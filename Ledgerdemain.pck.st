@@ -1,6 +1,16 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 14 June 2015 at 10:03:54.739048 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 15 June 2015 at 7:46:58.236892 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 3!
+!provides: 'Ledgerdemain' 1 4!
+!classDefinition: #Account category: #Ledgerdemain!
+Object subclass: #Account
+	instanceVariableNames: 'ledger balOpen balRcon balCur'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Account class' category: #Ledgerdemain!
+Account class
+	instanceVariableNames: ''!
+
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 Morph subclass: #Reconciliation
 	instanceVariableNames: ''
@@ -29,16 +39,6 @@ Object subclass: #NamedEntity
 	category: 'Ledgerdemain'!
 !classDefinition: 'NamedEntity class' category: #Ledgerdemain!
 NamedEntity class
-	instanceVariableNames: ''!
-
-!classDefinition: #Account category: #Ledgerdemain!
-NamedEntity subclass: #Account
-	instanceVariableNames: 'namAcct ledger balOpen balRcon balCur'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Account class' category: #Ledgerdemain!
-Account class
 	instanceVariableNames: ''!
 
 !classDefinition: #Category category: #Ledgerdemain!
@@ -132,6 +132,21 @@ CheckingTransaction class
 	instanceVariableNames: ''!
 
 
+!Account commentStamp: 'dhn 6/12/2015 17:53' prior: 0!
+Account responsibilities:
+
+  maintain ledger as collection of transactions
+  maintain name
+  maintain opening balance, reconciled balance, current balance
+  do transfers
+  move transactions between accounts and record in audit trail
+  edit transactions and record in audit trail 
+  enter transactions and record in audit trail 
+  delete transactions and record in audit trail
+  reconcile
+  report
+  export and import!
+
 !Reconciliation commentStamp: 'dhn 6/12/2015 19:10' prior: 0!
 Reconciliation responsibilities:
 
@@ -158,21 +173,6 @@ reported amount _ dollars (examples: 29.95 5.00)!
 
 !NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
 Abstract class for entities which have a specified name.!
-
-!Account commentStamp: 'dhn 6/12/2015 17:53' prior: 0!
-Account responsibilities:
-
-  maintain ledger as collection of transactions
-  maintain name
-  maintain opening balance, reconciled balance, current balance
-  do transfers
-  move transactions between accounts and record in audit trail
-  edit transactions and record in audit trail 
-  enter transactions and record in audit trail 
-  delete transactions and record in audit trail
-  reconcile
-  report
-  export and import!
 
 !Repository commentStamp: 'dhn 6/12/2015 19:12' prior: 0!
 Repository responsibilities:
@@ -220,155 +220,6 @@ Transaction responsibilities:
 CheckingTransaction responsibilities:
 
   hold number!
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:37'!
-accounts
-	"Answer the value of accounts"
-
-	accounts ifNil: [accounts _ OrderedCollection new].
-	^ accounts! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-accounts: anObject
-	"Set the value of accounts"
-
-	accounts _ anObject! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:47'!
-categories
-	"Answer the value of categories"
-
-	categories ifNil: [categories _ OrderedCollection new].
-	^ categories! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-categories: anObject
-	"Set the value of categories"
-
-	categories _ anObject! !
-
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
-handlesMouseDown: aMouseButtonEvent
-	^ true! !
-
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 10:38'!
-initialize
-	"initialize the state of the receiver"
-	| win |
-	super initialize.
-	win _ self embeddedInMorphicWindowLabeled: 'Ledger d''Main'.
-	win 	setProperty: #minimumExtent toValue: 188@185.
-	win model: self.
-	win openInWorld.
-! !
-
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 13:39'!
-mouseButton2Activity
-	"Show a pop-up menu"
-	| tuples list index |
-	tuples _ #(
-		('Restore a file'					#restoreFile)
-		('Save the current file'			#saveFile)
-		('Add an account'				#newAccount)
-		('Add a category'				#newCategory)
-	).
-	list _ tuples collect: [:ea | ea first].
-	index _ (PopUpMenu labelArray: list) 
-		startUpWithCaption: 'Getting Started'.
-	index > 0 ifTrue: [self perform: ((tuples at: index) at: 2)]! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-net
-	"Answer the value of net"
-
-	^ net! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-net: anObject
-	"Set the value of net"
-
-	net _ anObject! !
-
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 13:29'!
-newAccount! !
-
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 22:00'!
-newCategory
-	| temp cat b |
-	
-	temp _ FillInTheBlankMorph request: 'Name of new category:'.
-	self categories add: (cat _ Category named: temp).
-	
-	b _ true.
-	(PopUpMenu confirm: 'Submorphs?')
-		ifTrue: [
-			[b] whileTrue: [
-				cat newSubCategory.
-				b _ PopUpMenu confirm: 'Another submorph?']]! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-payees
-	"Answer the value of payees"
-
-	^ payees! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-payees: anObject
-	"Set the value of payees"
-
-	payees _ anObject! !
-
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
-restorationOf: fileName
-	"Restore accounts from file named fileName"
-	"File scheme:
-		Account1 record
-		Account2 record
-		...
-		Accountn record
-		Ledger transactions for Account1
-		Ledger transactions for Account2
-		...
-		
-		Ledger transactions for Accountn"
-	| acct ios x |
-	acct _ 0.
-	ios _ FileStream oldFileNamed: fileName.
-	[(x _ ios nextLine) notNil]
-		whileTrue: [
-			acct _ acct + 1.
-			accounts at: acct put: x.
-			Transcript show: x; newLine].
-	ios close.
-! !
-
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:33'!
-restoreFile
-	| fileName temp |
-	
-	fileName _ FillInTheBlankMorph request: 'Name of File to be Restored:' initialAnswer: 'c:\index1\...\file.ext'.
-	temp _ OrderedCollection new.
-	temp _ self restorationOf: fileName.
-	accounts _ temp asSet.! !
-
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
-saveFile! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-trail
-	"Answer the value of trail"
-
-	^ trail! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-trail: anObject
-	"Set the value of trail"
-
-	trail _ anObject! !
-
-!NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
-named: aName
-	^ self basicNew identity: aName! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
@@ -426,17 +277,162 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:36'!
-namAcct
-	"Answer the value of namAcct"
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:31'!
+accounts
+	"Answer the value of accounts"
 
-	^ namAcct! !
+	accounts ifNil: [accounts _ Dictionary new].
+	^ accounts! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:36'!
-namAcct: anObject
-	"Set the value of namAcct"
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:35'!
+accounts: anObject
+	"Save anObject in accounts"
 
-	namAcct _ anObject! !
+	(self accounts includesKey: anObject asSymbol)
+		ifTrue: [self inform: anObject,' is already an account']
+		ifFalse: [self accounts at: anObject asSymbol put: Account new]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:29'!
+categories
+	"Answer the value of categories"
+
+	categories ifNil: [categories _ Trie new].
+	^ categories! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+categories: anObject
+	"Set the value of categories"
+
+	categories _ anObject! !
+
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
+handlesMouseDown: aMouseButtonEvent
+	^ true! !
+
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 10:38'!
+initialize
+	"initialize the state of the receiver"
+	| win |
+	super initialize.
+	win _ self embeddedInMorphicWindowLabeled: 'Ledger d''Main'.
+	win 	setProperty: #minimumExtent toValue: 188@185.
+	win model: self.
+	win openInWorld.
+! !
+
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 13:39'!
+mouseButton2Activity
+	"Show a pop-up menu"
+	| tuples list index |
+	tuples _ #(
+		('Restore a file'					#restoreFile)
+		('Save the current file'			#saveFile)
+		('Add an account'				#newAccount)
+		('Add a category'				#newCategory)
+	).
+	list _ tuples collect: [:ea | ea first].
+	index _ (PopUpMenu labelArray: list) 
+		startUpWithCaption: 'Getting Started'.
+	index > 0 ifTrue: [self perform: ((tuples at: index) at: 2)]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+net
+	"Answer the value of net"
+
+	^ net! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+net: anObject
+	"Set the value of net"
+
+	net _ anObject! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:15'!
+newAccount
+	| temp |
+	
+	temp _ FillInTheBlankMorph request: 'Name of new account:'.
+	self accounts: temp.
+! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:34'!
+newCategory
+	| temp cat b |
+	
+	temp _ FillInTheBlankMorph request: 'Name of new category:'.
+	self categories at: temp put: (cat _ Category named: temp).
+	
+	b _ true.
+	(PopUpMenu confirm: 'Subcategories?')
+		ifTrue: [
+			[b] whileTrue: [
+				cat newSubCategory.
+				b _ PopUpMenu confirm: 'Another subcategory?']]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:37'!
+payees
+	"Answer the value of payees"
+
+	payees ifNil: [payees _ Trie new].
+	^ payees! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:39'!
+payees: anObject
+	"Save anObject in payees"
+
+	payees add: anObject! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
+restorationOf: fileName
+	"Restore accounts from file named fileName"
+	"File scheme:
+		Account1 record
+		Account2 record
+		...
+		Accountn record
+		Ledger transactions for Account1
+		Ledger transactions for Account2
+		...
+		
+		Ledger transactions for Accountn"
+	| acct ios x |
+	acct _ 0.
+	ios _ FileStream oldFileNamed: fileName.
+	[(x _ ios nextLine) notNil]
+		whileTrue: [
+			acct _ acct + 1.
+			accounts at: acct put: x.
+			Transcript show: x; newLine].
+	ios close.
+! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:33'!
+restoreFile
+	| fileName temp |
+	
+	fileName _ FillInTheBlankMorph request: 'Name of File to be Restored:' initialAnswer: 'c:\index1\...\file.ext'.
+	temp _ OrderedCollection new.
+	temp _ self restorationOf: fileName.
+	accounts _ temp asSet.! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
+saveFile! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+trail
+	"Answer the value of trail"
+
+	^ trail! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+trail: anObject
+	"Set the value of trail"
+
+	trail _ anObject! !
+
+!NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
+named: aName
+	^ self basicNew identity: aName! !
 
 !Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:20'!
 addSubCategory: anObject
