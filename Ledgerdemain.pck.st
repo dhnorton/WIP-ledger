@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 15 June 2015 at 7:46:58.236892 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 15 June 2015 at 8:35:52.772892 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 4!
+!provides: 'Ledgerdemain' 1 5!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -299,11 +299,13 @@ categories
 	categories ifNil: [categories _ Trie new].
 	^ categories! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 08:16'!
 categories: anObject
-	"Set the value of categories"
+	"Save anObject in categories"
 
-	categories _ anObject! !
+	(self categories includesKey: anObject)
+		ifTrue: [self inform: anObject,' is already a category']
+		ifFalse: [self categories at: anObject put: (Category named: anObject)]! !
 
 !LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
 handlesMouseDown: aMouseButtonEvent
