@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 15 June 2015 at 8:35:52.772892 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 15 June 2015 at 11:29:40.595892 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 5!
+!provides: 'Ledgerdemain' 1 6!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -322,7 +322,16 @@ initialize
 	win openInWorld.
 ! !
 
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 13:39'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 11:28'!
+listCategories
+
+	categories keysAndValuesDo: [:k :v |
+		Transcript show: k; newLine.
+		v subCategories isEmpty ifFalse: [
+			v subCategories do: [:s |
+				Transcript show: k; show: '.',s; newLine]]]! !
+
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/15/2015 11:13'!
 mouseButton2Activity
 	"Show a pop-up menu"
 	| tuples list index |
@@ -330,6 +339,7 @@ mouseButton2Activity
 		('Restore a file'					#restoreFile)
 		('Save the current file'			#saveFile)
 		('Add an account'				#newAccount)
+		('List categories'				#listCategories)
 		('Add a category'				#newCategory)
 	).
 	list _ tuples collect: [:ea | ea first].
