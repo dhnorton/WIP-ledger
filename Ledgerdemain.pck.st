@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 14 June 2015 at 7:56:46.296675 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 14 June 2015 at 9:21:46.553048 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 0!
+!provides: 'Ledgerdemain' 1 1!
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 Morph subclass: #Reconciliation
 	instanceVariableNames: ''
@@ -43,12 +43,22 @@ Account class
 
 !classDefinition: #Category category: #Ledgerdemain!
 NamedEntity subclass: #Category
-	instanceVariableNames: 'name'
+	instanceVariableNames: 'name subCategories'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
 !classDefinition: 'Category class' category: #Ledgerdemain!
 Category class
+	instanceVariableNames: ''!
+
+!classDefinition: #SubCategory category: #Ledgerdemain!
+NamedEntity subclass: #SubCategory
+	instanceVariableNames: 'name'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'SubCategory class' category: #Ledgerdemain!
+SubCategory class
 	instanceVariableNames: ''!
 
 !classDefinition: #Repository category: #Ledgerdemain!
@@ -282,12 +292,15 @@ net: anObject
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 13:29'!
 newAccount! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:57'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 21:16'!
 newCategory
-	| temp |
+	| temp cat |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new category:'.
-	self categories add: temp! !
+	self categories add: (cat _ Category named: temp).
+	
+	(PopUpMenu confirm: 'Submorphs?')
+		ifTrue: [cat newSubCategory]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 payees
@@ -406,6 +419,42 @@ ledger: anObject
 	ledger _ anObject! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+name: anObject
+	"Set the value of name"
+
+	name _ anObject! !
+
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:20'!
+addSubCategory: anObject
+	self subCategories add: anObject! !
+
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:18'!
+name: anObject
+	"Set the value of name"
+
+	name _ anObject! !
+
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 20:35'!
+newSubCategory
+	| temp |
+	
+	temp _ FillInTheBlankMorph request: 'Subcategory to ', self name.
+	self addSubCategory: temp! !
+
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 20:19'!
+subCategories
+	"Answer the value of categories"
+
+	subCategories ifNil: [subCategories _ OrderedCollection new].
+	^ subCategories! !
+
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:18'!
+subCategories: anObject
+	"Set the value of subCategories"
+
+	subCategories _ anObject! !
+
+!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 20:20'!
 name: anObject
 	"Set the value of name"
 
