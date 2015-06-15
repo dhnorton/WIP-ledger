@@ -1,0 +1,412 @@
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 14 June 2015 at 7:56:46.296675 pm'!
+'Description Please enter a description for this package'!
+!provides: 'Ledgerdemain' 1 0!
+!classDefinition: #Reconciliation category: #Ledgerdemain!
+Morph subclass: #Reconciliation
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Reconciliation class' category: #Ledgerdemain!
+Reconciliation class
+	instanceVariableNames: ''!
+
+!classDefinition: #LedgerDeMain category: #Ledgerdemain!
+RectangleLikeMorph subclass: #LedgerDeMain
+	instanceVariableNames: 'accounts payees categories net trail'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
+LedgerDeMain class
+	instanceVariableNames: ''!
+
+!classDefinition: #NamedEntity category: #Ledgerdemain!
+Object subclass: #NamedEntity
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'NamedEntity class' category: #Ledgerdemain!
+NamedEntity class
+	instanceVariableNames: ''!
+
+!classDefinition: #Account category: #Ledgerdemain!
+NamedEntity subclass: #Account
+	instanceVariableNames: 'name ledger balOpen balRcon balCur'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Account class' category: #Ledgerdemain!
+Account class
+	instanceVariableNames: ''!
+
+!classDefinition: #Category category: #Ledgerdemain!
+NamedEntity subclass: #Category
+	instanceVariableNames: 'name'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Category class' category: #Ledgerdemain!
+Category class
+	instanceVariableNames: ''!
+
+!classDefinition: #Repository category: #Ledgerdemain!
+Object subclass: #Repository
+	instanceVariableNames: 'trail'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Repository class' category: #Ledgerdemain!
+Repository class
+	instanceVariableNames: ''!
+
+!classDefinition: #Suggestion category: #Ledgerdemain!
+Object subclass: #Suggestion
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Suggestion class' category: #Ledgerdemain!
+Suggestion class
+	instanceVariableNames: ''!
+
+!classDefinition: #CheckNumber category: #Ledgerdemain!
+Suggestion subclass: #CheckNumber
+	instanceVariableNames: 'last'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'CheckNumber class' category: #Ledgerdemain!
+CheckNumber class
+	instanceVariableNames: ''!
+
+!classDefinition: #Payee category: #Ledgerdemain!
+Suggestion subclass: #Payee
+	instanceVariableNames: 'name last'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Payee class' category: #Ledgerdemain!
+Payee class
+	instanceVariableNames: ''!
+
+!classDefinition: #TransactionDate category: #Ledgerdemain!
+Suggestion subclass: #TransactionDate
+	instanceVariableNames: 'last'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'TransactionDate class' category: #Ledgerdemain!
+TransactionDate class
+	instanceVariableNames: ''!
+
+!classDefinition: #Transaction category: #Ledgerdemain!
+Object subclass: #Transaction
+	instanceVariableNames: 'date type payee amount category memo reconciled transfer'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Transaction class' category: #Ledgerdemain!
+Transaction class
+	instanceVariableNames: ''!
+
+!classDefinition: #CheckingTransaction category: #Ledgerdemain!
+Transaction subclass: #CheckingTransaction
+	instanceVariableNames: 'number'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'CheckingTransaction class' category: #Ledgerdemain!
+CheckingTransaction class
+	instanceVariableNames: ''!
+
+
+!Reconciliation commentStamp: 'dhn 6/12/2015 19:10' prior: 0!
+Reconciliation responsibilities:
+
+  report withdrawals and deposits
+  update ledger
+!
+
+!LedgerDeMain commentStamp: 'dhn 6/13/2015 20:09' prior: 0!
+LedgerDeMain (a cover class) responsibilities:
+
+  hold accounts
+  hold payees
+  hold categories
+  hold audit trail
+  search
+  maintain net worth
+  back up and restore
+
+With apologies to all the magicians.
+
+recorded date _ Date today julianDayNumber - Time squeakEpoch.
+recorded amount _ amount as cents. (examples: 2995 500)
+reported amount _ dollars (examples: 29.95 5.00)!
+
+!NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
+Abstract class for entities which have a specified name.!
+
+!Account commentStamp: 'dhn 6/12/2015 17:53' prior: 0!
+Account responsibilities:
+
+  maintain ledger as collection of transactions
+  maintain name
+  maintain opening balance, reconciled balance, current balance
+  do transfers
+  move transactions between accounts and record in audit trail
+  edit transactions and record in audit trail 
+  enter transactions and record in audit trail 
+  delete transactions and record in audit trail
+  reconcile
+  report
+  export and import!
+
+!Repository commentStamp: 'dhn 6/12/2015 19:12' prior: 0!
+Repository responsibilities:
+
+  maintain audit trail
+  search
+  report!
+
+!Suggestion commentStamp: 'dhn 6/12/2015 18:48' prior: 0!
+Suggestion (an abstract class) reponsibilities:
+
+  autotype
+!
+
+!CheckNumber commentStamp: 'dhn 6/12/2015 19:05' prior: 0!
+CheckNumber responsibilities:
+
+  maintain last used
+  adjust!
+
+!Payee commentStamp: '<historical>' prior: 0!
+Payee responsibilities:
+
+  maintain name
+  hold last transaction, by category
+!
+
+!TransactionDate commentStamp: 'dhn 6/12/2015 19:02' prior: 0!
+TransactionDate responsibilities:
+
+  maintain last used (current if nil)
+  adjust!
+
+!Transaction commentStamp: 'dhn 6/12/2015 17:39' prior: 0!
+Transaction responsibilities:
+
+  hold date, [number], type, payee, amount, category, memo, reconciled, transfer
+  provide entry suggestions for date, number, payee, category, amount
+  update number, payee, category, memo
+  split categories
+  record actions in audit trail
+!
+
+!CheckingTransaction commentStamp: 'dhn 6/12/2015 18:42' prior: 0!
+CheckingTransaction responsibilities:
+
+  hold number!
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:37'!
+accounts
+	"Answer the value of accounts"
+
+	accounts ifNil: [accounts _ OrderedCollection new].
+	^ accounts! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+accounts: anObject
+	"Set the value of accounts"
+
+	accounts _ anObject! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:47'!
+categories
+	"Answer the value of categories"
+
+	categories ifNil: [categories _ OrderedCollection new].
+	^ categories! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+categories: anObject
+	"Set the value of categories"
+
+	categories _ anObject! !
+
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
+handlesMouseDown: aMouseButtonEvent
+	^ true! !
+
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 10:38'!
+initialize
+	"initialize the state of the receiver"
+	| win |
+	super initialize.
+	win _ self embeddedInMorphicWindowLabeled: 'Ledger d''Main'.
+	win 	setProperty: #minimumExtent toValue: 188@185.
+	win model: self.
+	win openInWorld.
+! !
+
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 13:39'!
+mouseButton2Activity
+	"Show a pop-up menu"
+	| tuples list index |
+	tuples _ #(
+		('Restore a file'					#restoreFile)
+		('Save the current file'			#saveFile)
+		('Add an account'				#newAccount)
+		('Add a category'				#newCategory)
+	).
+	list _ tuples collect: [:ea | ea first].
+	index _ (PopUpMenu labelArray: list) 
+		startUpWithCaption: 'Getting Started'.
+	index > 0 ifTrue: [self perform: ((tuples at: index) at: 2)]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+net
+	"Answer the value of net"
+
+	^ net! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+net: anObject
+	"Set the value of net"
+
+	net _ anObject! !
+
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 13:29'!
+newAccount! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:57'!
+newCategory
+	| temp |
+	
+	temp _ FillInTheBlankMorph request: 'Name of new category:'.
+	self categories add: temp! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+payees
+	"Answer the value of payees"
+
+	^ payees! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+payees: anObject
+	"Set the value of payees"
+
+	payees _ anObject! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
+restorationOf: fileName
+	"Restore accounts from file named fileName"
+	"File scheme:
+		Account1 record
+		Account2 record
+		...
+		Accountn record
+		Ledger transactions for Account1
+		Ledger transactions for Account2
+		...
+		
+		Ledger transactions for Accountn"
+	| acct ios x |
+	acct _ 0.
+	ios _ FileStream oldFileNamed: fileName.
+	[(x _ ios nextLine) notNil]
+		whileTrue: [
+			acct _ acct + 1.
+			accounts at: acct put: x.
+			Transcript show: x; newLine].
+	ios close.
+! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:33'!
+restoreFile
+	| fileName temp |
+	
+	fileName _ FillInTheBlankMorph request: 'Name of File to be Restored:' initialAnswer: 'c:\index1\...\file.ext'.
+	temp _ OrderedCollection new.
+	temp _ self restorationOf: fileName.
+	accounts _ temp asSet.! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
+saveFile! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+trail
+	"Answer the value of trail"
+
+	^ trail! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+trail: anObject
+	"Set the value of trail"
+
+	trail _ anObject! !
+
+!NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 13:44'!
+named: aName
+	^ self basicNew name: aName! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+balCur
+	"Answer the value of balCur"
+
+	^ balCur! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+balCur: anObject
+	"Set the value of balCur"
+
+	balCur _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+balOpen
+	"Answer the value of balOpen"
+
+	^ balOpen! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+balOpen: anObject
+	"Set the value of balOpen"
+
+	balOpen _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+balRcon
+	"Answer the value of balRcon"
+
+	^ balRcon! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+balRcon: anObject
+	"Set the value of balRcon"
+
+	balRcon _ anObject! !
+
+!Account methodsFor: 'initialization' stamp: 'dhn 6/13/2015 20:24'!
+initialize
+! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+ledger
+	"Answer the value of ledger"
+
+	^ ledger! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+ledger: anObject
+	"Set the value of ledger"
+
+	ledger _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
+name: anObject
+	"Set the value of name"
+
+	name _ anObject! !
