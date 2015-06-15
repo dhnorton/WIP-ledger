@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 14 June 2015 at 9:21:46.553048 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 14 June 2015 at 10:03:54.739048 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 1!
+!provides: 'Ledgerdemain' 1 3!
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 Morph subclass: #Reconciliation
 	instanceVariableNames: ''
@@ -33,7 +33,7 @@ NamedEntity class
 
 !classDefinition: #Account category: #Ledgerdemain!
 NamedEntity subclass: #Account
-	instanceVariableNames: 'name ledger balOpen balRcon balCur'
+	instanceVariableNames: 'namAcct ledger balOpen balRcon balCur'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -43,7 +43,7 @@ Account class
 
 !classDefinition: #Category category: #Ledgerdemain!
 NamedEntity subclass: #Category
-	instanceVariableNames: 'name subCategories'
+	instanceVariableNames: 'catName subCategories'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -53,7 +53,7 @@ Category class
 
 !classDefinition: #SubCategory category: #Ledgerdemain!
 NamedEntity subclass: #SubCategory
-	instanceVariableNames: 'name'
+	instanceVariableNames: 'catName'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -93,7 +93,7 @@ CheckNumber class
 
 !classDefinition: #Payee category: #Ledgerdemain!
 Suggestion subclass: #Payee
-	instanceVariableNames: 'name last'
+	instanceVariableNames: 'payeeName last'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -292,15 +292,19 @@ net: anObject
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 13:29'!
 newAccount! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 21:16'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 22:00'!
 newCategory
-	| temp cat |
+	| temp cat b |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new category:'.
 	self categories add: (cat _ Category named: temp).
 	
+	b _ true.
 	(PopUpMenu confirm: 'Submorphs?')
-		ifTrue: [cat newSubCategory]! !
+		ifTrue: [
+			[b] whileTrue: [
+				cat newSubCategory.
+				b _ PopUpMenu confirm: 'Another submorph?']]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 payees
@@ -362,9 +366,9 @@ trail: anObject
 
 	trail _ anObject! !
 
-!NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 13:44'!
+!NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
 named: aName
-	^ self basicNew name: aName! !
+	^ self basicNew identity: aName! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
@@ -402,6 +406,10 @@ balRcon: anObject
 
 	balRcon _ anObject! !
 
+!Account methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:45'!
+identity: aName
+	self namAcct: aName! !
+
 !Account methodsFor: 'initialization' stamp: 'dhn 6/13/2015 20:24'!
 initialize
 ! !
@@ -418,27 +426,43 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
-name: anObject
-	"Set the value of name"
+!Account methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:36'!
+namAcct
+	"Answer the value of namAcct"
 
-	name _ anObject! !
+	^ namAcct! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:36'!
+namAcct: anObject
+	"Set the value of namAcct"
+
+	namAcct _ anObject! !
 
 !Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:20'!
 addSubCategory: anObject
 	self subCategories add: anObject! !
 
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:18'!
-name: anObject
-	"Set the value of name"
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:33'!
+catName
+	"Answer the value of catName"
 
-	name _ anObject! !
+	^ catName! !
 
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 20:35'!
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:33'!
+catName: anObject
+	"Set the value of catName"
+
+	catName _ anObject! !
+
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:47'!
+identity: aName
+	self catName: aName! !
+
+!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:49'!
 newSubCategory
 	| temp |
 	
-	temp _ FillInTheBlankMorph request: 'Subcategory to ', self name.
+	temp _ FillInTheBlankMorph request: 'Subcategory to ', self catName.
 	self addSubCategory: temp! !
 
 !Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 20:19'!
@@ -454,8 +478,42 @@ subCategories: anObject
 
 	subCategories _ anObject! !
 
-!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 20:20'!
-name: anObject
-	"Set the value of name"
+!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:34'!
+catName
+	"Answer the value of catName"
 
-	name _ anObject! !
+	^ catName! !
+
+!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:34'!
+catName: anObject
+	"Set the value of catName"
+
+	catName _ anObject! !
+
+!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:47'!
+identity: aName
+	self catName: aName! !
+
+!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
+last
+	"Answer the value of last"
+
+	^ last! !
+
+!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
+last: anObject
+	"Set the value of last"
+
+	last _ anObject! !
+
+!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
+payeeName
+	"Answer the value of payeeName"
+
+	^ payeeName! !
+
+!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
+payeeName: anObject
+	"Set the value of payeeName"
+
+	payeeName _ anObject! !
