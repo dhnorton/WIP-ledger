@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 15 June 2015 at 11:29:40.595892 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 16 June 2015 at 10:11:49.947452 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 6!
+!provides: 'Ledgerdemain' 1 8!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -307,6 +307,22 @@ categories: anObject
 		ifTrue: [self inform: anObject,' is already a category']
 		ifFalse: [self categories at: anObject put: (Category named: anObject)]! !
 
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/16/2015 22:11'!
+categoriesFromFile
+	"Copy category names from a file and add them to the categories ivar"
+	| file ios line x |
+	file _ FillInTheBlankMorph request: 'Name of categories File:' initialAnswer: 'c:\index1\...\file.ext'.
+	ios _ FileStream oldFileNamed: file.
+	[(line _ ios nextLine) notNil]
+   whileTrue: [
+	line size > 0 ifTrue: [
+		
+	x _ line findDelimiters: '.' startingAt: 1. 
+	x <= line size 
+		ifTrue: [^ 1 "primary category"]
+		ifFalse: [^ 2 "sub-category"].
+	Transcript show: x; newLine]]! !
+
 !LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
 handlesMouseDown: aMouseButtonEvent
 	^ true! !
@@ -331,21 +347,15 @@ listCategories
 			v subCategories do: [:s |
 				Transcript show: k; show: '.',s; newLine]]]! !
 
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/15/2015 11:13'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/16/2015 21:22'!
+listPayees
+
+	payees keysDo: [:k |
+		Transcript show: k; newLine]! !
+
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/15/2015 11:57'!
 mouseButton2Activity
-	"Show a pop-up menu"
-	| tuples list index |
-	tuples _ #(
-		('Restore a file'					#restoreFile)
-		('Save the current file'			#saveFile)
-		('Add an account'				#newAccount)
-		('List categories'				#listCategories)
-		('Add a category'				#newCategory)
-	).
-	list _ tuples collect: [:ea | ea first].
-	index _ (PopUpMenu labelArray: list) 
-		startUpWithCaption: 'Getting Started'.
-	index > 0 ifTrue: [self perform: ((tuples at: index) at: 2)]! !
+	self theMenu.! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 net
@@ -381,6 +391,14 @@ newCategory
 				cat newSubCategory.
 				b _ PopUpMenu confirm: 'Another subcategory?']]! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 12:10'!
+newPayee
+	"Temporary - add a payee. Normally done from ledger"
+	| temp |
+	
+	temp _ FillInTheBlankMorph request: 'Name of new payee:'.
+	self payees: temp! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:37'!
 payees
 	"Answer the value of payees"
@@ -388,11 +406,11 @@ payees
 	payees ifNil: [payees _ Trie new].
 	^ payees! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:39'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 12:24'!
 payees: anObject
 	"Save anObject in payees"
 
-	payees add: anObject! !
+	self payees at: anObject put: nil! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
 restorationOf: fileName
@@ -429,6 +447,24 @@ restoreFile
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
 saveFile! !
+
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/16/2015 21:23'!
+theMenu
+	"Show a pop-up menu"
+	| tuples list index |
+	tuples _ #(
+		('Restore a file'					#restoreFile)
+		('Save the current file'			#saveFile)
+		('List payees'					#listPayees)
+		('Add a payee'					#newPayee)
+		('List categories'				#listCategories)
+		('Add a category'				#newCategory)
+		('Add an account'				#newAccount)
+	).
+	list _ tuples collect: [:ea | ea first].
+	index _ (PopUpMenu labelArray: list) 
+		startUpWithCaption: 'Getting Started'.
+	index > 0 ifTrue: [self perform: ((tuples at: index) at: 2)]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 trail
