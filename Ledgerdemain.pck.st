@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 9:24:16.413635 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 10:32:00.865635 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 11!
+!provides: 'Ledgerdemain' 1 12!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -349,11 +349,12 @@ listCategories
 		Transcript show: k; newLine]]
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/16/2015 21:22'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:28'!
 listPayees
 
-	payees keysDo: [:k |
-		Transcript show: k; newLine]! !
+	payees ifNotNil: [payees keysAndValuesDo: [:k :v |
+		Transcript show: k; newLine]]
+! !
 
 !LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/15/2015 11:57'!
 mouseButton2Activity
@@ -386,13 +387,12 @@ newCategory
 	temp _ FillInTheBlankMorph request: 'Name of new category:'.
 	temp ~= '' ifTrue: [self addCategory: temp]! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 12:10'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:26'!
 newPayee
-	"Temporary - add a payee. Normally done from ledger"
 	| temp |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new payee:'.
-	self payees: temp! !
+	temp ~= '' ifTrue: [self payees: temp]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:37'!
 payees
@@ -401,11 +401,21 @@ payees
 	payees ifNil: [payees _ Trie new].
 	^ payees! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 12:24'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:25'!
 payees: anObject
 	"Save anObject in payees"
 
-	self payees at: anObject put: nil! !
+	self payees at: anObject put: 1! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 10:14'!
+payeesFromFile
+	"Copy payee names from a file and add them to the payees ivar"
+	| file ios line |
+	file _ FillInTheBlankMorph request: 'Name of payees File:' initialAnswer: 'c:\index1\...\file.ext'.
+	ios _ FileStream oldFileNamed: file.
+	[(line _ ios nextLine) notNil]
+		whileTrue: [	line size > 0 ifTrue: [self payees at: line put: 1]].
+	ios close! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
 restorationOf: fileName
@@ -443,13 +453,14 @@ restoreFile
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
 saveFile! !
 
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/18/2015 09:18'!
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/18/2015 10:16'!
 theMenu
 	"Show a pop-up menu"
 	| tuples list index |
 	tuples _ #(
 		('Restore a file'					#restoreFile)
 		('Save the current file'			#saveFile)
+		('Payees from file'				#payeesFromFile)
 		('List payees'					#listPayees)
 		('Add a payee'					#newPayee)
 		('Categories from file'			#categoriesFromFile)
