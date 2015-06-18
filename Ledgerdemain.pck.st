@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 10:40:26.272635 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 12:10:26.834635 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 13!
+!provides: 'Ledgerdemain' 1 14!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -39,26 +39,6 @@ Object subclass: #NamedEntity
 	category: 'Ledgerdemain'!
 !classDefinition: 'NamedEntity class' category: #Ledgerdemain!
 NamedEntity class
-	instanceVariableNames: ''!
-
-!classDefinition: #Category category: #Ledgerdemain!
-NamedEntity subclass: #Category
-	instanceVariableNames: 'catName subCategories'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Category class' category: #Ledgerdemain!
-Category class
-	instanceVariableNames: ''!
-
-!classDefinition: #SubCategory category: #Ledgerdemain!
-NamedEntity subclass: #SubCategory
-	instanceVariableNames: 'catName'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'SubCategory class' category: #Ledgerdemain!
-SubCategory class
 	instanceVariableNames: ''!
 
 !classDefinition: #Repository category: #Ledgerdemain!
@@ -220,6 +200,27 @@ Transaction responsibilities:
 CheckingTransaction responsibilities:
 
   hold number!
+
+!Trie methodsFor: '*Ledgerdemain' stamp: 'dhn 6/18/2015 12:07'!
+storeOn: aStream
+	"Refer to the comment in Object|storeOn:."
+	| noneYet |
+	aStream nextPutAll: '(('.
+	aStream nextPutAll: self class name.
+	aStream nextPutAll: ' new)'.
+	noneYet _ true.
+	self keysAndValuesDo: 
+			[:each :val | 
+			noneYet
+				ifTrue: [noneYet _ false]
+				ifFalse: [aStream nextPut: $;].
+			aStream 
+				nextPutAll: ' at: ';
+				store: each;
+				nextPutAll: ' put: ';
+				store: val].
+	noneYet ifFalse: [aStream nextPutAll: '; yourself'].
+	aStream nextPut: $)! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
@@ -488,62 +489,6 @@ trail: anObject
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
 named: aName
 	^ self basicNew identity: aName! !
-
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:20'!
-addSubCategory: anObject
-	self subCategories add: anObject! !
-
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:33'!
-catName
-	"Answer the value of catName"
-
-	^ catName! !
-
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:33'!
-catName: anObject
-	"Set the value of catName"
-
-	catName _ anObject! !
-
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:47'!
-identity: aName
-	self catName: aName! !
-
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:49'!
-newSubCategory
-	| temp |
-	
-	temp _ FillInTheBlankMorph request: 'Subcategory to ', self catName.
-	self addSubCategory: temp! !
-
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 20:19'!
-subCategories
-	"Answer the value of categories"
-
-	subCategories ifNil: [subCategories _ OrderedCollection new].
-	^ subCategories! !
-
-!Category methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:18'!
-subCategories: anObject
-	"Set the value of subCategories"
-
-	subCategories _ anObject! !
-
-!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:34'!
-catName
-	"Answer the value of catName"
-
-	^ catName! !
-
-!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:34'!
-catName: anObject
-	"Set the value of catName"
-
-	catName _ anObject! !
-
-!SubCategory methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:47'!
-identity: aName
-	self catName: aName! !
 
 !Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
 last
