@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 17 June 2015 at 9:43:24.681169 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 9:24:16.413635 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 9!
+!provides: 'Ledgerdemain' 1 11!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -292,6 +292,16 @@ accounts: anObject
 		ifTrue: [self inform: anObject,' is already an account']
 		ifFalse: [self accounts at: anObject asSymbol put: Account new]! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:00'!
+addCategory: aString
+	"Add category named aString"
+	| x |
+	x _ aString findDelimiters: '.' startingAt: 1. 
+	x > aString size 
+		ifTrue: [self categories at: aString put: 1] "primary category"
+		ifFalse: [self categories at: aString put: 2] "sub-category"
+! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:29'!
 categories
 	"Answer the value of categories"
@@ -299,28 +309,22 @@ categories
 	categories ifNil: [categories _ Trie new].
 	^ categories! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 08:16'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:09'!
 categories: anObject
 	"Save anObject in categories"
 
 	(self categories includesKey: anObject)
 		ifTrue: [self inform: anObject,' is already a category']
-		ifFalse: [self categories at: anObject put: (Category named: anObject)]! !
+		ifFalse: [self addCategory: anObject]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/17/2015 21:29'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 09:05'!
 categoriesFromFile
 	"Copy category names from a file and add them to the categories ivar"
-	| file ios line x |
+	| file ios line |
 	file _ FillInTheBlankMorph request: 'Name of categories File:' initialAnswer: 'c:\index1\...\file.ext'.
 	ios _ FileStream oldFileNamed: file.
 	[(line _ ios nextLine) notNil]
-		whileTrue: [
-			line size > 0 ifTrue: [
-			x _ line findDelimiters: '.' startingAt: 1. 
-			x > line size 
-				ifTrue: [self categories at: line put: 1]
-				ifFalse: [self categories at: line put: 2]]].
-	self halt.
+		whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 	ios close! !
 
 !LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
@@ -338,11 +342,11 @@ initialize
 	win openInWorld.
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/17/2015 21:38'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:22'!
 listCategories
 
-	categories keysAndValuesDo: [:k :v |
-		Transcript show: k; newLine]
+	categories ifNotNil: [categories keysAndValuesDo: [:k :v |
+		Transcript show: k; newLine]]
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/16/2015 21:22'!
@@ -375,19 +379,12 @@ newAccount
 	self accounts: temp.
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:34'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:14'!
 newCategory
-	| temp cat b |
+	| temp |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new category:'.
-	self categories at: temp put: (cat _ Category named: temp).
-	
-	b _ true.
-	(PopUpMenu confirm: 'Subcategories?')
-		ifTrue: [
-			[b] whileTrue: [
-				cat newSubCategory.
-				b _ PopUpMenu confirm: 'Another subcategory?']]! !
+	temp ~= '' ifTrue: [self addCategory: temp]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 12:10'!
 newPayee
@@ -446,7 +443,7 @@ restoreFile
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
 saveFile! !
 
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/16/2015 21:23'!
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/18/2015 09:18'!
 theMenu
 	"Show a pop-up menu"
 	| tuples list index |
@@ -455,6 +452,7 @@ theMenu
 		('Save the current file'			#saveFile)
 		('List payees'					#listPayees)
 		('Add a payee'					#newPayee)
+		('Categories from file'			#categoriesFromFile)
 		('List categories'				#listCategories)
 		('Add a category'				#newCategory)
 		('Add an account'				#newAccount)
