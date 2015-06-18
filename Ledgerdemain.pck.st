@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 12:10:26.834635 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 3:03:18.379635 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 14!
+!provides: 'Ledgerdemain' 1 15!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -442,6 +442,11 @@ restorationOf: fileName
 	ios close.
 ! !
 
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 14:47'!
+restoreCategoriesFrom: storeString
+	"Set the receiver to the object formed by evaluating  storeString"
+	categories _ Compiler evaluate: storeString! !
+
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:33'!
 restoreFile
 	| fileName temp |
@@ -485,6 +490,16 @@ trail: anObject
 	"Set the value of trail"
 
 	trail _ anObject! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:00'!
+trie: aTrie withPrefix: aString
+	"Answer the leaves which contain aString as the first character(s)"
+	^ aTrie forPrefix: aString keysAndValuesDo: [:key :v | {key} print]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 14:52'!
+withPrefix: aString
+	"Answer the leaves which contain aString as the first character(s)"
+	^ self forPrefix: aString keysAndValuesDo: [:key :v | key]! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
 named: aName
