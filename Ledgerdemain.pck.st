@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 16 June 2015 at 10:11:49.947452 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 17 June 2015 at 9:43:24.681169 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 8!
+!provides: 'Ledgerdemain' 1 9!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -307,21 +307,21 @@ categories: anObject
 		ifTrue: [self inform: anObject,' is already a category']
 		ifFalse: [self categories at: anObject put: (Category named: anObject)]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/16/2015 22:11'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/17/2015 21:29'!
 categoriesFromFile
 	"Copy category names from a file and add them to the categories ivar"
 	| file ios line x |
 	file _ FillInTheBlankMorph request: 'Name of categories File:' initialAnswer: 'c:\index1\...\file.ext'.
 	ios _ FileStream oldFileNamed: file.
 	[(line _ ios nextLine) notNil]
-   whileTrue: [
-	line size > 0 ifTrue: [
-		
-	x _ line findDelimiters: '.' startingAt: 1. 
-	x <= line size 
-		ifTrue: [^ 1 "primary category"]
-		ifFalse: [^ 2 "sub-category"].
-	Transcript show: x; newLine]]! !
+		whileTrue: [
+			line size > 0 ifTrue: [
+			x _ line findDelimiters: '.' startingAt: 1. 
+			x > line size 
+				ifTrue: [self categories at: line put: 1]
+				ifFalse: [self categories at: line put: 2]]].
+	self halt.
+	ios close! !
 
 !LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
 handlesMouseDown: aMouseButtonEvent
@@ -338,14 +338,12 @@ initialize
 	win openInWorld.
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 11:28'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/17/2015 21:38'!
 listCategories
 
 	categories keysAndValuesDo: [:k :v |
-		Transcript show: k; newLine.
-		v subCategories isEmpty ifFalse: [
-			v subCategories do: [:s |
-				Transcript show: k; show: '.',s; newLine]]]! !
+		Transcript show: k; newLine]
+! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/16/2015 21:22'!
 listPayees
