@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 10:32:00.865635 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 10:40:26.272635 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 12!
+!provides: 'Ledgerdemain' 1 13!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -342,17 +342,17 @@ initialize
 	win openInWorld.
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:22'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:38'!
 listCategories
 
-	categories ifNotNil: [categories keysAndValuesDo: [:k :v |
+	categories ifNotNil: [categories keysDo: [:k |
 		Transcript show: k; newLine]]
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:28'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:38'!
 listPayees
 
-	payees ifNotNil: [payees keysAndValuesDo: [:k :v |
+	payees ifNotNil: [payees keysDo: [:k |
 		Transcript show: k; newLine]]
 ! !
 
