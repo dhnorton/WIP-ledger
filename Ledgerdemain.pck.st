@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 3:03:18.379635 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 8:44:25.066641 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 15!
+!provides: 'Ledgerdemain' 1 17!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -23,7 +23,7 @@ Reconciliation class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 RectangleLikeMorph subclass: #LedgerDeMain
-	instanceVariableNames: 'accounts payees categories net trail'
+	instanceVariableNames: 'accounts payees categories memos net trail'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -357,6 +357,29 @@ listPayees
 		Transcript show: k; newLine]]
 ! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 20:40'!
+memos
+	"Answer the value of memos"
+
+	memos ifNil: [memos _ Trie new].
+	^ memos! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 19:52'!
+memos: anObject
+	"Save anObject in memos:"
+
+	self memos at: anObject put: 1! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 20:33'!
+memosFromFile
+	"Copy memos from a file and add them to the memos ivar"
+	| file ios line |
+	file _ FillInTheBlankMorph request: 'Name of memos file:' initialAnswer: 'c:\directory\file.ext'.
+	ios _ FileStream oldFileNamed: file.
+	[(line _ ios nextLine) notNil]
+		whileTrue: [	line size > 0 ifTrue: [self memos at: line put: 1]].
+	ios close! !
+
 !LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/15/2015 11:57'!
 mouseButton2Activity
 	self theMenu.! !
@@ -459,7 +482,7 @@ restoreFile
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
 saveFile! !
 
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/18/2015 10:16'!
+!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/18/2015 20:35'!
 theMenu
 	"Show a pop-up menu"
 	| tuples list index |
@@ -472,6 +495,7 @@ theMenu
 		('Categories from file'			#categoriesFromFile)
 		('List categories'				#listCategories)
 		('Add a category'				#newCategory)
+		('Memos from file'				#memosFromFile)
 		('Add an account'				#newAccount)
 	).
 	list _ tuples collect: [:ea | ea first].
@@ -491,10 +515,10 @@ trail: anObject
 
 	trail _ anObject! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:00'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
 trie: aTrie withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
-	^ aTrie forPrefix: aString keysAndValuesDo: [:key :v | {key} print]! !
+	aTrie forPrefix: aString keysAndValuesDo: [:key :v | Transcript show: key; newLine]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 14:52'!
 withPrefix: aString
