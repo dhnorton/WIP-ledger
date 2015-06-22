@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 22 June 2015 at 2:32:54.673413 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 22 June 2015 at 5:10:42.910212 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 19!
+!provides: 'Ledgerdemain' 1 20!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -9,6 +9,16 @@ Object subclass: #Account
 	category: 'Ledgerdemain'!
 !classDefinition: 'Account class' category: #Ledgerdemain!
 Account class
+	instanceVariableNames: ''!
+
+!classDefinition: #LedgerDeMain category: #Ledgerdemain!
+Object subclass: #LedgerDeMain
+	instanceVariableNames: 'window accounts payees categories memos net trail accountListIndex selectedAccount'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
+LedgerDeMain class
 	instanceVariableNames: ''!
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
@@ -21,14 +31,14 @@ Morph subclass: #Reconciliation
 Reconciliation class
 	instanceVariableNames: ''!
 
-!classDefinition: #LedgerDeMain category: #Ledgerdemain!
-RectangleLikeMorph subclass: #LedgerDeMain
-	instanceVariableNames: 'accounts payees categories memos net trail'
+!classDefinition: #LedgerWindow category: #Ledgerdemain!
+SystemWindow subclass: #LedgerWindow
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
-!classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
-LedgerDeMain class
+!classDefinition: 'LedgerWindow class' category: #Ledgerdemain!
+LedgerWindow class
 	instanceVariableNames: ''!
 
 !classDefinition: #NamedEntity category: #Ledgerdemain!
@@ -127,13 +137,6 @@ Account responsibilities:
   report
   export and import!
 
-!Reconciliation commentStamp: 'dhn 6/12/2015 19:10' prior: 0!
-Reconciliation responsibilities:
-
-  report withdrawals and deposits
-  update ledger
-!
-
 !LedgerDeMain commentStamp: 'dhn 6/13/2015 20:09' prior: 0!
 LedgerDeMain (a cover class) responsibilities:
 
@@ -150,6 +153,13 @@ With apologies to all the magicians.
 recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
 reported amount _ dollars (examples: 29.95 5.00)!
+
+!Reconciliation commentStamp: 'dhn 6/12/2015 19:10' prior: 0!
+Reconciliation responsibilities:
+
+  report withdrawals and deposits
+  update ledger
+!
 
 !NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
 Abstract class for entities which have a specified name.!
@@ -277,6 +287,16 @@ ledger: anObject
 
 	ledger _ anObject! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:13'!
+accountList
+	"Answer a list of accounts"
+	^ self accounts keys! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 17:02'!
+accountListIndex
+	self accountList ifNil: [ ^ accountListIndex _ 0 ].
+	^ self accountList indexOf: selectedAccount! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:31'!
 accounts
 	"Answer the value of accounts"
@@ -331,15 +351,11 @@ categoriesFromFile
 handlesMouseDown: aMouseButtonEvent
 	^ true! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/14/2015 10:38'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/22/2015 16:04'!
 initialize
 	"initialize the state of the receiver"
-	| win |
+
 	super initialize.
-	win _ self embeddedInMorphicWindowLabeled: 'Ledger d''Main'.
-	win 	setProperty: #minimumExtent toValue: 188@185.
-	win model: self.
-	win openInWorld.
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:38'!
@@ -521,6 +537,18 @@ trie: aTrie withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
 	aTrie forPrefix: aString keysAndValuesDo: [:key :v | Transcript show: key; newLine]! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:08'!
+window
+	"Answer the value of window"
+
+	^ window! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:08'!
+window: anObject
+	"Set the value of window"
+
+	window _ anObject! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 14:52'!
 withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
@@ -530,6 +558,35 @@ withPrefix: aString
 includeInNewMorphMenu
 	"Not to be instantiated from the menu"
 	^ false! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/22/2015 16:02'!
+buildMorphicWindow
+	"Answer a window for Ledger d'Main"
+	| list1 |
+	list1 _ PluggableListMorph
+				model: model
+				listGetter: #accountList
+				indexGetter: #accountListIndex
+				indexSetter: #accountListIndex:
+				mainView: self
+				menuGetter: nil
+				keystrokeAction: nil.
+	self setLabel: 'Ledger d''Main'! !
+
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
+how
+"
+	LedgerWindow open.
+"! !
+
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 15:59'!
+open
+	| window main |
+	main _ LedgerDeMain new.
+	main window: (window _ self new model: main).
+	window buildMorphicWindow.
+	window openInWorld.
+! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
 named: aName
