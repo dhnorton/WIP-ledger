@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 18 June 2015 at 8:44:25.066641 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 22 June 2015 at 2:32:54.673413 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 17!
+!provides: 'Ledgerdemain' 1 19!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -73,7 +73,7 @@ CheckNumber class
 
 !classDefinition: #Payee category: #Ledgerdemain!
 Suggestion subclass: #Payee
-	instanceVariableNames: 'payeeName last'
+	instanceVariableNames: 'last'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -176,7 +176,6 @@ CheckNumber responsibilities:
 !Payee commentStamp: '<historical>' prior: 0!
 Payee responsibilities:
 
-  maintain name
   hold last transaction, by category
 !
 
@@ -411,12 +410,14 @@ newCategory
 	temp _ FillInTheBlankMorph request: 'Name of new category:'.
 	temp ~= '' ifTrue: [self addCategory: temp]! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:26'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:32'!
 newPayee
 	| temp |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new payee:'.
-	temp ~= '' ifTrue: [self payees: temp]! !
+	(self payees includesKey: temp)
+		ifTrue: [self inform: temp,' is already a payee']
+		ifFalse: [temp ~= '' ifTrue: [self payees: temp]]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:37'!
 payees
@@ -425,20 +426,20 @@ payees
 	payees ifNil: [payees _ Trie new].
 	^ payees! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:25'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:04'!
 payees: anObject
 	"Save anObject in payees"
 
-	self payees at: anObject put: 1! !
+	self payees at: anObject put: Payee new! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 10:14'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/22/2015 14:08'!
 payeesFromFile
 	"Copy payee names from a file and add them to the payees ivar"
 	| file ios line |
-	file _ FillInTheBlankMorph request: 'Name of payees File:' initialAnswer: 'c:\index1\...\file.ext'.
+	file _ FillInTheBlankMorph request: 'Name of payees File:' initialAnswer: 'c:\directory\file.ext'.
 	ios _ FileStream oldFileNamed: file.
 	[(line _ ios nextLine) notNil]
-		whileTrue: [	line size > 0 ifTrue: [self payees at: line put: 1]].
+		whileTrue: [	line size > 0 ifTrue: [self payees at: line put: Payee new]].
 	ios close! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
@@ -525,14 +526,20 @@ withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
 	^ self forPrefix: aString keysAndValuesDo: [:key :v | key]! !
 
+!LedgerDeMain class methodsFor: 'as yet unclassified' stamp: 'dhn 6/18/2015 21:16'!
+includeInNewMorphMenu
+	"Not to be instantiated from the menu"
+	^ false! !
+
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
 named: aName
 	^ self basicNew identity: aName! !
 
-!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
+!Payee methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:01'!
 last
 	"Answer the value of last"
 
+	last ifNil: [last _ Dictionary new].
 	^ last! !
 
 !Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
@@ -540,15 +547,3 @@ last: anObject
 	"Set the value of last"
 
 	last _ anObject! !
-
-!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
-payeeName
-	"Answer the value of payeeName"
-
-	^ payeeName! !
-
-!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
-payeeName: anObject
-	"Set the value of payeeName"
-
-	payeeName _ anObject! !
