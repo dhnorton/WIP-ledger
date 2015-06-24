@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 22 June 2015 at 5:10:42.910212 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 10:01:30.084425 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 20!
+!provides: 'Ledgerdemain' 1 21!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -347,10 +347,6 @@ categoriesFromFile
 		whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 	ios close! !
 
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/14/2015 10:46'!
-handlesMouseDown: aMouseButtonEvent
-	^ true! !
-
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/22/2015 16:04'!
 initialize
 	"initialize the state of the receiver"
@@ -394,10 +390,6 @@ memosFromFile
 	[(line _ ios nextLine) notNil]
 		whileTrue: [	line size > 0 ifTrue: [self memos at: line put: 1]].
 	ios close! !
-
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/15/2015 11:57'!
-mouseButton2Activity
-	self theMenu.! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 net
@@ -499,27 +491,6 @@ restoreFile
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
 saveFile! !
 
-!LedgerDeMain methodsFor: 'menus' stamp: 'dhn 6/18/2015 20:35'!
-theMenu
-	"Show a pop-up menu"
-	| tuples list index |
-	tuples _ #(
-		('Restore a file'					#restoreFile)
-		('Save the current file'			#saveFile)
-		('Payees from file'				#payeesFromFile)
-		('List payees'					#listPayees)
-		('Add a payee'					#newPayee)
-		('Categories from file'			#categoriesFromFile)
-		('List categories'				#listCategories)
-		('Add a category'				#newCategory)
-		('Memos from file'				#memosFromFile)
-		('Add an account'				#newAccount)
-	).
-	list _ tuples collect: [:ea | ea first].
-	index _ (PopUpMenu labelArray: list) 
-		startUpWithCaption: 'Getting Started'.
-	index > 0 ifTrue: [self perform: ((tuples at: index) at: 2)]! !
-
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 trail
 	"Answer the value of trail"
@@ -573,19 +544,48 @@ buildMorphicWindow
 				keystrokeAction: nil.
 	self setLabel: 'Ledger d''Main'! !
 
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:52'!
+handlesMouseDown: aMouseButtonEvent
+	^ true! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:53'!
+mouseButton2Activity
+	self theMenu.! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 10:00'!
+theMenu
+	"Show a pop-up menu"
+	| tuples list index |
+	tuples _ #(
+		('Restore a file'					#restoreFile)
+		('Save the current file'			#saveFile)
+		('Payees from file'				#payeesFromFile)
+		('List payees'					#listPayees)
+		('Add a payee'					#newPayee)
+		('Categories from file'			#categoriesFromFile)
+		('List categories'				#listCategories)
+		('Add a category'				#newCategory)
+		('Memos from file'				#memosFromFile)
+		('Add an account'				#newAccount)
+	).
+	list _ tuples collect: [:ea | ea first].
+	index _ (PopUpMenu labelArray: list) 
+		startUpWithCaption: 'Getting Started'.
+	index > 0 ifTrue: [model perform: ((tuples at: index) at: 2)]! !
+
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
 "
 	LedgerWindow open.
 "! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 15:59'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/23/2015 09:57'!
 open
-	| window main |
+	| wind main |
 	main _ LedgerDeMain new.
-	main window: (window _ self new model: main).
-	window buildMorphicWindow.
-	window openInWorld.
+	main window: (wind _ self new model: main).
+	wind buildMorphicWindow.
+	wind openInWorld.
 ! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
