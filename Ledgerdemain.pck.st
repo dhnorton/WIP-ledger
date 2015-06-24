@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 7:11:36.721425 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 8:32:51.690425 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 23!
+!provides: 'Ledgerdemain' 1 24!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -343,15 +343,16 @@ categories: anObject
 		ifTrue: [self inform: anObject,' is already a category']
 		ifFalse: [self addCategory: anObject]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 09:05'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:30'!
 categoriesFromFile
 	"Copy category names from a file and add them to the categories ivar"
 	| file ios line |
-	file _ FillInTheBlankMorph request: 'Name of categories File:' initialAnswer: 'c:\index1\...\file.ext'.
-	ios _ FileStream oldFileNamed: file.
-	[(line _ ios nextLine) notNil]
-		whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
-	ios close! !
+	file _ FillInTheBlankMorph request: 'Name of categories File:' initialAnswer: 'c:\directory\file.ext'.
+	file ~= '' ifTrue: [
+		ios _ FileStream oldFileNamed: file.
+		[(line _ ios nextLine) notNil]
+			whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
+		ios close]! !
 
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/23/2015 10:19'!
 initialize
@@ -387,15 +388,16 @@ memos: anObject
 
 	self memos at: anObject put: 1! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 20:33'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:21'!
 memosFromFile
 	"Copy memos from a file and add them to the memos ivar"
 	| file ios line |
 	file _ FillInTheBlankMorph request: 'Name of memos file:' initialAnswer: 'c:\directory\file.ext'.
-	ios _ FileStream oldFileNamed: file.
-	[(line _ ios nextLine) notNil]
-		whileTrue: [	line size > 0 ifTrue: [self memos at: line put: 1]].
-	ios close! !
+	file ~= '' ifTrue: [
+		ios _ FileStream oldFileNamed: file.
+		[(line _ ios nextLine) notNil]
+			whileTrue: [	line size > 0 ifTrue: [self memos at: line put: 1]].
+		ios close]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:19'!
 modified
@@ -421,12 +423,12 @@ net: anObject
 
 	net _ anObject! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:15'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 20:32'!
 newAccount
 	| temp |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
-	self accounts: temp.
+	temp ~= '' ifTrue: [self accounts: temp]
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:14'!
@@ -458,15 +460,16 @@ payees: anObject
 
 	self payees at: anObject put: Payee new! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/22/2015 14:08'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:19'!
 payeesFromFile
 	"Copy payee names from a file and add them to the payees ivar"
 	| file ios line |
 	file _ FillInTheBlankMorph request: 'Name of payees File:' initialAnswer: 'c:\directory\file.ext'.
-	ios _ FileStream oldFileNamed: file.
-	[(line _ ios nextLine) notNil]
-		whileTrue: [	line size > 0 ifTrue: [self payees at: line put: Payee new]].
-	ios close! !
+	file ~= '' ifTrue: [
+		ios _ FileStream oldFileNamed: file.
+		[(line _ ios nextLine) notNil]
+			whileTrue: [	line size > 0 ifTrue: [self payees at: line put: Payee new]].
+		ios close]! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
 restorationOf: fileName
@@ -560,15 +563,35 @@ includeInNewMorphMenu
 	"Not to be instantiated from the menu"
 	^ false! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 19:08'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:28'!
+addCategoryActionsTo: aMenu
+	"Add items to aMenu for category actions"
+
+	| subMenu |
+	subMenu := MenuMorph new defaultTarget: self.
+	subMenu add: 'List categories'			target: self model 	action: #listCategories.
+	subMenu add: 'Add a category'			target: self model 	action: #newCategory.
+	subMenu add: 'Categories from file'	target: self model 	action: #categoriesFromFile.
+	aMenu add: 'Categories...' subMenu: subMenu! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:25'!
+addMemoActionsTo: aMenu
+	"Add items to aMenu for payee actions"
+
+	| subMenu |
+	subMenu := MenuMorph new defaultTarget: self.
+	subMenu add: 'Memos from file'		target: self model 	action: #memosFromFile.
+	aMenu add: 'Memos...' subMenu: subMenu! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:09'!
 addPayeeActionsTo: aMenu
 	"Add items to aMenu for payee actions"
 
 	| subMenu |
 	subMenu := MenuMorph new defaultTarget: self.
-	subMenu add: 'List payees'			action: #listPayees.
-	subMenu add: 'Add a payee'		action: #newPayee.
-	subMenu add: 'Payees from file'	action: #payeesFromFile.
+	subMenu add: 'List payees'			target: self model 	action: #listPayees.
+	subMenu add: 'Add a payee'		target: self model 	action: #newPayee.
+	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/22/2015 16:02'!
@@ -593,7 +616,7 @@ handlesMouseDown: aMouseButtonEvent
 mouseButton2Activity
 	self theMenu.! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 19:09'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:25'!
 theMenu
 	"Show a pop-up menu"
 
@@ -603,13 +626,16 @@ theMenu
 		addTitle: 'Options'; 
 		addStayUpIcons;
 		addLine.
-	aMenu add: 'Restore a file'			action:	#restoreFile.
+	aMenu add: 'Restore a file'			target: self model 	action:	#restoreFile.
 	aMenu balloonTextForLastItem: 'load a previously saved file 
 of account ledgers'.
-	aMenu add: 'Save the current file'	action:	#saveFile.
+	aMenu add: 'Save the current file'	target: self model 	action:	#saveFile.
 	aMenu balloonTextForLastItem: 'preserve changes to the data'.
 	aMenu addLine.
+	aMenu add: 'Add an account'	target: self model 	action:	#newAccount.
 	self addPayeeActionsTo: aMenu.
+	self addCategoryActionsTo: aMenu.
+	self addMemoActionsTo: aMenu.
 	aMenu popUpInWorld: self world.
 ! !
 
