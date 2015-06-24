@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 9:31:40.597425 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 9:51:02.919425 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 26!
+!provides: 'Ledgerdemain' 1 27!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -519,8 +519,10 @@ restoreFile
 	temp _ self restorationOf: fileName.
 	accounts _ temp asSet.! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
-saveFile! !
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 21:50'!
+saveFile
+
+	Transcript show: 'Simulate saving the file'! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
 selectedAccount
@@ -626,6 +628,14 @@ buildMorphicWindow
 				menuGetter: nil
 				keystrokeAction: nil.
 	self setLabel: 'Ledger d''Main'! !
+
+!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 6/23/2015 21:47'!
+delete
+
+	self model modified ifTrue: [
+		(nil confirm: 'Save changes?') ifTrue: [
+			self model saveFile]].
+	super delete! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:52'!
 handlesMouseDown: aMouseButtonEvent
