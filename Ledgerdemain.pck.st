@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 9:51:02.919425 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 24 June 2015 at 10:21:43.009915 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 27!
+!provides: 'Ledgerdemain' 1 28!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -103,22 +103,12 @@ TransactionDate class
 
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
-	instanceVariableNames: 'date type payee amount category memo reconciled transfer'
+	instanceVariableNames: 'date type payee amount category memo reconciled transfer serial'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
 !classDefinition: 'Transaction class' category: #Ledgerdemain!
 Transaction class
-	instanceVariableNames: ''!
-
-!classDefinition: #CheckingTransaction category: #Ledgerdemain!
-Transaction subclass: #CheckingTransaction
-	instanceVariableNames: 'number'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'CheckingTransaction class' category: #Ledgerdemain!
-CheckingTransaction class
 	instanceVariableNames: ''!
 
 
@@ -198,20 +188,15 @@ TransactionDate responsibilities:
   maintain last used (current if nil)
   adjust!
 
-!Transaction commentStamp: 'dhn 6/12/2015 17:39' prior: 0!
+!Transaction commentStamp: '<historical>' prior: 0!
 Transaction responsibilities:
 
-  hold date, [number], type, payee, amount, category, memo, reconciled, transfer
+  hold date, [serial], type, payee, amount, category, memo, reconciled, transfer
   provide entry suggestions for date, number, payee, category, amount
-  update number, payee, category, memo
+  update serial, payee, category, memo
   split categories
   record actions in audit trail
 !
-
-!CheckingTransaction commentStamp: 'dhn 6/12/2015 18:42' prior: 0!
-CheckingTransaction responsibilities:
-
-  hold number!
 
 !Trie methodsFor: '*Ledgerdemain' stamp: 'dhn 6/18/2015 12:07'!
 storeOn: aStream
@@ -340,12 +325,11 @@ categories
 	categories ifNil: [categories _ Trie new].
 	^ categories! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:29'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:50'!
 categories: anObject
 	"Save anObject in categories"
 
 	(self categories includesKey: anObject)
-		ifTrue: [self inform: anObject,' is already a category']
 		ifFalse: [
 			self addCategory: anObject.
 			self modified: true]! !
@@ -440,12 +424,16 @@ newAccount
 	temp ~= '' ifTrue: [self accounts: temp]
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:14'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
 newCategory
 	| temp |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new category:'.
-	temp ~= '' ifTrue: [self addCategory: temp]! !
+	(self categories includesKey: temp)
+		ifTrue: [self inform: temp,' is already a category']
+		ifFalse: [
+			self addCategory: temp.
+			self modified: true]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:32'!
 newPayee
@@ -481,20 +469,21 @@ payeesFromFile
 			whileTrue: [	line size > 0 ifTrue: [self payees at: line put: Payee new]].
 		ios close]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/13/2015 19:54'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 10:07'!
 restorationOf: fileName
 	"Restore accounts from file named fileName"
 	"File scheme:
 		Account1 record
-		Account2 record
-		...
-		Accountn record
 		Ledger transactions for Account1
+		Account2 record
 		Ledger transactions for Account2
 		...
-		
+		Accountn record
+		...
 		Ledger transactions for Accountn"
 	| acct ios x |
+	
+	"must consider: effect on balances"
 	acct _ 0.
 	ios _ FileStream oldFileNamed: fileName.
 	[(x _ ios nextLine) notNil]
@@ -510,14 +499,17 @@ restoreCategoriesFrom: storeString
 	"Set the receiver to the object formed by evaluating  storeString"
 	categories _ Compiler evaluate: storeString! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:33'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 10:20'!
 restoreFile
+	"Add a file to the accounts"
 	| fileName temp |
 	
-	fileName _ FillInTheBlankMorph request: 'Name of File to be Restored:' initialAnswer: 'c:\index1\...\file.ext'.
+	fileName _ FillInTheBlankMorph request: 'Name of file to be restored:' initialAnswer: 'c:\directory\file.ext'.
 	temp _ OrderedCollection new.
+	self accounts ifNil: [self modified: false].
 	temp _ self restorationOf: fileName.
-	accounts _ temp asSet.! !
+	self accounts: temp asSet.
+	! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 21:50'!
 saveFile
