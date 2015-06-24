@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 10:21:13.919425 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 7:11:36.721425 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 22!
+!provides: 'Ledgerdemain' 1 23!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -560,6 +560,17 @@ includeInNewMorphMenu
 	"Not to be instantiated from the menu"
 	^ false! !
 
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 19:08'!
+addPayeeActionsTo: aMenu
+	"Add items to aMenu for payee actions"
+
+	| subMenu |
+	subMenu := MenuMorph new defaultTarget: self.
+	subMenu add: 'List payees'			action: #listPayees.
+	subMenu add: 'Add a payee'		action: #newPayee.
+	subMenu add: 'Payees from file'	action: #payeesFromFile.
+	aMenu add: 'Payees...' subMenu: subMenu! !
+
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/22/2015 16:02'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
@@ -582,8 +593,28 @@ handlesMouseDown: aMouseButtonEvent
 mouseButton2Activity
 	self theMenu.! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 10:00'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 19:09'!
 theMenu
+	"Show a pop-up menu"
+
+	| aMenu |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu
+		addTitle: 'Options'; 
+		addStayUpIcons;
+		addLine.
+	aMenu add: 'Restore a file'			action:	#restoreFile.
+	aMenu balloonTextForLastItem: 'load a previously saved file 
+of account ledgers'.
+	aMenu add: 'Save the current file'	action:	#saveFile.
+	aMenu balloonTextForLastItem: 'preserve changes to the data'.
+	aMenu addLine.
+	self addPayeeActionsTo: aMenu.
+	aMenu popUpInWorld: self world.
+! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 18:15'!
+xtheMenu
 	"Show a pop-up menu"
 	| tuples list index |
 	tuples _ #(
