@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 9:10:55.298425 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 9:31:40.597425 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 25!
+!provides: 'Ledgerdemain' 1 26!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -313,23 +313,25 @@ accounts
 	accounts ifNil: [accounts _ Dictionary new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:35'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:27'!
 accounts: anObject
 	"Save anObject in accounts"
 
 	(self accounts includesKey: anObject asSymbol)
 		ifTrue: [self inform: anObject,' is already an account']
-		ifFalse: [self accounts at: anObject asSymbol put: Account new]! !
+		ifFalse: [
+			self accounts at: anObject asSymbol put: Account new.
+			self modified: true]! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:00'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:28'!
 addCategory: aString
 	"Add category named aString"
 	| x |
 	x _ aString findDelimiters: '.' startingAt: 1. 
 	x > aString size 
 		ifTrue: [self categories at: aString put: 1] "primary category"
-		ifFalse: [self categories at: aString put: 2] "sub-category"
-! !
+		ifFalse: [self categories at: aString put: 2]. "sub-category"
+	self modified: true! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:29'!
 categories
@@ -338,13 +340,15 @@ categories
 	categories ifNil: [categories _ Trie new].
 	^ categories! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 09:09'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:29'!
 categories: anObject
 	"Save anObject in categories"
 
 	(self categories includesKey: anObject)
 		ifTrue: [self inform: anObject,' is already a category']
-		ifFalse: [self addCategory: anObject]! !
+		ifFalse: [
+			self addCategory: anObject.
+			self modified: true]! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:30'!
 categoriesFromFile
@@ -385,11 +389,12 @@ memos
 	memos ifNil: [memos _ Trie new].
 	^ memos! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 19:52'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:29'!
 memos: anObject
 	"Save anObject in memos:"
 
-	self memos at: anObject put: 1! !
+	self memos at: anObject put: 1.
+	self modified: true! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:21'!
 memosFromFile
@@ -420,11 +425,12 @@ net
 
 	^ net! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:29'!
 net: anObject
 	"Set the value of net"
 
-	net _ anObject! !
+	net _ anObject.
+	self modified: true! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 20:32'!
 newAccount
@@ -457,11 +463,12 @@ payees
 	payees ifNil: [payees _ Trie new].
 	^ payees! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:04'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:30'!
 payees: anObject
 	"Save anObject in payees"
 
-	self payees at: anObject put: Payee new! !
+	self payees at: anObject put: Payee new.
+	self modified: true! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:19'!
 payeesFromFile
@@ -533,11 +540,12 @@ trail
 
 	^ trail! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:31'!
 trail: anObject
 	"Set the value of trail"
 
-	trail _ anObject! !
+	trail _ anObject.
+	self modified: true! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
 trie: aTrie withPrefix: aString
