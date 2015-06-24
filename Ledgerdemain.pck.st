@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 10:01:30.084425 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 10:21:13.919425 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 21!
+!provides: 'Ledgerdemain' 1 22!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -13,7 +13,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 Object subclass: #LedgerDeMain
-	instanceVariableNames: 'window accounts payees categories memos net trail accountListIndex selectedAccount'
+	instanceVariableNames: 'window accounts payees categories memos net trail accountListIndex selectedAccount modified'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -297,6 +297,12 @@ accountListIndex
 	self accountList ifNil: [ ^ accountListIndex _ 0 ].
 	^ self accountList indexOf: selectedAccount! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
+accountListIndex: anObject
+	"Set the value of accountListIndex"
+
+	accountListIndex _ anObject! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:31'!
 accounts
 	"Answer the value of accounts"
@@ -347,12 +353,12 @@ categoriesFromFile
 		whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 	ios close! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/22/2015 16:04'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/23/2015 10:19'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
-! !
+	modified _ false! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:38'!
 listCategories
@@ -390,6 +396,18 @@ memosFromFile
 	[(line _ ios nextLine) notNil]
 		whileTrue: [	line size > 0 ifTrue: [self memos at: line put: 1]].
 	ios close! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:19'!
+modified
+	"Answer the value of modified"
+
+	^ modified! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:19'!
+modified: anObject
+	"Set the value of modified"
+
+	modified _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 net
@@ -490,6 +508,18 @@ restoreFile
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/14/2015 13:30'!
 saveFile! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
+selectedAccount
+	"Answer the value of selectedAccount"
+
+	^ selectedAccount! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
+selectedAccount: anObject
+	"Set the value of selectedAccount"
+
+	selectedAccount _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 trail
