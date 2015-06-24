@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 24 June 2015 at 10:21:43.009915 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 24 June 2015 at 11:29:57.212915 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 28!
+!provides: 'Ledgerdemain' 1 29!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -112,14 +112,13 @@ Transaction class
 	instanceVariableNames: ''!
 
 
-!Account commentStamp: 'dhn 6/12/2015 17:53' prior: 0!
+!Account commentStamp: 'dhn 6/24/2015 10:49' prior: 0!
 Account responsibilities:
 
   maintain ledger as collection of transactions
   maintain name
   maintain opening balance, reconciled balance, current balance
   do transfers
-  move transactions between accounts and record in audit trail
   edit transactions and record in audit trail 
   enter transactions and record in audit trail 
   delete transactions and record in audit trail
@@ -127,18 +126,16 @@ Account responsibilities:
   report
   export and import!
 
-!LedgerDeMain commentStamp: 'dhn 6/13/2015 20:09' prior: 0!
+!LedgerDeMain commentStamp: 'dhn 6/24/2015 10:49' prior: 0!
 LedgerDeMain (a cover class) responsibilities:
 
-  hold accounts
-  hold payees
-  hold categories
-  hold audit trail
+  hold accounts, payees, categories, memos, trail
   search
   maintain net worth
   back up and restore
+  move transactions between accounts and record in audit trail
 
-With apologies to all the magicians.
+With apologies to those who do legerdemane.
 
 recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
@@ -188,11 +185,11 @@ TransactionDate responsibilities:
   maintain last used (current if nil)
   adjust!
 
-!Transaction commentStamp: '<historical>' prior: 0!
+!Transaction commentStamp: 'dhn 6/24/2015 10:51' prior: 0!
 Transaction responsibilities:
 
   hold date, [serial], type, payee, amount, category, memo, reconciled, transfer
-  provide entry suggestions for date, number, payee, category, amount
+  provide entry suggestions for date, serial, payee, category, amount
   update serial, payee, category, memo
   split categories
   record actions in audit trail
@@ -259,9 +256,12 @@ balRcon: anObject
 identity: aName
 	self namAcct: aName! !
 
-!Account methodsFor: 'initialization' stamp: 'dhn 6/13/2015 20:24'!
+!Account methodsFor: 'initialization' stamp: 'dhn 6/24/2015 10:55'!
 initialize
-! !
+
+	balOpen _ 0.
+	balRcon _ 0.
+	balCur _ 0.! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 ledger
@@ -325,14 +325,12 @@ categories
 	categories ifNil: [categories _ Trie new].
 	^ categories! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:50'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 11:21'!
 categories: anObject
 	"Save anObject in categories"
 
 	(self categories includesKey: anObject)
-		ifFalse: [
-			self addCategory: anObject.
-			self modified: true]! !
+		ifFalse: [self addCategory: anObject]! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:30'!
 categoriesFromFile
@@ -373,14 +371,14 @@ memos
 	memos ifNil: [memos _ Trie new].
 	^ memos! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:29'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 11:23'!
 memos: anObject
 	"Save anObject in memos:"
 
-	self memos at: anObject put: 1.
-	self modified: true! !
+	(self payees includesKey: anObject)
+		ifFalse: [self memos at: anObject put: 1]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:21'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 11:03'!
 memosFromFile
 	"Copy memos from a file and add them to the memos ivar"
 	| file ios line |
@@ -388,7 +386,7 @@ memosFromFile
 	file ~= '' ifTrue: [
 		ios _ FileStream oldFileNamed: file.
 		[(line _ ios nextLine) notNil]
-			whileTrue: [	line size > 0 ifTrue: [self memos at: line put: 1]].
+			whileTrue: [	line size > 0 ifTrue: [self memos: line]].
 		ios close]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:19'!
@@ -451,12 +449,12 @@ payees
 	payees ifNil: [payees _ Trie new].
 	^ payees! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:30'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 11:18'!
 payees: anObject
 	"Save anObject in payees"
 
-	self payees at: anObject put: Payee new.
-	self modified: true! !
+	(self payees includesKey: anObject)
+		ifFalse: [self payees at: anObject put: Payee new]! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:19'!
 payeesFromFile
