@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 8:32:51.690425 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 23 June 2015 at 9:10:55.298425 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 24!
+!provides: 'Ledgerdemain' 1 25!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -160,6 +160,9 @@ Reconciliation responsibilities:
   report withdrawals and deposits
   update ledger
 !
+
+!LedgerWindow commentStamp: 'dhn 6/23/2015 20:42' prior: 0!
+Window for Ledger d'Main. Provides pop-up menu for options.!
 
 !NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
 Abstract class for entities which have a specified name.!
@@ -558,10 +561,18 @@ withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
 	^ self forPrefix: aString keysAndValuesDo: [:key :v | key]! !
 
-!LedgerDeMain class methodsFor: 'as yet unclassified' stamp: 'dhn 6/18/2015 21:16'!
-includeInNewMorphMenu
-	"Not to be instantiated from the menu"
-	^ false! !
+!LedgerDeMain class methodsFor: 'fileIn/Out' stamp: 'dhn 6/23/2015 21:10'!
+keyTable
+	"Answer a dictionary of keys and their hash values"
+	^ Dictionary new
+		at: 'account' put: 'account' hash;
+		at: 'account balances' put: 'account balances' hash;
+"actually what's needed: <account name> balances"
+		at: 'account ledger transaction' put: 'account ledger transaction' hash;
+		at: 'payee' put: 'payee' hash;
+		at: 'category' put: 'category' hash;
+		at: 'memo' put: 'memo' hash;
+		yourself! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:28'!
 addCategoryActionsTo: aMenu
@@ -639,32 +650,16 @@ of account ledgers'.
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 18:15'!
-xtheMenu
-	"Show a pop-up menu"
-	| tuples list index |
-	tuples _ #(
-		('Restore a file'					#restoreFile)
-		('Save the current file'			#saveFile)
-		('Payees from file'				#payeesFromFile)
-		('List payees'					#listPayees)
-		('Add a payee'					#newPayee)
-		('Categories from file'			#categoriesFromFile)
-		('List categories'				#listCategories)
-		('Add a category'				#newCategory)
-		('Memos from file'				#memosFromFile)
-		('Add an account'				#newAccount)
-	).
-	list _ tuples collect: [:ea | ea first].
-	index _ (PopUpMenu labelArray: list) 
-		startUpWithCaption: 'Getting Started'.
-	index > 0 ifTrue: [model perform: ((tuples at: index) at: 2)]! !
-
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
 "
 	LedgerWindow open.
 "! !
+
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/23/2015 20:45'!
+includeInNewMorphMenu
+
+	^ false 	"Not to be instantiated from the menu"! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/23/2015 09:57'!
 open
