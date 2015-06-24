@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2367] on 24 June 2015 at 11:29:57.212915 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 24 June 2015 at 7:44:01.251149 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 29!
+!provides: 'Ledgerdemain' 1 30!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -195,27 +195,6 @@ Transaction responsibilities:
   record actions in audit trail
 !
 
-!Trie methodsFor: '*Ledgerdemain' stamp: 'dhn 6/18/2015 12:07'!
-storeOn: aStream
-	"Refer to the comment in Object|storeOn:."
-	| noneYet |
-	aStream nextPutAll: '(('.
-	aStream nextPutAll: self class name.
-	aStream nextPutAll: ' new)'.
-	noneYet _ true.
-	self keysAndValuesDo: 
-			[:each :val | 
-			noneYet
-				ifTrue: [noneYet _ false]
-				ifFalse: [aStream nextPut: $;].
-			aStream 
-				nextPutAll: ' at: ';
-				store: each;
-				nextPutAll: ' put: ';
-				store: val].
-	noneYet ifFalse: [aStream nextPutAll: '; yourself'].
-	aStream nextPut: $)! !
-
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
 	"Answer the value of balCur"
@@ -371,11 +350,11 @@ memos
 	memos ifNil: [memos _ Trie new].
 	^ memos! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 11:23'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 19:43'!
 memos: anObject
 	"Save anObject in memos:"
 
-	(self payees includesKey: anObject)
+	(self memos includesKey: anObject)
 		ifFalse: [self memos at: anObject put: 1]! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 11:03'!
