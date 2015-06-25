@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 25 June 2015 at 11:51:12.73525 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 25 June 2015 at 1:17:16.83425 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 32!
+!provides: 'Ledgerdemain' 1 33!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -39,6 +39,16 @@ Morph subclass: #Reconciliation
 	category: 'Ledgerdemain'!
 !classDefinition: 'Reconciliation class' category: #Ledgerdemain!
 Reconciliation class
+	instanceVariableNames: ''!
+
+!classDefinition: #LedgerListMorph category: #Ledgerdemain!
+PluggableListMorph subclass: #LedgerListMorph
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerListMorph class' category: #Ledgerdemain!
+LedgerListMorph class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
@@ -160,6 +170,9 @@ Reconciliation responsibilities:
   report withdrawals and deposits
   update ledger
 !
+
+!LedgerListMorph commentStamp: 'dhn 6/25/2015 13:09' prior: 0!
+Enable the LedgerDeMain pop-up menu.!
 
 !LedgerWindow commentStamp: 'dhn 6/23/2015 20:42' prior: 0!
 Window for Ledger d'Main. Provides pop-up menu for options.!
@@ -602,6 +615,12 @@ uniqueInstance
 	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
 	^ UniqueInstance! !
 
+!LedgerListMorph methodsFor: 'menus' stamp: 'dhn 6/25/2015 13:14'!
+mouseButton2Activity
+	self listMorph highlightedRow: nil.
+	self model window theMenu.
+	super mouseButton2Activity! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:28'!
 addCategoryActionsTo: aMenu
 	"Add items to aMenu for category actions"
@@ -633,11 +652,11 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/24/2015 22:19'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/25/2015 13:14'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
 	| list1 list2 row |
-	list1 _ PluggableListMorph
+	list1 _ LedgerListMorph
 				model: model
 				listGetter: #accountList
 				indexGetter: #accountListIndex
