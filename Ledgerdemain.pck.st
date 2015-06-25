@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 24 June 2015 at 10:24:06.73899 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 25 June 2015 at 11:51:12.73525 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 31!
+!provides: 'Ledgerdemain' 1 32!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -23,8 +23,8 @@ Ledger class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 Object subclass: #LedgerDeMain
-	instanceVariableNames: 'window accounts payees categories memos net trail accountListIndex selectedAccount modified transactionListIndex'
-	classVariableNames: ''
+	instanceVariableNames: 'window accounts net trail accountListIndex selectedAccount modified transactionListIndex'
+	classVariableNames: 'Categories Memos Payees UniqueInstance'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
@@ -320,12 +320,12 @@ addCategory: aString
 		ifFalse: [self categories at: aString put: 2]. "sub-category"
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:29'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:29'!
 categories
-	"Answer the value of categories"
+	"Answer the value of Categories"
 
-	categories ifNil: [categories _ Trie new].
-	^ categories! !
+	Categories ifNil: [Categories _ Trie new].
+	^ Categories! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 11:21'!
 categories: anObject
@@ -352,26 +352,26 @@ initialize
 	super initialize.
 	modified _ false! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:38'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:46'!
 listCategories
 
-	categories ifNotNil: [categories keysDo: [:k |
+	Categories ifNotNil: [Categories keysDo: [:k |
 		Transcript show: k; newLine]]
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 10:38'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:48'!
 listPayees
 
-	payees ifNotNil: [payees keysDo: [:k |
+	Payees ifNotNil: [Payees keysDo: [:k |
 		Transcript show: k; newLine]]
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 20:40'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:42'!
 memos
-	"Answer the value of memos"
+	"Answer the value of Memos"
 
-	memos ifNil: [memos _ Trie new].
-	^ memos! !
+	Memos ifNil: [Memos _ Trie new].
+	^ Memos! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 19:43'!
 memos: anObject
@@ -444,12 +444,12 @@ newPayee
 		ifTrue: [self inform: temp,' is already a payee']
 		ifFalse: [temp ~= '' ifTrue: [self payees: temp]]! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 06:37'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:41'!
 payees
-	"Answer the value of payees"
+	"Answer the value of Payees"
 
-	payees ifNil: [payees _ Trie new].
-	^ payees! !
+	Payees ifNil: [Payees _ Trie new].
+	^ Payees! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 11:18'!
 payees: anObject
@@ -494,10 +494,10 @@ restorationOf: fileName
 	ios close.
 ! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/18/2015 14:47'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/25/2015 11:49'!
 restoreCategoriesFrom: storeString
 	"Set the receiver to the object formed by evaluating  storeString"
-	categories _ Compiler evaluate: storeString! !
+	Categories _ Compiler evaluate: storeString! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 10:20'!
 restoreFile
@@ -595,6 +595,13 @@ keyTable
 		at: 'memo' put: 'memo' hash;
 		yourself! !
 
+!LedgerDeMain class methodsFor: 'class initialization' stamp: 'dhn 6/25/2015 11:07'!
+uniqueInstance
+	"Ensure that there is only one of me"
+
+	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
+	^ UniqueInstance! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:28'!
 addCategoryActionsTo: aMenu
 	"Add items to aMenu for category actions"
@@ -666,6 +673,11 @@ delete
 handlesMouseDown: aMouseButtonEvent
 	^ true! !
 
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/25/2015 11:03'!
+initialize
+
+	super initialize! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:53'!
 mouseButton2Activity
 	self theMenu.! !
@@ -704,10 +716,10 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/23/2015 09:57'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/25/2015 11:06'!
 open
 	| wind main |
-	main _ LedgerDeMain new.
+	main _ LedgerDeMain uniqueInstance.
 	main window: (wind _ self new model: main).
 	wind buildMorphicWindow.
 	wind openInWorld.
