@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 24 June 2015 at 7:44:01.251149 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 24 June 2015 at 10:24:06.73899 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 30!
+!provides: 'Ledgerdemain' 1 31!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -11,9 +11,19 @@ Object subclass: #Account
 Account class
 	instanceVariableNames: ''!
 
+!classDefinition: #Ledger category: #Ledgerdemain!
+Object subclass: #Ledger
+	instanceVariableNames: 'contents'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Ledger class' category: #Ledgerdemain!
+Ledger class
+	instanceVariableNames: ''!
+
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 Object subclass: #LedgerDeMain
-	instanceVariableNames: 'window accounts payees categories memos net trail accountListIndex selectedAccount modified'
+	instanceVariableNames: 'window accounts payees categories memos net trail accountListIndex selectedAccount modified transactionListIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -126,6 +136,9 @@ Account responsibilities:
   report
   export and import!
 
+!Ledger commentStamp: 'dhn 6/24/2015 21:11' prior: 0!
+Ledger is an ordered collection of transactions.!
+
 !LedgerDeMain commentStamp: 'dhn 6/24/2015 10:49' prior: 0!
 LedgerDeMain (a cover class) responsibilities:
 
@@ -235,12 +248,13 @@ balRcon: anObject
 identity: aName
 	self namAcct: aName! !
 
-!Account methodsFor: 'initialization' stamp: 'dhn 6/24/2015 10:55'!
+!Account methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:09'!
 initialize
 
 	balOpen _ 0.
 	balRcon _ 0.
-	balCur _ 0.! !
+	balCur _ 0.
+	ledger _ Ledger new! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 ledger
@@ -253,6 +267,15 @@ ledger: anObject
 	"Set the value of ledger"
 
 	ledger _ anObject! !
+
+!Ledger methodsFor: 'displaying' stamp: 'dhn 6/24/2015 21:07'!
+asFormatted
+	"Answer the transactions in collection as a formatted list"! !
+
+!Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
+initialize
+
+	contents _ OrderedCollection new! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:13'!
 accountList
@@ -518,6 +541,25 @@ trail: anObject
 	trail _ anObject.
 	self modified: true! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 22:16'!
+transactionList
+	"Answer a list of transactions"
+	"
+	^ (self accounts at: (self accountList at: accountListIndex)) ledger asFormatted
+	"
+	^ nil! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 22:16'!
+transactionListIndex
+	self transactionList ifNil: [ ^ self transactionListIndex: 0].
+	^ self transactionList indexOf: self selectedTransaction! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 21:26'!
+transactionListIndex: anObject
+	"Set the value of transactionListIndex"
+
+	transactionListIndex _ anObject! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
 trie: aTrie withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
@@ -584,10 +626,10 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/22/2015 16:02'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/24/2015 22:19'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
-	| list1 |
+	| list1 list2 row |
 	list1 _ PluggableListMorph
 				model: model
 				listGetter: #accountList
@@ -596,6 +638,20 @@ buildMorphicWindow
 				mainView: self
 				menuGetter: nil
 				keystrokeAction: nil.
+	list2 _ PluggableListMorph
+				model: model
+				listGetter: nil
+				indexGetter: nil
+				indexSetter: nil
+				mainView: self
+				menuGetter: nil
+				keystrokeAction: nil.
+	row _ LayoutMorph newRow.
+	row
+		addMorph: list1 proportionalWidth: 0.2;
+		addAdjusterAndMorph: list2 proportionalWidth: 0.8.
+	self layoutMorph
+		addMorph: row.
 	self setLabel: 'Ledger d''Main'! !
 
 !LedgerWindow methodsFor: 'open/close' stamp: 'dhn 6/23/2015 21:47'!
