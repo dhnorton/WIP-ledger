@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 12:23:16.121341 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 1:59:43.336341 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 39!
+!provides: 'Ledgerdemain' 1 40!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -43,7 +43,7 @@ Reconciliation class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'list1 list2'
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -641,10 +641,10 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 11:30'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 13:47'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
-	| row |
+	| list1 list2 row |
 	list1 _ PluggableListMorph
 				model: model
 				listGetter: #accountList
@@ -685,30 +685,6 @@ handlesMouseDown: aMouseButtonEvent
 initialize
 
 	super initialize! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
-list1
-	"Answer the value of list1"
-
-	^ list1! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
-list1: anObject
-	"Set the value of list1"
-
-	list1 _ anObject! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
-list2
-	"Answer the value of list2"
-
-	^ list2! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
-list2: anObject
-	"Set the value of list2"
-
-	list2 _ anObject! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:53'!
 mouseButton2Activity
