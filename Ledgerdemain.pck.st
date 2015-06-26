@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 1:59:43.336341 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 2:53:02.710341 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 40!
+!provides: 'Ledgerdemain' 1 41!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -473,6 +473,9 @@ payeesFromFile
 			whileTrue: [	line size > 0 ifTrue: [self payees at: line put: Payee new]].
 		ios close]! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:51'!
+reconcile! !
+
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 10:07'!
 restorationOf: fileName
 	"Restore accounts from file named fileName"
@@ -519,6 +522,12 @@ restoreFile
 saveFile
 
 	Transcript show: 'Simulate saving the file'! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:47'!
+searchAllAccounts! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:47'!
+searchOneAccount! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
 selectedAccount
@@ -610,6 +619,16 @@ uniqueInstance
 	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
 	^ UniqueInstance! !
 
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:48'!
+addAccountActionsTo: aMenu
+	"Add items to aMenu for account actions"
+
+	| subMenu |
+	subMenu := MenuMorph new defaultTarget: self.
+	subMenu add: 'Add an account'	target: self model 	action:	#newAccount.
+	subMenu add: 'Search all accounts...'		target: self model 	action: #searchAllAccounts.
+	aMenu add: 'Accounts...' subMenu: subMenu! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:28'!
 addCategoryActionsTo: aMenu
 	"Add items to aMenu for category actions"
@@ -641,7 +660,7 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 13:47'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 14:29'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
 	| list1 list2 row |
@@ -651,17 +670,20 @@ buildMorphicWindow
 				indexGetter: #accountListIndex
 				indexSetter: #accountListIndex:
 				mainView: self
-				menuGetter: #theMenu
+				menuGetter: #menuMain
 				keystrokeAction: nil.
+	list1 name: 'Account List'.
 	list2 _ PluggableListMorph
 				model: model
 				listGetter: nil
 				indexGetter: nil
 				indexSetter: nil
 				mainView: self
-				menuGetter: #theMenu
+				menuGetter: #menuLedger
 				keystrokeAction: nil.
+	list2 name: #Ledger.
 	row _ LayoutMorph newRow.
+	row name: #Row.
 	row
 		addMorph: list1 proportionalWidth: 0.2;
 		addAdjusterAndMorph: list2 proportionalWidth: 0.8.
@@ -686,22 +708,30 @@ initialize
 
 	super initialize! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:53'!
-mouseButton2Activity
-	self theMenu.! !
-
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
-popUpInWorld: aWorld
-	"Required by PluggableListMorph. Do nothing."! !
-
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:25'!
-theMenu
-	"Show a pop-up menu"
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:49'!
+menuLedger
+	"Ledger pop-up menu"
 
 	| aMenu |
 	aMenu _ MenuMorph new defaultTarget: self.
 	aMenu
-		addTitle: 'Options'; 
+		addTitle: 'Ledger Menu'; 
+		addLine.
+	aMenu add: 'Reconcile...'	target: self model 	action:	#reconcile.
+	aMenu balloonTextForLastItem: 'reconcile this account'.
+	aMenu add: 'Search...'		target: self model 	action:	#searchOneAccount.
+	aMenu balloonTextForLastItem: 'search within this account only'.
+	aMenu popUpInWorld: self world.
+! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:37'!
+menuMain
+	"Main pop-up menu"
+
+	| aMenu |
+	aMenu _ MenuMorph new defaultTarget: self.
+	aMenu
+		addTitle: 'Main Menu'; 
 		addStayUpIcons;
 		addLine.
 	aMenu add: 'Restore a file'			target: self model 	action:	#restoreFile.
@@ -710,12 +740,20 @@ of account ledgers'.
 	aMenu add: 'Save the current file'	target: self model 	action:	#saveFile.
 	aMenu balloonTextForLastItem: 'preserve changes to the data'.
 	aMenu addLine.
-	aMenu add: 'Add an account'	target: self model 	action:	#newAccount.
+	self addAccountActionsTo: aMenu.
 	self addPayeeActionsTo: aMenu.
 	self addCategoryActionsTo: aMenu.
 	self addMemoActionsTo: aMenu.
 	aMenu popUpInWorld: self world.
 ! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:35'!
+mouseButton2Activity
+	self menuMain.! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
+popUpInWorld: aWorld
+	"Required by PluggableListMorph. Do nothing."! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
