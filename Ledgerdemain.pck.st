@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 25 June 2015 at 1:17:16.83425 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 11:36:26.502341 am'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 33!
+!provides: 'Ledgerdemain' 1 37!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -41,19 +41,9 @@ Morph subclass: #Reconciliation
 Reconciliation class
 	instanceVariableNames: ''!
 
-!classDefinition: #LedgerListMorph category: #Ledgerdemain!
-PluggableListMorph subclass: #LedgerListMorph
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'LedgerListMorph class' category: #Ledgerdemain!
-LedgerListMorph class
-	instanceVariableNames: ''!
-
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: ''
+	instanceVariableNames: 'list1 list2'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -171,9 +161,6 @@ Reconciliation responsibilities:
   update ledger
 !
 
-!LedgerListMorph commentStamp: 'dhn 6/25/2015 13:09' prior: 0!
-Enable the LedgerDeMain pop-up menu.!
-
 !LedgerWindow commentStamp: 'dhn 6/23/2015 20:42' prior: 0!
 Window for Ledger d'Main. Provides pop-up menu for options.!
 
@@ -290,15 +277,21 @@ initialize
 
 	contents _ OrderedCollection new! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:13'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 20:14'!
 accountList
 	"Answer a list of accounts"
-	^ self accounts keys! !
+	| col |
+	col _ self accounts keys asOrderedCollection.
+	col do: [:ea | Transcript show: ea; newLine].
+	^ col! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 17:02'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:08'!
 accountListIndex
+	| x |
 	self accountList ifNil: [ ^ accountListIndex _ 0 ].
-	^ self accountList indexOf: selectedAccount! !
+	x _ self accountList indexOf: selectedAccount.
+	{x} print.
+	^ x! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
 accountListIndex: anObject
@@ -429,7 +422,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 20:32'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 11:32'!
 newAccount
 	| temp |
 	
@@ -608,18 +601,16 @@ keyTable
 		at: 'memo' put: 'memo' hash;
 		yourself! !
 
+!LedgerDeMain class methodsFor: 'as yet unclassified' stamp: 'dhn 6/25/2015 20:04'!
+look
+	Payees explore! !
+
 !LedgerDeMain class methodsFor: 'class initialization' stamp: 'dhn 6/25/2015 11:07'!
 uniqueInstance
 	"Ensure that there is only one of me"
 
 	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
 	^ UniqueInstance! !
-
-!LedgerListMorph methodsFor: 'menus' stamp: 'dhn 6/25/2015 13:14'!
-mouseButton2Activity
-	self listMorph highlightedRow: nil.
-	self model window theMenu.
-	super mouseButton2Activity! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:28'!
 addCategoryActionsTo: aMenu
@@ -652,17 +643,17 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/25/2015 13:14'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 11:30'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
-	| list1 list2 row |
-	list1 _ LedgerListMorph
+	| row |
+	list1 _ PluggableListMorph
 				model: model
 				listGetter: #accountList
 				indexGetter: #accountListIndex
 				indexSetter: #accountListIndex:
 				mainView: self
-				menuGetter: nil
+				menuGetter: #theMenu
 				keystrokeAction: nil.
 	list2 _ PluggableListMorph
 				model: model
@@ -670,7 +661,7 @@ buildMorphicWindow
 				indexGetter: nil
 				indexSetter: nil
 				mainView: self
-				menuGetter: nil
+				menuGetter: #theMenu
 				keystrokeAction: nil.
 	row _ LayoutMorph newRow.
 	row
@@ -680,7 +671,7 @@ buildMorphicWindow
 		addMorph: row.
 	self setLabel: 'Ledger d''Main'! !
 
-!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 6/23/2015 21:47'!
+!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 6/25/2015 15:03'!
 delete
 
 	self model modified ifTrue: [
@@ -697,9 +688,37 @@ initialize
 
 	super initialize! !
 
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
+list1
+	"Answer the value of list1"
+
+	^ list1! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
+list1: anObject
+	"Set the value of list1"
+
+	list1 _ anObject! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
+list2
+	"Answer the value of list2"
+
+	^ list2! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:11'!
+list2: anObject
+	"Set the value of list2"
+
+	list2 _ anObject! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:53'!
 mouseButton2Activity
 	self theMenu.! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
+popUpInWorld: aWorld
+	"Required by PluggableListMorph. Do nothing."! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:25'!
 theMenu
@@ -735,13 +754,14 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/25/2015 11:06'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/25/2015 15:55'!
 open
 	| wind main |
-	main _ LedgerDeMain uniqueInstance.
+	main _ LedgerDeMain new.
 	main window: (wind _ self new model: main).
 	wind buildMorphicWindow.
 	wind openInWorld.
+	main changed: #actualContents.
 ! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
