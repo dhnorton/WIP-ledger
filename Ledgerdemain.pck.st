@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 11:54:58.346341 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 12:23:16.121341 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 38!
+!provides: 'Ledgerdemain' 1 39!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -277,27 +277,23 @@ initialize
 
 	contents _ OrderedCollection new! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 20:14'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:21'!
 accountList
 	"Answer a list of accounts"
-	| col |
-	col _ self accounts keys asOrderedCollection.
-	col do: [:ea | Transcript show: ea; newLine].
-	^ col! !
+	^ self accounts keys asOrderedCollection! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 16:08'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:22'!
 accountListIndex
-	| x |
 	self accountList ifNil: [ ^ accountListIndex _ 0 ].
-	x _ self accountList indexOf: selectedAccount.
-	{x} print.
-	^ x! !
+	^ self accountList indexOf: selectedAccount! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
-accountListIndex: anObject
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:18'!
+accountListIndex: index
 	"Set the value of accountListIndex"
 
-	accountListIndex _ anObject! !
+	accountListIndex _ index.
+	self selectedAccount: 
+		(self accountList at: index ifAbsent: nil)! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:31'!
 accounts
@@ -422,7 +418,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 11:51'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:10'!
 newAccount
 	| temp |
 	
