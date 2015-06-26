@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 2:53:02.710341 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 7:53:48.249341 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 41!
+!provides: 'Ledgerdemain' 1 43!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -12,7 +12,7 @@ Account class
 	instanceVariableNames: ''!
 
 !classDefinition: #Ledger category: #Ledgerdemain!
-Object subclass: #Ledger
+OrderedCollection subclass: #Ledger
 	instanceVariableNames: 'contents'
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -244,10 +244,6 @@ balRcon: anObject
 
 	balRcon _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:45'!
-identity: aName
-	self namAcct: aName! !
-
 !Account methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:09'!
 initialize
 
@@ -418,14 +414,33 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:10'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 19:49'!
 newAccount
-	| temp |
+	| temp bal balDate trans |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
 		self accounts: temp.
-		self changed: #accountList]
+		self changed: #accountList.
+		bal _ FillInTheBlankMorph 
+			request: 'Opening balance for ', temp
+			initialAnswer: '0.00'.
+		bal ~= '' 
+			ifTrue: [
+				balDate _ FillInTheBlankMorph 
+					request: 'Date of opening balance'
+					initialAnswer: Date today mmddyyyy]
+			ifFalse: [
+				bal _ '0'.
+				balDate _ Date today mmddyyyy].
+		trans _ Transaction new.
+		trans
+			payee: 'Opening Balance';
+			date: balDate;
+			amount: (self toCents: bal).
+		(self accounts at: temp) balOpen: trans amount.
+		(self accounts at: temp) ledger addFirst: trans.
+		self modified: true].
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
@@ -540,6 +555,22 @@ selectedAccount: anObject
 	"Set the value of selectedAccount"
 
 	selectedAccount _ anObject! !
+
+!LedgerDeMain methodsFor: 'conversion' stamp: 'dhn 6/26/2015 19:26'!
+toCents: aString
+	"Answer the conversion of aString in dollars to a number of cents"
+	| digits w x y |
+	digits _ $0 to: $9.
+	w _ aString select: [:a | (digits includes: a) or: a = $.].
+	x _ w findDelimiters: '.' startingAt: 1. 
+	x > w size 
+		ifTrue: [y _ w, '00'] "no decimal point specified"
+		ifFalse: [	"a decimal point exists"
+			w size - x >= 2
+				ifTrue: [y _ (w copyFrom: 1 to: x - 1), (w copyFrom: x + 1 to: x + 2)]
+				ifFalse: [y _ (w copyFrom: 1 to: x - 1), '00'].]. 
+
+	^ y asNumber! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 trail
@@ -766,11 +797,11 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/25/2015 15:55'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/26/2015 16:45'!
 open
 	| wind main |
 	main _ LedgerDeMain new.
-	main window: (wind _ self new model: main).
+	main window: (wind _ LedgerWindow new model: main).
 	wind buildMorphicWindow.
 	wind openInWorld.
 	main changed: #actualContents.
@@ -792,3 +823,111 @@ last: anObject
 	"Set the value of last"
 
 	last _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+amount
+	"Answer the value of amount"
+
+	^ amount! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+amount: anObject
+	"Set the value of amount"
+
+	amount _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+category
+	"Answer the value of category"
+
+	^ category! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+category: anObject
+	"Set the value of category"
+
+	category _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+date
+	"Answer the value of date"
+
+	^ date! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+date: anObject
+	"Set the value of date"
+
+	date _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+memo
+	"Answer the value of memo"
+
+	^ memo! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+memo: anObject
+	"Set the value of memo"
+
+	memo _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+payee
+	"Answer the value of payee"
+
+	^ payee! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+payee: anObject
+	"Set the value of payee"
+
+	payee _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+reconciled
+	"Answer the value of reconciled"
+
+	^ reconciled! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+reconciled: anObject
+	"Set the value of reconciled"
+
+	reconciled _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+serial
+	"Answer the value of serial"
+
+	^ serial! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+serial: anObject
+	"Set the value of serial"
+
+	serial _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+transfer
+	"Answer the value of transfer"
+
+	^ transfer! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+transfer: anObject
+	"Set the value of transfer"
+
+	transfer _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+type
+	"Answer the value of type"
+
+	^ type! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+type: anObject
+	"Set the value of type"
+
+	type _ anObject! !
