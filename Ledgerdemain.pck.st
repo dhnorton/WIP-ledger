@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2383] on 26 June 2015 at 7:53:48.249341 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 28 June 2015 at 9:11:22.98741 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 43!
+!provides: 'Ledgerdemain' 1 47!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -23,7 +23,7 @@ Ledger class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 Object subclass: #LedgerDeMain
-	instanceVariableNames: 'window accounts net trail accountListIndex selectedAccount modified transactionListIndex'
+	instanceVariableNames: 'window accounts accountListIndex selectedAccount net trail modified transactions transactionList transactionListIndex selectedTransaction'
 	classVariableNames: 'Categories Memos Payees UniqueInstance'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -264,26 +264,27 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!Ledger methodsFor: 'displaying' stamp: 'dhn 6/24/2015 21:07'!
+!Ledger methodsFor: 'displaying' stamp: 'dhn 6/26/2015 21:31'!
 asFormatted
-	"Answer the transactions in collection as a formatted list"! !
+	"Answer the transactions in collection as a formatted list"
+	^ self storeString! !
 
 !Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
 initialize
 
 	contents _ OrderedCollection new! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:21'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:21'!
 accountList
 	"Answer a list of accounts"
 	^ self accounts keys asOrderedCollection! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:22'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:22'!
 accountListIndex
 	self accountList ifNil: [ ^ accountListIndex _ 0 ].
 	^ self accountList indexOf: selectedAccount! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 12:18'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:18'!
 accountListIndex: index
 	"Set the value of accountListIndex"
 
@@ -291,14 +292,14 @@ accountListIndex: index
 	self selectedAccount: 
 		(self accountList at: index ifAbsent: nil)! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/15/2015 07:31'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/15/2015 07:31'!
 accounts
 	"Answer the value of accounts"
 
 	accounts ifNil: [accounts _ Dictionary new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:27'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/23/2015 21:27'!
 accounts: anObject
 	"Save anObject in accounts"
 
@@ -414,7 +415,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 19:49'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/28/2015 21:07'!
 newAccount
 	| temp bal balDate trans |
 	
@@ -538,23 +539,39 @@ saveFile
 
 	Transcript show: 'Simulate saving the file'! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:47'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 14:47'!
 searchAllAccounts! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:47'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 14:47'!
 searchOneAccount! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/23/2015 10:14'!
 selectedAccount
 	"Answer the value of selectedAccount"
 
 	^ selectedAccount! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 10:14'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/28/2015 19:47'!
 selectedAccount: anObject
 	"Set the value of selectedAccount"
 
-	selectedAccount _ anObject! !
+	selectedAccount _ anObject.
+	anObject ifNotNil: [{accounts at: anObject} print].
+	self changed: #accountListIndex! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:34'!
+selectedTransaction
+	"Answer the value of selectedTransaction"
+
+	^ selectedTransaction! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/28/2015 20:00'!
+selectedTransaction: anObject
+	"Set the value of selectedTransaction"
+
+	selectedTransaction _ anObject.
+	anObject ifNotNil: [{transactions at: anObject} print].
+	self changed: #transactionListIndex! !
 
 !LedgerDeMain methodsFor: 'conversion' stamp: 'dhn 6/26/2015 19:26'!
 toCents: aString
@@ -585,24 +602,46 @@ trail: anObject
 	trail _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 22:16'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/28/2015 19:54'!
 transactionList
 	"Answer a list of transactions"
-	"
-	^ (self accounts at: (self accountList at: accountListIndex)) ledger asFormatted
-	"
-	^ nil! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 22:16'!
+	self accounts isEmpty ifFalse: [
+		^ (self accounts at: (self accountList at: accountListIndex))
+			ledger asFormatted].
+	^ OrderedCollection new
+! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/28/2015 19:58'!
+transactionList: anObject
+	"Set the value of transactionList"
+
+	transactionList _ anObject! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/24/2015 22:16'!
 transactionListIndex
 	self transactionList ifNil: [ ^ self transactionListIndex: 0].
 	^ self transactionList indexOf: self selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 21:26'!
-transactionListIndex: anObject
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:37'!
+transactionListIndex: index
 	"Set the value of transactionListIndex"
 
-	transactionListIndex _ anObject! !
+	transactionListIndex _ index.
+	self selectedTransaction: 
+		(self transactionList at: index ifAbsent: nil)! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:28'!
+transactions
+	"Answer the value of transactions"
+
+	^ transactions! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:28'!
+transactions: anObject
+	"Set the value of transactions"
+
+	transactions _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
 trie: aTrie withPrefix: aString
@@ -691,7 +730,7 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 14:29'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 21:41'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
 	| list1 list2 row |
@@ -706,9 +745,9 @@ buildMorphicWindow
 	list1 name: 'Account List'.
 	list2 _ PluggableListMorph
 				model: model
-				listGetter: nil
-				indexGetter: nil
-				indexSetter: nil
+				listGetter: #transactionList
+				indexGetter: #transactionListIndex
+				indexSetter: #transactionListIndex:
 				mainView: self
 				menuGetter: #menuLedger
 				keystrokeAction: nil.
@@ -797,14 +836,13 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/26/2015 16:45'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/26/2015 21:23'!
 open
 	| wind main |
 	main _ LedgerDeMain new.
 	main window: (wind _ LedgerWindow new model: main).
 	wind buildMorphicWindow.
 	wind openInWorld.
-	main changed: #actualContents.
 ! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
