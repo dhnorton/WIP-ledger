@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 28 June 2015 at 9:11:22.98741 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 29 June 2015 at 1:01:52.925935 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 47!
+!provides: 'Ledgerdemain' 1 50!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -207,6 +207,39 @@ Transaction responsibilities:
   split categories
   record actions in audit trail
 !
+
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 12:59'!
+asLdmDate
+	"Convert receiver in the form of dd/mm/yyyy to a Ledgerdemain date number"
+	"Covers dates from 1/1/1901 to 2/27/2935093 (quite a long time)"
+	| digits w x y dt |
+	digits _ $0 to: $9.
+	w _ self select: [:a | (digits includes: a) or: a = $/].
+	x _ w findTokens: '/'.
+	x size ~= 3 
+		ifTrue: [nil error: 'not a date'].
+	y _ OrderedCollection new.
+	x do: [:ea | y add: ea asNumber].
+
+	dt _ Date newDay: (y at: 2) month: (y at: 1) year: (y at: 3).
+	^ dt julianDayNumber - Time squeakEpoch! !
+
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 11:49'!
+dollarsToCents
+	"Answer the conversion of the receiver to a number of cents"
+	| digits w x y |
+	digits _ $0 to: $9.
+	w _ self select: [:a | (digits includes: a) or: a = $.].
+	x _ w findDelimiters: '.' startingAt: 1. 
+	x > w size 
+		ifTrue: [y _ w, '00'] "no decimal point specified"
+		ifFalse: [	"a decimal point exists"
+			w size - x >= 2
+				ifTrue: [y _ (w copyFrom: 1 to: x - 1), (w copyFrom: x + 1 to: x + 2)]
+					"fractions of cents are dropped"
+				ifFalse: [y _ (w copyFrom: 1 to: x - 1), '00']]. 
+					"fewer than 2 decimal places gets zeros appended"
+	^ y asNumber! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
@@ -572,22 +605,6 @@ selectedTransaction: anObject
 	selectedTransaction _ anObject.
 	anObject ifNotNil: [{transactions at: anObject} print].
 	self changed: #transactionListIndex! !
-
-!LedgerDeMain methodsFor: 'conversion' stamp: 'dhn 6/26/2015 19:26'!
-toCents: aString
-	"Answer the conversion of aString in dollars to a number of cents"
-	| digits w x y |
-	digits _ $0 to: $9.
-	w _ aString select: [:a | (digits includes: a) or: a = $.].
-	x _ w findDelimiters: '.' startingAt: 1. 
-	x > w size 
-		ifTrue: [y _ w, '00'] "no decimal point specified"
-		ifFalse: [	"a decimal point exists"
-			w size - x >= 2
-				ifTrue: [y _ (w copyFrom: 1 to: x - 1), (w copyFrom: x + 1 to: x + 2)]
-				ifFalse: [y _ (w copyFrom: 1 to: x - 1), '00'].]. 
-
-	^ y asNumber! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 trail
