@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 29 June 2015 at 1:01:52.925935 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 30 June 2015 at 6:53:34.626626 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 50!
+!provides: 'Ledgerdemain' 1 52!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -224,12 +224,12 @@ asLdmDate
 	dt _ Date newDay: (y at: 2) month: (y at: 1) year: (y at: 3).
 	^ dt julianDayNumber - Time squeakEpoch! !
 
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 11:49'!
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 6/30/2015 18:48'!
 dollarsToCents
 	"Answer the conversion of the receiver to a number of cents"
 	| digits w x y |
 	digits _ $0 to: $9.
-	w _ self select: [:a | (digits includes: a) or: a = $.].
+	w _ self select: [:a | (digits includes: a) or: ('-.' includes: a)].
 	x _ w findDelimiters: '.' startingAt: 1. 
 	x > w size 
 		ifTrue: [y _ w, '00'] "no decimal point specified"
@@ -240,6 +240,11 @@ dollarsToCents
 				ifFalse: [y _ (w copyFrom: 1 to: x - 1), '00']]. 
 					"fewer than 2 decimal places gets zeros appended"
 	^ y asNumber! !
+
+!SmallInteger methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 13:34'!
+asMmDdYyyy
+	"Convert the receiver from Ledgerdemain date number to dd/mm/yyyy"
+	^ (Date fromDays: self) mmddyyyy! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
