@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 30 June 2015 at 6:53:34.626626 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 30 June 2015 at 8:47:39.814626 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 52!
+!provides: 'Ledgerdemain' 1 53!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -311,6 +311,22 @@ asFormatted
 initialize
 
 	contents _ OrderedCollection new! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/30/2015 20:34'!
+accountFromFile
+	"Copy account ledger entries from a file and add them to the account ledger ivar"
+	| file ios line rec |
+	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.ext'.
+	file ~= '' ifTrue: [
+		ios _ FileStream oldFileNamed: file.
+		rec _ S50 new.
+		[(line _ ios nextLine) notNil]
+			whileTrue: [	line size > 0 
+				ifTrue: [
+					rec content: line.
+					{rec type. rec date. rec checkNumber. rec payee. } print.
+					]].
+		ios close]! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:21'!
 accountList
@@ -711,13 +727,14 @@ uniqueInstance
 	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
 	^ UniqueInstance! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:48'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
 addAccountActionsTo: aMenu
 	"Add items to aMenu for account actions"
 
 	| subMenu |
 	subMenu := MenuMorph new defaultTarget: self.
 	subMenu add: 'Add an account'	target: self model 	action:	#newAccount.
+	subMenu add: 'Load account from file...'	target: self model 	action:	#accountFromFile.
 	subMenu add: 'Search all accounts...'		target: self model 	action: #searchAllAccounts.
 	aMenu add: 'Accounts...' subMenu: subMenu! !
 
