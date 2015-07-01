@@ -1,6 +1,7 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 30 June 2015 at 9:51:54.555626 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 1 July 2015 at 1:05:36.609986 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 54!
+!provides: 'Ledgerdemain' 1 55!
+!requires: 'QuickenReport' 1 3 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -302,7 +303,7 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/30/2015 21:31'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 7/1/2015 12:56'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec |
@@ -317,6 +318,7 @@ accountFromFile
 					self categories: rec category withoutTrailingBlanks.
 					self payees: rec payee withoutTrailingBlanks.
 					self memos: rec memo withoutTrailingBlanks.
+					(accounts at: selectedAccount) ledger addLast: rec content.
 					]].
 		ios close]! !
 
@@ -468,7 +470,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/30/2015 21:05'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 12:03'!
 newAccount
 	| temp bal balDate trans |
 	
@@ -493,7 +495,6 @@ newAccount
 			date: balDate;
 			amount: (bal dollarsToCents).
 		(self accounts at: temp) balOpen: trans amount.
-		(self accounts at: temp) ledger addFirst: trans.
 		self modified: true].
 ! !
 
@@ -604,12 +605,11 @@ selectedAccount
 
 	^ selectedAccount! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/28/2015 19:47'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 12:47'!
 selectedAccount: anObject
 	"Set the value of selectedAccount"
 
 	selectedAccount _ anObject.
-	anObject ifNotNil: [{accounts at: anObject} print].
 	self changed: #accountListIndex! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:34'!
@@ -779,28 +779,12 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/26/2015 21:41'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 7/1/2015 12:37'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
 	| list1 list2 row |
-	list1 _ PluggableListMorph
-				model: model
-				listGetter: #accountList
-				indexGetter: #accountListIndex
-				indexSetter: #accountListIndex:
-				mainView: self
-				menuGetter: #menuMain
-				keystrokeAction: nil.
-	list1 name: 'Account List'.
-	list2 _ PluggableListMorph
-				model: model
-				listGetter: #transactionList
-				indexGetter: #transactionListIndex
-				indexSetter: #transactionListIndex:
-				mainView: self
-				menuGetter: #menuLedger
-				keystrokeAction: nil.
-	list2 name: #Ledger.
+	list1 _ self windowAccountList.
+	list2 _ self windowLedgerList.
 	row _ LayoutMorph newRow.
 	row name: #Row.
 	row
@@ -873,6 +857,36 @@ mouseButton2Activity
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 7/1/2015 12:36'!
+windowAccountList
+	"Answer the specifications for the list of accounts in the window"
+	
+	^ (PluggableListMorph
+		model: model
+		listGetter: #accountList
+		indexGetter: #accountListIndex
+		indexSetter: #accountListIndex:
+		mainView: self
+		menuGetter: #menuMain
+		keystrokeAction: nil)
+			name: 'Account List'
+! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 7/1/2015 12:36'!
+windowLedgerList
+	"Answer the specifications for the ledger list in the window"
+	
+	^ (PluggableListMorph
+		model: model
+		listGetter: #transactionList
+		indexGetter: #transactionListIndex
+		indexSetter: #transactionListIndex:
+		mainView: self
+		menuGetter: #menuLedger
+		keystrokeAction: nil)
+			name: #Ledger
+! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
