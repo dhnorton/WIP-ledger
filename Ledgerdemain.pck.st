@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 1 July 2015 at 4:00:17.353986 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 1 July 2015 at 5:15:23.431986 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 57!
+!provides: 'Ledgerdemain' 1 58!
 !requires: 'QuickenReport' 1 3 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -636,12 +636,15 @@ selectedAccount
 
 	^ selectedAccount! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 12:47'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 17:12'!
 selectedAccount: anObject
 	"Set the value of selectedAccount"
 
 	selectedAccount _ anObject.
-	self changed: #accountListIndex! !
+	anObject ifNotNil: [
+		self transactionList: (self accounts at: anObject) ledger].
+	self changed: #accountListIndex.
+	self changed: #transactionList! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:34'!
 selectedTransaction
@@ -670,13 +673,13 @@ trail: anObject
 	trail _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/28/2015 19:54'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 7/1/2015 16:55'!
 transactionList
 	"Answer a list of transactions"
 
 	self accounts isEmpty ifFalse: [
 		^ (self accounts at: (self accountList at: accountListIndex))
-			ledger asFormatted].
+			ledger].
 	^ OrderedCollection new
 ! !
 
