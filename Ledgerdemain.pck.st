@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 1 July 2015 at 1:05:36.609986 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 1 July 2015 at 2:12:30.034986 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 55!
+!provides: 'Ledgerdemain' 1 56!
 !requires: 'QuickenReport' 1 3 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -15,7 +15,7 @@ Account class
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 Workspace subclass: #LedgerDeMain
 	instanceVariableNames: 'window accounts accountListIndex selectedAccount net trail modified transactions transactionList transactionListIndex selectedTransaction'
-	classVariableNames: 'Categories Memos Payees UniqueInstance'
+	classVariableNames: 'Categories Memos Payees Type UniqueInstance'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
@@ -303,7 +303,7 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 7/1/2015 12:56'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 7/1/2015 14:02'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec |
@@ -318,6 +318,7 @@ accountFromFile
 					self categories: rec category withoutTrailingBlanks.
 					self payees: rec payee withoutTrailingBlanks.
 					self memos: rec memo withoutTrailingBlanks.
+					self type: rec type withoutTrailingBlanks.
 					(accounts at: selectedAccount) ledger addLast: rec content.
 					]].
 		ios close]! !
@@ -588,10 +589,10 @@ restoreFile
 	self accounts: temp asSet.
 	! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 21:50'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 7/1/2015 14:03'!
 saveFile
 
-	Transcript show: 'Simulate saving the file'! !
+	Transcript show: 'Simulate saving the file'; newLine! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 14:47'!
 searchAllAccounts! !
@@ -684,6 +685,20 @@ transactions: anObject
 trie: aTrie withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
 	aTrie forPrefix: aString keysAndValuesDo: [:key :v | Transcript show: key; newLine]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 7/1/2015 13:57'!
+type
+	"Answer the value of Type"
+
+	Type ifNil: [Type _ Trie new].
+	^ Type! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:00'!
+type: anObject
+	"Save anObject in Type"
+
+	(self type includesKey: anObject)
+		ifFalse: [self type at: anObject put: 1]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:08'!
 window
