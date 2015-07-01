@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 30 June 2015 at 8:47:39.814626 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 30 June 2015 at 9:51:54.555626 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 53!
+!provides: 'Ledgerdemain' 1 54!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger balOpen balRcon balCur'
@@ -11,6 +11,16 @@ Object subclass: #Account
 Account class
 	instanceVariableNames: ''!
 
+!classDefinition: #LedgerDeMain category: #Ledgerdemain!
+Workspace subclass: #LedgerDeMain
+	instanceVariableNames: 'window accounts accountListIndex selectedAccount net trail modified transactions transactionList transactionListIndex selectedTransaction'
+	classVariableNames: 'Categories Memos Payees UniqueInstance'
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
+LedgerDeMain class
+	instanceVariableNames: ''!
+
 !classDefinition: #Ledger category: #Ledgerdemain!
 OrderedCollection subclass: #Ledger
 	instanceVariableNames: 'contents'
@@ -19,16 +29,6 @@ OrderedCollection subclass: #Ledger
 	category: 'Ledgerdemain'!
 !classDefinition: 'Ledger class' category: #Ledgerdemain!
 Ledger class
-	instanceVariableNames: ''!
-
-!classDefinition: #LedgerDeMain category: #Ledgerdemain!
-Object subclass: #LedgerDeMain
-	instanceVariableNames: 'window accounts accountListIndex selectedAccount net trail modified transactions transactionList transactionListIndex selectedTransaction'
-	classVariableNames: 'Categories Memos Payees UniqueInstance'
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
-LedgerDeMain class
 	instanceVariableNames: ''!
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
@@ -136,9 +136,6 @@ Account responsibilities:
   report
   export and import!
 
-!Ledger commentStamp: 'dhn 6/24/2015 21:11' prior: 0!
-Ledger is an ordered collection of transactions.!
-
 !LedgerDeMain commentStamp: 'dhn 6/24/2015 10:49' prior: 0!
 LedgerDeMain (a cover class) responsibilities:
 
@@ -153,6 +150,9 @@ With apologies to those who do legerdemane.
 recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
 reported amount _ dollars (examples: 29.95 5.00)!
+
+!Ledger commentStamp: 'dhn 6/24/2015 21:11' prior: 0!
+Ledger is an ordered collection of transactions.!
 
 !Reconciliation commentStamp: 'dhn 6/12/2015 19:10' prior: 0!
 Reconciliation responsibilities:
@@ -302,21 +302,11 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!Ledger methodsFor: 'displaying' stamp: 'dhn 6/26/2015 21:31'!
-asFormatted
-	"Answer the transactions in collection as a formatted list"
-	^ self storeString! !
-
-!Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
-initialize
-
-	contents _ OrderedCollection new! !
-
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/30/2015 20:34'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/30/2015 21:31'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec |
-	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.ext'.
+	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.txt'.
 	file ~= '' ifTrue: [
 		ios _ FileStream oldFileNamed: file.
 		rec _ S50 new.
@@ -324,7 +314,9 @@ accountFromFile
 			whileTrue: [	line size > 0 
 				ifTrue: [
 					rec content: line.
-					{rec type. rec date. rec checkNumber. rec payee. } print.
+					self categories: rec category withoutTrailingBlanks.
+					self payees: rec payee withoutTrailingBlanks.
+					self memos: rec memo withoutTrailingBlanks.
 					]].
 		ios close]! !
 
@@ -412,6 +404,13 @@ listCategories
 		Transcript show: k; newLine]]
 ! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/30/2015 21:43'!
+listMemos
+
+	Memos ifNotNil: [Memos keysDo: [:k |
+		Transcript show: k; newLine]]
+! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:48'!
 listPayees
 
@@ -469,7 +468,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/28/2015 21:07'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/30/2015 21:05'!
 newAccount
 	| temp bal balDate trans |
 	
@@ -492,7 +491,7 @@ newAccount
 		trans
 			payee: 'Opening Balance';
 			date: balDate;
-			amount: (self toCents: bal).
+			amount: (bal dollarsToCents).
 		(self accounts at: temp) balOpen: trans amount.
 		(self accounts at: temp) ledger addFirst: trans.
 		self modified: true].
@@ -727,6 +726,16 @@ uniqueInstance
 	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
 	^ UniqueInstance! !
 
+!Ledger methodsFor: 'displaying' stamp: 'dhn 6/26/2015 21:31'!
+asFormatted
+	"Answer the transactions in collection as a formatted list"
+	^ self storeString! !
+
+!Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
+initialize
+
+	contents _ OrderedCollection new! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
 addAccountActionsTo: aMenu
 	"Add items to aMenu for account actions"
@@ -749,12 +758,13 @@ addCategoryActionsTo: aMenu
 	subMenu add: 'Categories from file'	target: self model 	action: #categoriesFromFile.
 	aMenu add: 'Categories...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:25'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 21:44'!
 addMemoActionsTo: aMenu
 	"Add items to aMenu for payee actions"
 
 	| subMenu |
 	subMenu := MenuMorph new defaultTarget: self.
+	subMenu add: 'List memos'			target: self model 	action: #listMemos.
 	subMenu add: 'Memos from file'		target: self model 	action: #memosFromFile.
 	aMenu add: 'Memos...' subMenu: subMenu! !
 
