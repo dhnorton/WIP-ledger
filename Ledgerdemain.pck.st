@@ -1,10 +1,10 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 1 July 2015 at 2:12:30.034986 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2390] on 1 July 2015 at 4:00:17.353986 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Ledgerdemain' 1 56!
+!provides: 'Ledgerdemain' 1 57!
 !requires: 'QuickenReport' 1 3 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
-	instanceVariableNames: 'ledger balOpen balRcon balCur'
+	instanceVariableNames: 'ledger balOpen openDate balRcon balCur'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -303,14 +303,38 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 7/1/2015 14:02'!
+!Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 15:50'!
+loadTransaction: anObject
+	"Update balances and add anObject to the ledger"
+	| amt |
+	
+	amt _ anObject amount dollarsToCents.
+	self balCur: self balCur + amt.
+	anObject reconcile = 'R' 
+		ifTrue: [self balRcon: self balRcon + amt].
+	self ledger addLast: anObject content! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:49'!
+openDate
+	"Answer the value of openDate"
+
+	^ openDate! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:49'!
+openDate: anObject
+	"Set the value of openDate"
+
+	openDate _ anObject! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 7/1/2015 15:15'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
-	| file ios line rec |
+	| file ios line rec acct |
 	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.txt'.
 	file ~= '' ifTrue: [
 		ios _ FileStream oldFileNamed: file.
 		rec _ S50 new.
+		acct _ accounts at: selectedAccount.
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 
 				ifTrue: [
@@ -319,8 +343,7 @@ accountFromFile
 					self payees: rec payee withoutTrailingBlanks.
 					self memos: rec memo withoutTrailingBlanks.
 					self type: rec type withoutTrailingBlanks.
-					(accounts at: selectedAccount) ledger addLast: rec content.
-					]].
+					acct loadTransaction: rec]].
 		ios close]! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:21'!
@@ -421,6 +444,13 @@ listPayees
 		Transcript show: k; newLine]]
 ! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:17'!
+listType
+
+	Type ifNotNil: [Type keysDo: [:k |
+		Transcript show: k; newLine]]
+! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:42'!
 memos
 	"Answer the value of Memos"
@@ -471,9 +501,9 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 12:03'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 14:55'!
 newAccount
-	| temp bal balDate trans |
+	| temp bal amt balDate |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
@@ -490,12 +520,12 @@ newAccount
 			ifFalse: [
 				bal _ '0'.
 				balDate _ Date today mmddyyyy].
-		trans _ Transaction new.
-		trans
-			payee: 'Opening Balance';
-			date: balDate;
-			amount: (bal dollarsToCents).
-		(self accounts at: temp) balOpen: trans amount.
+		amt _ bal dollarsToCents.
+		(self accounts at: temp)
+			openDate: balDate;
+			balOpen: amt;
+			balCur: amt;
+			balRcon: amt.
 		self modified: true].
 ! !
 
@@ -842,7 +872,7 @@ menuLedger
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:37'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 7/1/2015 14:18'!
 menuMain
 	"Main pop-up menu"
 
@@ -862,6 +892,7 @@ of account ledgers'.
 	self addPayeeActionsTo: aMenu.
 	self addCategoryActionsTo: aMenu.
 	self addMemoActionsTo: aMenu.
+	aMenu add: 'List transaction types'			target: self model 	action:	#listType.
 	aMenu popUpInWorld: self world.
 ! !
 
