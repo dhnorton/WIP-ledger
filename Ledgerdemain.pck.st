@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2399] on 2 July 2015 at 12:00:11.751621 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2399] on 2 July 2015 at 2:35:35.453621 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 61!
+!provides: 'Ledgerdemain' 1 62!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger ledgerLines balOpen openDate balRcon balCur'
@@ -1139,16 +1139,17 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 7/2/2015 11:00'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 7/2/2015 14:29'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
 	str _ String new writeStream
-		nextPutAll: (self type contractTo: (self class itemLength at: #type));
-		nextPutAll: (self date contractTo: (self class itemLength at: #date));
-		nextPutAll: (self payee contractTo: (self class itemLength at: #payee));
-		nextPutAll: (self category contractTo: (self class itemLength at: #category));
-		nextPutAll: (self memo contractTo: (self class itemLength at: #memo));
+		nextPutAll: (self type contractTo: (self class itemLength at: #type)); tab;
+		nextPutAll: (self date contractTo: (self class itemLength at: #date)); tab;
+		nextPutAll: (self checkNumber contractTo: (self class itemLength at: #checkNumber)); tab;
+		nextPutAll: (self payee contractTo: (self class itemLength at: #payee)); tab;
+		nextPutAll: (self category contractTo: (self class itemLength at: #category)); tab;
+		nextPutAll: (self memo contractTo: (self class itemLength at: #memo)); tab;
 		nextPutAll: (self amount contractTo: (self class itemLength at: #amount)).
 	^ str contents! !
 
@@ -1233,17 +1234,17 @@ fields
 		at: #AmountIn put: (Field at: 124@136);
 		yourself! !
 
-!Transaction class methodsFor: 'formatting' stamp: 'dhn 7/2/2015 11:40'!
+!Transaction class methodsFor: 'formatting' stamp: 'dhn 7/2/2015 14:15'!
 itemLength
 	"Answer the length of data items for use in ledger list format"
 	^ Dictionary new
 		at: #amount 			put: 16;
 		at: #category 		put: 20;
-		at: #date 				put: 12;
-		at: #memo			put: 16;
-		at: #payee			put: 20;
+		at: #date 				put: 20;
+		at: #memo			put: 30;
+		at: #payee			put: 30;
 		at: #reconciled		put: 2;
 		at: #checkNumber	put: 6;
 		at: #transfer			put: 12;
-		at: #type 				put: 5;
+		at: #type 				put: 6;
 		yourself! !
