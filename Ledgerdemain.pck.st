@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2399] on 2 July 2015 at 2:35:35.453621 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2399] on 2 July 2015 at 7:52:15.206621 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 62!
+!provides: 'Ledgerdemain' 1 63!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger ledgerLines balOpen openDate balRcon balCur'
@@ -49,6 +49,16 @@ Morph subclass: #Reconciliation
 	category: 'Ledgerdemain'!
 !classDefinition: 'Reconciliation class' category: #Ledgerdemain!
 Reconciliation class
+	instanceVariableNames: ''!
+
+!classDefinition: #LedgerLine category: #Ledgerdemain!
+PluggableMorph subclass: #LedgerLine
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerLine class' category: #Ledgerdemain!
+LedgerLine class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
@@ -890,6 +900,70 @@ rightJustifyAt: aPoint with: aCharacter
 initialize
 
 	contents _ OrderedCollection new! !
+
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:39'!
+amount
+	"Answer layout for the date field"
+	^ BorderedRectMorph new
+		color: Color lightBlue;
+		layoutSpec: (LayoutSpec fixedWidth: 60); 
+		name: #amount! !
+
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:36'!
+category
+	"Answer layout for the date field"
+	^ BorderedRectMorph new
+		color: Color lightGray;
+		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
+		name: #category! !
+
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 18:32'!
+date
+	"Answer layout for the date field"
+	^ BorderedRectMorph new
+		color: Color orange;
+		layoutSpec: (LayoutSpec fixedWidth: 90); 
+		name: #date! !
+
+!LedgerLine methodsFor: 'initialization' stamp: 'dhn 7/2/2015 19:50'!
+initialize
+	| row |
+	super initialize.
+	row _ LayoutMorph newRow
+		name: #Row;
+		color: Color red;
+		morphExtent: 400@40;
+		addMorph: self type;
+		addMorph: self date;
+		addMorph: self payee;
+		addMorph: self category;
+		addMorph: self memo;
+		addMorph: self amount.
+	^ row! !
+
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:45'!
+memo
+	"Answer layout for the date field"
+	^ BorderedRectMorph new
+		color: Color white;
+		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
+		name: #memo! !
+
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:34'!
+payee
+	"Answer layout for the date field"
+	^ BorderedRectMorph new
+		color: Color lightGreen;
+		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
+		name: #payee! !
+
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 18:30'!
+type
+	"Answer layout for the type field"
+	^ BorderedRectMorph new
+		color: Color white;
+		layoutSpec: (LayoutSpec fixedWidth: 40); 
+		name: #type! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
 addAccountActionsTo: aMenu
