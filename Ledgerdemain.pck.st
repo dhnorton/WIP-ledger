@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2399] on 2 July 2015 at 7:52:15.206621 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2399] on 2 July 2015 at 7:57:39.602621 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 63!
+!provides: 'Ledgerdemain' 1 64!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger ledgerLines balOpen openDate balRcon balCur'
@@ -901,17 +901,17 @@ initialize
 
 	contents _ OrderedCollection new! !
 
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:39'!
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:57'!
 amount
-	"Answer layout for the date field"
+	"Answer layout for the amount field"
 	^ BorderedRectMorph new
 		color: Color lightBlue;
 		layoutSpec: (LayoutSpec fixedWidth: 60); 
 		name: #amount! !
 
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:36'!
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:57'!
 category
-	"Answer layout for the date field"
+	"Answer layout for the category field"
 	^ BorderedRectMorph new
 		color: Color lightGray;
 		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
@@ -941,17 +941,17 @@ initialize
 		addMorph: self amount.
 	^ row! !
 
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:45'!
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:56'!
 memo
-	"Answer layout for the date field"
+	"Answer layout for the memo field"
 	^ BorderedRectMorph new
 		color: Color white;
 		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
 		name: #memo! !
 
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:34'!
+!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:56'!
 payee
-	"Answer layout for the date field"
+	"Answer layout for the payee field"
 	^ BorderedRectMorph new
 		color: Color lightGreen;
 		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
