@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2399] on 2 July 2015 at 7:57:39.602621 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2404] on 8 July 2015 at 8:38:54.550121 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 64!
+!provides: 'Ledgerdemain' 1 65!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger ledgerLines balOpen openDate balRcon balCur'
@@ -156,7 +156,7 @@ Account responsibilities:
   report
   export and import!
 
-!LedgerDeMain commentStamp: 'dhn 6/24/2015 10:49' prior: 0!
+!LedgerDeMain commentStamp: 'dhn 7/8/2015 20:28' prior: 0!
 LedgerDeMain (a cover class) responsibilities:
 
   hold accounts, payees, categories, memos, trail
@@ -165,7 +165,7 @@ LedgerDeMain (a cover class) responsibilities:
   back up and restore
   move transactions between accounts and record in audit trail
 
-With apologies to those who do legerdemane.
+With apologies to those who do legerdemain.
 
 recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
@@ -539,9 +539,9 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 14:55'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/8/2015 20:35'!
 newAccount
-	| temp bal amt balDate |
+	| temp bal amt balDate acct rec |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
@@ -559,12 +559,25 @@ newAccount
 				bal _ '0'.
 				balDate _ Date today mmddyyyy].
 		amt _ bal dollarsToCents.
-		(self accounts at: temp)
+		acct _ (self accounts at: temp)
 			openDate: balDate;
 			balOpen: amt;
 			balCur: amt;
 			balRcon: amt.
-		self modified: true].
+		self modified: true.
+		rec _ Transaction new.
+		rec
+			date: balDate;
+			payee: '**Opening Balance';
+			amount: amt.
+		acct ledger addFirst: rec.
+		rec _ Transaction new.
+		rec 
+			date: Date today mmddyyyy;
+			payee: '';
+			amount: amt.
+		acct ledger addLast: rec]
+	
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
