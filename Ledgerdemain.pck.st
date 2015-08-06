@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2404] on 8 July 2015 at 8:38:54.550121 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 6 August 2015 at 3:13:39.985687 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 65!
+!provides: 'Ledgerdemain' 1 68!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'ledger ledgerLines balOpen openDate balRcon balCur'
@@ -156,8 +156,8 @@ Account responsibilities:
   report
   export and import!
 
-!LedgerDeMain commentStamp: 'dhn 7/8/2015 20:28' prior: 0!
-LedgerDeMain (a cover class) responsibilities:
+!LedgerDeMain commentStamp: 'dhn 8/5/2015 20:22' prior: 0!
+LedgerDeMain is the model for LedgerWindow and a cover class. Its responsibilities are:
 
   hold accounts, payees, categories, memos, trail
   search
@@ -185,8 +185,11 @@ Reconciliation responsibilities:
   update ledger
 !
 
-!LedgerWindow commentStamp: 'dhn 6/23/2015 20:42' prior: 0!
-Window for Ledger d'Main. Provides pop-up menu for options.!
+!LedgerWindow commentStamp: 'dhn 8/5/2015 20:23' prior: 0!
+Window for Ledger d'Main. Provides pop-up menu for options.
+
+The window is a LedgerWindow.
+The window's model is a LedgerDeMain.!
 
 !NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
 Abstract class for entities which have a specified name.!
@@ -1116,7 +1119,7 @@ windowAccountList
 			name: 'Account List'
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 7/1/2015 12:36'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/5/2015 18:59'!
 windowLedgerList
 	"Answer the specifications for the ledger list in the window"
 	
@@ -1128,7 +1131,8 @@ windowLedgerList
 		mainView: self
 		menuGetter: #menuLedger
 		keystrokeAction: nil)
-			name: #Ledger
+			name: #Ledger;
+			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 11)
 ! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
@@ -1226,18 +1230,26 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 7/2/2015 14:29'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/6/2015 15:11'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
 	str _ String new writeStream
-		nextPutAll: (self type contractTo: (self class itemLength at: #type)); tab;
-		nextPutAll: (self date contractTo: (self class itemLength at: #date)); tab;
-		nextPutAll: (self checkNumber contractTo: (self class itemLength at: #checkNumber)); tab;
-		nextPutAll: (self payee contractTo: (self class itemLength at: #payee)); tab;
-		nextPutAll: (self category contractTo: (self class itemLength at: #category)); tab;
-		nextPutAll: (self memo contractTo: (self class itemLength at: #memo)); tab;
-		nextPutAll: (self amount contractTo: (self class itemLength at: #amount)).
+		nextPutAll: (self date contractTo: 10);
+		nextPut: $ ;
+		nextPutAll: (self checkNumber contractTo: 4);
+		nextPut: $ ;
+		nextPutAll: (self payee contractTo: 30);
+		nextPut: $ ;
+		nextPutAll: (self category contractTo: 35);
+		nextPut: $ ;
+		nextPutAll: (self memo contractTo: 30);
+		nextPut: $ ;
+		nextPut: self reconciled asCharacter;
+		nextPut: $ ;
+		nextPutAll: (self amount contractTo: 16);
+		nextPut: $ ;
+		nextPutAll: (self type contractTo: 4).
 	^ str contents! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:42'!
@@ -1321,15 +1333,36 @@ fields
 		at: #AmountIn put: (Field at: 124@136);
 		yourself! !
 
-!Transaction class methodsFor: 'formatting' stamp: 'dhn 7/2/2015 14:15'!
+!Transaction class methodsFor: 'formatting' stamp: 'dhn 8/6/2015 12:50'!
+fieldsOut
+	"Answer the transaction list item definition consisting of field names and positions"
+	^ Dictionary new
+		at: #TypeOut put: (Field at: 1@5);	"EFT, DEB, TOUT"
+		at: #Blank01 put: (Field at: 6);
+		at: #DateOut put: (Field at: 7@17);	"mm/dd/yyyy"
+		at: #Blank02 put: (Field at: 18);
+		at: #CheckOut put: (Field at: 19@22);	"check number"
+		at: #Blank03 put: (Field at: 23);
+		at: #PayeeOut put: (Field at: 24@54);
+		at: #Blank04 put: (Field at: 55);
+		at: #CategoryOut put: (Field at: 56@76);
+		at: #Blank05 put: (Field at: 77);
+		at: #MemoOut put: (Field at: 78@98);
+		at: #Blank06 put: (Field at: 99);
+		at: #ROut put: (Field at: 100);	"R, blank"
+		at: #Blank07 put: (Field at: 101);
+		at: #AmountOut put: (Field at: 102@124);
+		yourself! !
+
+!Transaction class methodsFor: 'formatting' stamp: 'dhn 8/6/2015 14:41'!
 itemLength
 	"Answer the length of data items for use in ledger list format"
 	^ Dictionary new
 		at: #amount 			put: 16;
-		at: #category 		put: 20;
+		at: #category 			put: 30;
 		at: #date 				put: 20;
-		at: #memo			put: 30;
-		at: #payee			put: 30;
+		at: #memo				put: 30;
+		at: #payee				put: 30;
 		at: #reconciled		put: 2;
 		at: #checkNumber	put: 6;
 		at: #transfer			put: 12;
