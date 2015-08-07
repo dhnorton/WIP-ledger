@@ -1,9 +1,10 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 6 August 2015 at 3:13:39.985687 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 7 August 2015 at 6:06:06.21979 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 68!
+!provides: 'Ledgerdemain' 1 72!
+!requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
-	instanceVariableNames: 'ledger ledgerLines balOpen openDate balRcon balCur'
+	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -19,16 +20,6 @@ Workspace subclass: #LedgerDeMain
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
 LedgerDeMain class
-	instanceVariableNames: ''!
-
-!classDefinition: #Field category: #Ledgerdemain!
-OrderedCollection subclass: #Field
-	instanceVariableNames: 'location pad left'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Field class' category: #Ledgerdemain!
-Field class
 	instanceVariableNames: ''!
 
 !classDefinition: #Ledger category: #Ledgerdemain!
@@ -51,16 +42,6 @@ Morph subclass: #Reconciliation
 Reconciliation class
 	instanceVariableNames: ''!
 
-!classDefinition: #LedgerLine category: #Ledgerdemain!
-PluggableMorph subclass: #LedgerLine
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'LedgerLine class' category: #Ledgerdemain!
-LedgerLine class
-	instanceVariableNames: ''!
-
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
 	instanceVariableNames: ''
@@ -79,6 +60,16 @@ Object subclass: #NamedEntity
 	category: 'Ledgerdemain'!
 !classDefinition: 'NamedEntity class' category: #Ledgerdemain!
 NamedEntity class
+	instanceVariableNames: ''!
+
+!classDefinition: #LedgerLine category: #Ledgerdemain!
+RecordLayout subclass: #LedgerLine
+	instanceVariableNames: 'date check payee category memo reconciled amount type balance'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerLine class' category: #Ledgerdemain!
+LedgerLine class
 	instanceVariableNames: ''!
 
 !classDefinition: #Repository category: #Ledgerdemain!
@@ -133,7 +124,7 @@ TransactionDate class
 
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
-	instanceVariableNames: 'content date type payee amount category memo reconciled transfer serial'
+	instanceVariableNames: 'account content date type payee amount category memo reconciled transfer serial balance'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -170,10 +161,6 @@ With apologies to those who do legerdemain.
 recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
 reported amount _ dollars (examples: 29.95 5.00)!
-
-!Field commentStamp: 'dhn 1/17/2015 17:21' prior: 0!
-A Field is a container for the location, size, justification, and padding of a field in a data record.
-!
 
 !Ledger commentStamp: 'dhn 6/24/2015 21:11' prior: 0!
 Ledger is an ordered collection of transactions.!
@@ -273,6 +260,26 @@ asMmDdYyyy
 	"Convert the receiver from Ledgerdemain date number to dd/mm/yyyy"
 	^ (Date fromDays: self) mmddyyyy! !
 
+!Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
+accountName
+	"Answer the value of accountName"
+
+	^ accountName! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
+accountName: anObject
+	"Set the value of accountName"
+
+	accountName _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:54'!
+addTransaction: anObject
+	"Add anObject to the ledger and to the ledger list as formatted"
+	| str |
+	self ledger addLast: anObject.
+	str _ anObject formatted.
+	self ledgerLines addLast: str! !
+
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
 	"Answer the value of balCur"
@@ -342,7 +349,7 @@ ledgerLines: anObject
 
 	ledgerLines _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:56'!
+!Account methodsFor: 'accessing' stamp: 'dhn 8/6/2015 16:22'!
 loadTransaction: anObject
 	"Update balances and add anObject to the ledger"
 	| amt tr |
@@ -352,8 +359,7 @@ loadTransaction: anObject
 	anObject reconciled = 'R' 
 		ifTrue: [self balRcon: self balRcon + amt].
 	tr _ Transaction new content: anObject content.
-	self ledger addLast: tr.
-	self ledgerLines addLast: tr formatted! !
+	self addTransaction: tr! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:49'!
 openDate
@@ -412,14 +418,14 @@ accounts
 	accounts ifNil: [accounts _ Dictionary new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/23/2015 21:27'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/7/2015 11:40'!
 accounts: anObject
 	"Save anObject in accounts"
 
 	(self accounts includesKey: anObject asSymbol)
 		ifTrue: [self inform: anObject,' is already an account']
 		ifFalse: [
-			self accounts at: anObject asSymbol put: Account new.
+			self accounts at: anObject asSymbol put: (Account new accountName: anObject).
 			self modified: true]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:28'!
@@ -542,7 +548,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/8/2015 20:35'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/7/2015 15:55'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -568,19 +574,18 @@ newAccount
 			balCur: amt;
 			balRcon: amt.
 		self modified: true.
-		rec _ Transaction new.
+		rec _ Transaction new account: acct.
 		rec
-			date: balDate;
+			date: acct openDate;
 			payee: '**Opening Balance';
-			amount: amt.
-		acct ledger addFirst: rec.
-		rec _ Transaction new.
+			reconciled: 'R';
+			balance: ((acct balOpen / 100) roundTo: 0.01) asString.
+		acct addTransaction: rec.
+		rec _ Transaction new account: acct.
 		rec 
-			date: Date today mmddyyyy;
-			payee: '';
-			amount: amt.
-		acct ledger addLast: rec]
-	
+			date: Date today mmddyyyy.
+		acct addTransaction: rec].
+		self changed: #transactionList
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
@@ -828,158 +833,10 @@ uniqueInstance
 	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
 	^ UniqueInstance! !
 
-!Field methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:54'!
-at: anObject
-	"Set the receiver to anObject"
-	anObject class = Point
-		ifFalse: [^ anObject asPoint].
-	^ anObject! !
-
-!Field methodsFor: 'accessing' stamp: 'dhn 1/17/2015 14:44'!
-left
-	"Answer the value of left"
-	left ifNil: [left _ true].
-	^ left! !
-
-!Field methodsFor: 'accessing' stamp: 'dhn 1/17/2015 14:45'!
-left: aBool
-	"Set whether justification will be left (true) or right (false)"
-	left _ aBool! !
-
-!Field methodsFor: 'accessing' stamp: 'dhn 1/17/2015 15:04'!
-length
-	"Answer the length of the field"
-	^ 1 + location y - location x! !
-
-!Field methodsFor: 'accessing' stamp: 'dhn 1/17/2015 14:45'!
-location
-	"Answer the value of location"
-	^ location! !
-
-!Field methodsFor: 'accessing' stamp: 'dhn 6/30/2015 15:27'!
-location: aPoint
-	"Set the value of location as from@to"
-	location _ self at: aPoint! !
-
-!Field methodsFor: 'accessing' stamp: 'dhn 1/17/2015 14:47'!
-pad
-	"Answer the value of pad. The default is a blank character"
-	pad ifNil: [pad _ $ ].
-	^ pad! !
-
-!Field methodsFor: 'accessing' stamp: 'dhn 1/17/2015 14:46'!
-pad: anObject
-	"Set the value of pad"
-	pad _ anObject! !
-
-!Field class methodsFor: 'basic' stamp: 'dhn 1/17/2015 14:48'!
-at: aPoint
-	"Establish the receiver with no padding or justification. The first position of the receiver is aPoint x; the last is aPoint y"
-	^ self new location: aPoint! !
-
-!Field class methodsFor: 'basic' stamp: 'dhn 1/17/2015 14:48'!
-at: aPoint left: aBool
-	"Establish Character blank as the padding character for the receiver. Data in the receiver will be left-justified if aBool is true and right-justified otherwise. The first position of the receiver is aPoint x; the last is aPoint y"
-	^ self new location: aPoint; left: aBool! !
-
-!Field class methodsFor: 'basic' stamp: 'dhn 1/17/2015 14:49'!
-at: aPoint left: aBool with: aCharacter
-	"Establish aCharacter as the padding character for the receiver. Data in the receiver will be left-justified if aBool is true and right-justified otherwise. The first position of the receiver is aPoint x; the last is aPoint y"
-	^ self new location: aPoint; left: aBool; pad: aCharacter! !
-
-!Field class methodsFor: 'basic' stamp: 'dhn 1/17/2015 14:53'!
-at: aLocation with: aCharacter
-	"Establish a single character for the receiver (not for strings). The first position of the receiver is aPoint x; the last is aPoint y"
-	^ self new location: aLocation@aLocation; pad: aCharacter! !
-
-!Field class methodsFor: 'coherent' stamp: 'dhn 1/17/2015 15:49'!
-character: aCharacter at: aLocation
-	^ self at: aLocation with: aCharacter! !
-
-!Field class methodsFor: 'coherent' stamp: 'dhn 1/17/2015 15:13'!
-leftJustifyAt: aPoint
-	^ self at: aPoint; left: true! !
-
-!Field class methodsFor: 'coherent' stamp: 'dhn 1/17/2015 15:19'!
-leftJustifyAt: aPoint with: aCharacter
-	^ self at: aPoint left: true with: aCharacter! !
-
-!Field class methodsFor: 'coherent' stamp: 'dhn 1/17/2015 15:14'!
-rightJustifyAt: aPoint
-	^ self at: aPoint; left: false! !
-
-!Field class methodsFor: 'coherent' stamp: 'dhn 1/17/2015 15:19'!
-rightJustifyAt: aPoint with: aCharacter
-	^ self at: aPoint left: false with: aCharacter! !
-
 !Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
 initialize
 
 	contents _ OrderedCollection new! !
-
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:57'!
-amount
-	"Answer layout for the amount field"
-	^ BorderedRectMorph new
-		color: Color lightBlue;
-		layoutSpec: (LayoutSpec fixedWidth: 60); 
-		name: #amount! !
-
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:57'!
-category
-	"Answer layout for the category field"
-	^ BorderedRectMorph new
-		color: Color lightGray;
-		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
-		name: #category! !
-
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 18:32'!
-date
-	"Answer layout for the date field"
-	^ BorderedRectMorph new
-		color: Color orange;
-		layoutSpec: (LayoutSpec fixedWidth: 90); 
-		name: #date! !
-
-!LedgerLine methodsFor: 'initialization' stamp: 'dhn 7/2/2015 19:50'!
-initialize
-	| row |
-	super initialize.
-	row _ LayoutMorph newRow
-		name: #Row;
-		color: Color red;
-		morphExtent: 400@40;
-		addMorph: self type;
-		addMorph: self date;
-		addMorph: self payee;
-		addMorph: self category;
-		addMorph: self memo;
-		addMorph: self amount.
-	^ row! !
-
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:56'!
-memo
-	"Answer layout for the memo field"
-	^ BorderedRectMorph new
-		color: Color white;
-		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
-		name: #memo! !
-
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 19:56'!
-payee
-	"Answer layout for the payee field"
-	^ BorderedRectMorph new
-		color: Color lightGreen;
-		layoutSpec: (LayoutSpec proportionalWidth: 0.6); 
-		name: #payee! !
-
-!LedgerLine methodsFor: 'layout' stamp: 'dhn 7/2/2015 18:30'!
-type
-	"Answer layout for the type field"
-	^ BorderedRectMorph new
-		color: Color white;
-		layoutSpec: (LayoutSpec fixedWidth: 40); 
-		name: #type! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
 addAccountActionsTo: aMenu
@@ -1159,6 +1016,155 @@ open
 named: aName
 	^ self basicNew identity: aName! !
 
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:02'!
+amount
+	"Answer the value of amount"
+
+	amount ifNil: [amount _ String new].
+	^ amount! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+amount: anObject
+	"Set the value of amount"
+
+	amount _ anObject! !
+
+!LedgerLine methodsFor: 'finalizing' stamp: 'dhn 8/7/2015 18:03'!
+assemble: anObject 
+	"Answer the record formed by populating the fields with data from
+	anObject "
+	^ self assemble: anObject endingWith: ''
+! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:04'!
+balance
+	"Answer the value of balance"
+
+	balance ifNil: [balance _ String new].
+	^ balance! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+balance: anObject
+	"Set the value of balance"
+
+	balance _ anObject! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:04'!
+category
+	"Answer the value of category"
+
+	category ifNil: [category _ String new].
+	^ category! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+category: anObject
+	"Set the value of category"
+
+	category _ anObject! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:05'!
+check
+	"Answer the value of check"
+
+	check ifNil: [check _ String new].
+	^ check! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+check: anObject
+	"Set the value of check"
+
+	check _ anObject! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:05'!
+date
+	"Answer the value of date"
+
+	date ifNil: [date _ String new].
+	^ date! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+date: anObject
+	"Set the value of date"
+
+	date _ anObject! !
+
+!LedgerLine methodsFor: 'initialization' stamp: 'dhn 8/7/2015 13:33'!
+initialize
+
+	super initialize.
+! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:06'!
+memo
+	"Answer the value of memo"
+
+	memo ifNil: [memo _ String new].
+	^ memo! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+memo: anObject
+	"Set the value of memo"
+
+	memo _ anObject! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:06'!
+payee
+	"Answer the value of payee"
+
+	payee ifNil: [payee _ String new].
+	^ payee! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+payee: anObject
+	"Set the value of payee"
+
+	payee _ anObject! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:07'!
+reconciled
+	"Answer the value of reconciled"
+
+	reconciled ifNil: [reconciled _ String new].
+	^ reconciled! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+reconciled: anObject
+	"Set the value of reconciled"
+
+	reconciled _ anObject! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:07'!
+type
+	"Answer the value of type"
+
+	type ifNil: [type _ String new].
+	^ type! !
+
+!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
+type: anObject
+	"Set the value of type"
+
+	type _ anObject! !
+
+!LedgerLine class methodsFor: 'accessing' stamp: 'dhn 8/7/2015 16:24'!
+fields
+	"Answer the transaction list-item definition consisting of field names and positions"
+	
+	"Fields which are left-justified are defined one larger than actual data, obviating the need to define blank padding between fields."
+	
+	^ Dictionary new
+		at: #date 			put: (Field at: 				1@11);	"mm/dd/yyyy"
+		at: #check 			put: (Field at: 				12@16);	"check number"
+		at: #payee 			put: (Field at: 				17@37);
+		at: #category 		put: (Field at: 				38@68);
+		at: #memo 			put: (Field at: 				69@104);
+		at: #reconciled	put: (Field at: 				105@106);	"reconciled: R, blank"
+		at: #amount 		put: (Field rightJustifyAt: 	107@122);
+		at: #Blank07 		put: (Field at: 				123);
+		at: #type 			put: (Field at: 				124@128);	"EFT, DEB, TOUT"
+		at: #balance 		put: (Field rightJustifyAt: 	129@144);
+		yourself! !
+
 !Payee methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:01'!
 last
 	"Answer the value of last"
@@ -1172,12 +1178,24 @@ last: anObject
 
 	last _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:37'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:53'!
+account
+	"Answer the value of account"
+
+	^ account! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:53'!
+account: anObject
+	"Set the value of account"
+
+	account _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:24'!
 amount
 	"Answer the content of the amount field"
-	| f |
-	f _ self class fields at: #AmountIn.
-	^ self content copyFrom: f location x count: f length! !
+
+	amount ifNil: [amount _ String new].
+	^ amount! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
 amount: anObject
@@ -1185,14 +1203,27 @@ amount: anObject
 
 	amount _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:38'!
-category
-	"Answer the content of the category field"
-	| f |
-	f _ self class fields at: #CategoryIn.
-	^ self content copyFrom: f location x count: f length! !
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:24'!
+balance
+	"Answer the content of the balance field"
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+	balance ifNil: [balance _ String new].
+	^ balance! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/6/2015 21:06'!
+balance: anObject
+	"Set the value of balance"
+
+	balance _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:25'!
+category
+	"Answer the value of category"
+
+	category ifNil: [category _ String new].
+	^ category! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:17'!
 category: anObject
 	"Set the value of category"
 
@@ -1217,79 +1248,90 @@ content: anObject
 
 	content _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:41'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:25'!
 date
-	"Answer the content of the date field"
-	| f |
-	f _ self class fields at: #DateIn.
-	^ self content copyFrom: f location x count: f length! !
+	"Answer the value of date"
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+	date ifNil: [date _ String new].
+	^ date! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:17'!
 date: anObject
 	"Set the value of date"
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/6/2015 15:11'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/7/2015 18:03'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
-	str _ String new writeStream
-		nextPutAll: (self date contractTo: 10);
-		nextPut: $ ;
-		nextPutAll: (self checkNumber contractTo: 4);
-		nextPut: $ ;
-		nextPutAll: (self payee contractTo: 30);
-		nextPut: $ ;
-		nextPutAll: (self category contractTo: 35);
-		nextPut: $ ;
-		nextPutAll: (self memo contractTo: 30);
-		nextPut: $ ;
-		nextPut: self reconciled asCharacter;
-		nextPut: $ ;
-		nextPutAll: (self amount contractTo: 16);
-		nextPut: $ ;
-		nextPutAll: (self type contractTo: 4).
-	^ str contents! !
+	str _ LedgerLine new.
+	str data at: #date put: (self date contractTo: 10).
+	str data at: #check put: (self serial contractTo: 4).
+	str data at: #payee put: (self payee contractTo: 30).
+	str data at: #category put: (self category contractTo: 35).
+	str data at: #memo put: (self memo contractTo: 30).
+	str data at: #reconciled put: self reconciled asString.
+	str data at: #amount put: (self amount contractTo: 16).
+	str data at: #balance put: ((self account balCur / 100) roundTo: 0.01) asString.
+	str data at: #type put: (self type contractTo: 4).
+	^ str assemble: str data! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:42'!
+!Transaction methodsFor: 'initialization' stamp: 'dhn 8/6/2015 18:03'!
+initialize
+	super initialize! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:26'!
 memo
-	"Answer the content of the memo field"
-	| f |
-	f _ self class fields at: #MemoIn.
-	^ self content copyFrom: f location x count: f length! !
+	"Answer the value of memo"
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+	memo ifNil: [memo _ String new].
+	^ memo! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:17'!
 memo: anObject
 	"Set the value of memo"
 
 	memo _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:42'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:26'!
 payee
-	"Answer the content of the payee field"
-	| f |
-	f _ self class fields at: #PayeeIn.
-	^ self content copyFrom: f location x count: f length! !
+	"Answer the value of payee"
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+	payee ifNil: [payee _ String new].
+	^ payee! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:17'!
 payee: anObject
 	"Set the value of payee"
 
 	payee _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:44'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:27'!
 reconciled
-	"Answer the content of the reconcile field"
-	| f |
-	f _ self class fields at: #RIn.
-	^ self content copyFrom: f location x count: f length! !
+	"Answer the value of reconciled"
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+	reconciled ifNil: [reconciled _ String new].
+	^ reconciled! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:17'!
 reconciled: anObject
 	"Set the value of reconciled"
 
 	reconciled _ anObject! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:23'!
+serial
+	"Answer the value of serial"
+
+	serial ifNil: [serial _ String new].
+	^ serial! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/6/2015 21:06'!
+serial: anObject
+	"Set the value of serial"
+
+	serial _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
 transfer
@@ -1303,14 +1345,14 @@ transfer: anObject
 
 	transfer _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:44'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:28'!
 type
-	"Answer the content of the type field"
-	| f |
-	f _ self class fields at: #Type.
-	^ self content copyFrom: f location x count: f length! !
+	"Answer the value of type"
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+	type ifNil: [type _ String new].
+	^ type! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:17'!
 type: anObject
 	"Set the value of type"
 
@@ -1333,25 +1375,27 @@ fields
 		at: #AmountIn put: (Field at: 124@136);
 		yourself! !
 
-!Transaction class methodsFor: 'formatting' stamp: 'dhn 8/6/2015 12:50'!
+!Transaction class methodsFor: 'formatting' stamp: 'dhn 8/6/2015 21:00'!
 fieldsOut
 	"Answer the transaction list item definition consisting of field names and positions"
 	^ Dictionary new
-		at: #TypeOut put: (Field at: 1@5);	"EFT, DEB, TOUT"
-		at: #Blank01 put: (Field at: 6);
-		at: #DateOut put: (Field at: 7@17);	"mm/dd/yyyy"
-		at: #Blank02 put: (Field at: 18);
-		at: #CheckOut put: (Field at: 19@22);	"check number"
-		at: #Blank03 put: (Field at: 23);
-		at: #PayeeOut put: (Field at: 24@54);
-		at: #Blank04 put: (Field at: 55);
-		at: #CategoryOut put: (Field at: 56@76);
-		at: #Blank05 put: (Field at: 77);
-		at: #MemoOut put: (Field at: 78@98);
-		at: #Blank06 put: (Field at: 99);
-		at: #ROut put: (Field at: 100);	"R, blank"
-		at: #Blank07 put: (Field at: 101);
-		at: #AmountOut put: (Field at: 102@124);
+		at: #DateOut put: (Field at: 1@10);	"mm/dd/yyyy"
+		at: #Blank01 put: (Field at: 11);
+		at: #CheckOut put: (Field at: 12@15);	"check number"
+		at: #Blank02 put: (Field at: 16);
+		at: #PayeeOut put: (Field at: 17@36);
+		at: #Blank03 put: (Field at: 37);
+		at: #CategoryOut put: (Field at: 38@67);
+		at: #Blank04 put: (Field at: 68);
+		at: #MemoOut put: (Field at: 69@103);
+		at: #Blank05 put: (Field at: 104);
+		at: #ROut put: (Field at: 105);	"R, blank"
+		at: #Blank06 put: (Field at: 106);
+		at: #AmountOut put: (Field at: 107@122);
+		at: #Blank07 put: (Field at: 123);
+		at: #TypeOut put: (Field at: 124@127);	"EFT, DEB, TOUT"
+		at: #Blank08 put: (Field at: 128);
+		at: #Balance put: (Field at: 129@144);
 		yourself! !
 
 !Transaction class methodsFor: 'formatting' stamp: 'dhn 8/6/2015 14:41'!
