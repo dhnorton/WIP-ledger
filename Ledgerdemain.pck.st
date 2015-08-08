@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 8 August 2015 at 11:54:55.370242 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 8 August 2015 at 3:31:45.431666 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 73!
+!provides: 'Ledgerdemain' 1 74!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -559,7 +559,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/8/2015 11:52'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/8/2015 15:18'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -586,7 +586,7 @@ newAccount
 		self modified: true.
 		rec _ Transaction new account: acct.
 		rec
-			date: acct openDate;
+			date: (rec mmddyyyy: acct openDate);
 			payee: '**Opening Balance';
 			reconciled: 'R';
 			type: '';
@@ -1216,11 +1216,11 @@ amount
 	amount ifNil: [amount _ String new].
 	^ amount! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/8/2015 14:36'!
 amount: anObject
 	"Set the value of amount"
 
-	amount _ anObject! !
+	amount _ self format: anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:24'!
 balance
@@ -1229,11 +1229,11 @@ balance
 	balance ifNil: [balance _ String new].
 	^ balance! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 8/6/2015 21:06'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/8/2015 13:43'!
 balance: anObject
 	"Set the value of balance"
 
-	balance _ anObject! !
+	balance _ self format: anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:25'!
 category
@@ -1285,7 +1285,19 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 11:33'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 15:25'!
+format: anObject
+	"Answer anObject as a string with at least two decimal places"
+	| str pos |
+	str _ anObject asString.
+	pos _ str findFirst: [:a | a = $.].
+	str size > 0
+		ifTrue: [
+			(str size - pos) < 2
+				ifTrue: [^ str, '0']].
+	^ str! !
+
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 13:52'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
@@ -1297,7 +1309,8 @@ formatted
 	str data at: #memo put: self memo withoutTrailingBlanks.
 	str data at: #reconciled put: self reconciled asString.
 	str data at: #amount put: self amount withoutTrailingBlanks.
-	str data at: #balance put: ((self account balCur / 100) roundTo: 0.01) asString.
+	str data at: #balance 
+		put: (self format: ((self account balCur / 100) roundTo: 0.01) asString).
 	str data at: #type put: self type withoutTrailingBlanks.
 	^ str assemble: str data! !
 
@@ -1317,6 +1330,22 @@ memo: anObject
 	"Set the value of memo"
 
 	memo _ anObject! !
+
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 15:14'!
+mmddyyyy: anObject
+	"Answer anObject as a date in the form mm/dd/yyyy because Date does not do it right"
+	| str dd mm yyyy ios |
+	str _ anObject asDate yyyymmdd.		"ISO format"
+	dd _  str copyFrom: 9 to: 10.
+	mm _ str copyFrom: 6 to: 7.
+	yyyy _ str copyFrom: 1 to: 4.
+	ios _ String new writeStream
+		nextPutAll: mm;
+		nextPut: $/;
+		nextPutAll: dd;
+		nextPut: $/;
+		nextPutAll: yyyy.
+	^ ios contents! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:26'!
 payee
