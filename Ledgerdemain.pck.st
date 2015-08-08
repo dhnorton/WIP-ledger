@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 7 August 2015 at 6:06:06.21979 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 8 August 2015 at 11:54:55.370242 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 72!
+!provides: 'Ledgerdemain' 1 73!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -124,7 +124,7 @@ TransactionDate class
 
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
-	instanceVariableNames: 'account content date type payee amount category memo reconciled transfer serial balance'
+	instanceVariableNames: 'account content date type payee amount category memo reconciled transfer check balance'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -180,6 +180,9 @@ The window's model is a LedgerDeMain.!
 
 !NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
 Abstract class for entities which have a specified name.!
+
+!LedgerLine commentStamp: 'dhn 8/7/2015 18:45' prior: 0!
+Format a transaction as an item in the ledger list pane.!
 
 !Repository commentStamp: 'dhn 6/12/2015 19:12' prior: 0!
 Repository responsibilities:
@@ -349,7 +352,7 @@ ledgerLines: anObject
 
 	ledgerLines _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 8/6/2015 16:22'!
+!Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 21:58'!
 loadTransaction: anObject
 	"Update balances and add anObject to the ledger"
 	| amt tr |
@@ -358,7 +361,8 @@ loadTransaction: anObject
 	self balCur: self balCur + amt.
 	anObject reconciled = 'R' 
 		ifTrue: [self balRcon: self balRcon + amt].
-	tr _ Transaction new content: anObject content.
+	tr _ anObject copy.
+	tr balance: ((self balCur / 100) roundTo: 0.01) asString.
 	self addTransaction: tr! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:49'!
@@ -373,19 +377,26 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 7/2/2015 11:45'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 8/8/2015 11:33'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
 	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.txt'.
 	file ~= '' ifTrue: [
 		ios _ FileStream oldFileNamed: file.
-		rec _ Transaction new.
 		acct _ accounts at: selectedAccount.
+		rec _ Transaction new account: acct.
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 
 				ifTrue: [
-					rec content: line.
+					rec type: (rec acquire: #type from: line).
+					rec date: (rec acquire: #date from: line).
+					rec check: (rec acquire: #check from: line).
+					rec payee: (rec acquire: #payee from: line).
+					rec memo: (rec acquire: #memo from: line).
+					rec category: (rec acquire: #category from: line).
+					rec reconciled: (rec acquire: #reconciled from: line).
+					rec amount: (rec acquire: #amount from: line).
 					self categories: rec category withoutTrailingBlanks.
 					self payees: rec payee withoutTrailingBlanks.
 					self memos: rec memo withoutTrailingBlanks.
@@ -548,14 +559,13 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/7/2015 15:55'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/8/2015 11:52'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
 		self accounts: temp.
-		self changed: #accountList.
 		bal _ FillInTheBlankMorph 
 			request: 'Opening balance for ', temp
 			initialAnswer: '0.00'.
@@ -579,13 +589,15 @@ newAccount
 			date: acct openDate;
 			payee: '**Opening Balance';
 			reconciled: 'R';
+			type: '';
+			amount: '';
+			category: '';
+			memo: '';
+			transfer: '';
+			check: '';
 			balance: ((acct balOpen / 100) roundTo: 0.01) asString.
-		acct addTransaction: rec.
-		rec _ Transaction new account: acct.
-		rec 
-			date: Date today mmddyyyy.
 		acct addTransaction: rec].
-		self changed: #transactionList
+		self changed: #accountList
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
@@ -976,7 +988,7 @@ windowAccountList
 			name: 'Account List'
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/5/2015 18:59'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/7/2015 18:38'!
 windowLedgerList
 	"Answer the specifications for the ledger list in the window"
 	
@@ -989,7 +1001,7 @@ windowLedgerList
 		menuGetter: #menuLedger
 		keystrokeAction: nil)
 			name: #Ledger;
-			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 11)
+			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9)
 ! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
@@ -1190,6 +1202,13 @@ account: anObject
 
 	account _ anObject! !
 
+!Transaction methodsFor: 'loading' stamp: 'dhn 8/7/2015 21:27'!
+acquire: aField from: aString
+	"Answer the subset of aString which is defined by aField"
+	| loc |
+	loc _ (self class fields at: aField asSymbol) location.
+	^ aString copyFrom: loc x to: loc y.! !
+
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:24'!
 amount
 	"Answer the content of the amount field"
@@ -1229,12 +1248,17 @@ category: anObject
 
 	category _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/2/2015 11:38'!
-checkNumber
-	"Answer the content of the check number field"
-	| f |
-	f _ self class fields at: #CheckIn.
-	^ self content copyFrom: f location x count: f length! !
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 21:41'!
+check
+	"Answer the value of check"
+
+	^ check! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 21:41'!
+check: anObject
+	"Set the value of check"
+
+	check _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 7/1/2015 21:59'!
 content
@@ -1261,20 +1285,20 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/7/2015 18:03'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 11:33'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
 	str _ LedgerLine new.
-	str data at: #date put: (self date contractTo: 10).
-	str data at: #check put: (self serial contractTo: 4).
-	str data at: #payee put: (self payee contractTo: 30).
-	str data at: #category put: (self category contractTo: 35).
-	str data at: #memo put: (self memo contractTo: 30).
+	str data at: #date put: self date withoutTrailingBlanks.
+	str data at: #check put: self check withoutTrailingBlanks.
+	str data at: #payee put: self payee withoutTrailingBlanks.
+	str data at: #category put: self category withoutTrailingBlanks.
+	str data at: #memo put: self memo withoutTrailingBlanks.
 	str data at: #reconciled put: self reconciled asString.
-	str data at: #amount put: (self amount contractTo: 16).
+	str data at: #amount put: self amount withoutTrailingBlanks.
 	str data at: #balance put: ((self account balCur / 100) roundTo: 0.01) asString.
-	str data at: #type put: (self type contractTo: 4).
+	str data at: #type put: self type withoutTrailingBlanks.
 	^ str assemble: str data! !
 
 !Transaction methodsFor: 'initialization' stamp: 'dhn 8/6/2015 18:03'!
@@ -1320,19 +1344,6 @@ reconciled: anObject
 
 	reconciled _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:23'!
-serial
-	"Answer the value of serial"
-
-	serial ifNil: [serial _ String new].
-	^ serial! !
-
-!Transaction methodsFor: 'accessing' stamp: 'dhn 8/6/2015 21:06'!
-serial: anObject
-	"Set the value of serial"
-
-	serial _ anObject! !
-
 !Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
 transfer
 	"Answer the value of transfer"
@@ -1358,57 +1369,19 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'loading' stamp: 'dhn 7/2/2015 11:32'!
+!Transaction class methodsFor: 'loading' stamp: 'dhn 8/7/2015 21:32'!
 fields
 	"Answer the S50 record definition consisting of field names and positions"
 	^ Dictionary new
-		at: #Type put: (Field at: 1@5);	"EFT, DEB, TOUT"
+		at: #type put: (Field at: 1@5);	"EFT, DEB, TOUT"
 		at: #Blank1 put: (Field at: 6@20);
-		at: #DateIn put: (Field at: 21@30);	"mm/dd/yyyy"
+		at: #date put: (Field at: 21@30);	"mm/dd/yyyy"
 		at: #Blank2 put: (Field at: 31@35);
-		at: #CheckIn put: (Field at: 36@39);	"check number"
+		at: #check put: (Field at: 36@39);	"check number"
 		at: #Blank3 put: (Field at: 40);
-		at: #PayeeIn put: (Field at: 41@70);
-		at: #MemoIn put: (Field at: 71@87);
-		at: #CategoryIn put: (Field at: 88@122);
-		at: #RIn put: (Field at: 123);	"R, blank"
-		at: #AmountIn put: (Field at: 124@136);
-		yourself! !
-
-!Transaction class methodsFor: 'formatting' stamp: 'dhn 8/6/2015 21:00'!
-fieldsOut
-	"Answer the transaction list item definition consisting of field names and positions"
-	^ Dictionary new
-		at: #DateOut put: (Field at: 1@10);	"mm/dd/yyyy"
-		at: #Blank01 put: (Field at: 11);
-		at: #CheckOut put: (Field at: 12@15);	"check number"
-		at: #Blank02 put: (Field at: 16);
-		at: #PayeeOut put: (Field at: 17@36);
-		at: #Blank03 put: (Field at: 37);
-		at: #CategoryOut put: (Field at: 38@67);
-		at: #Blank04 put: (Field at: 68);
-		at: #MemoOut put: (Field at: 69@103);
-		at: #Blank05 put: (Field at: 104);
-		at: #ROut put: (Field at: 105);	"R, blank"
-		at: #Blank06 put: (Field at: 106);
-		at: #AmountOut put: (Field at: 107@122);
-		at: #Blank07 put: (Field at: 123);
-		at: #TypeOut put: (Field at: 124@127);	"EFT, DEB, TOUT"
-		at: #Blank08 put: (Field at: 128);
-		at: #Balance put: (Field at: 129@144);
-		yourself! !
-
-!Transaction class methodsFor: 'formatting' stamp: 'dhn 8/6/2015 14:41'!
-itemLength
-	"Answer the length of data items for use in ledger list format"
-	^ Dictionary new
-		at: #amount 			put: 16;
-		at: #category 			put: 30;
-		at: #date 				put: 20;
-		at: #memo				put: 30;
-		at: #payee				put: 30;
-		at: #reconciled		put: 2;
-		at: #checkNumber	put: 6;
-		at: #transfer			put: 12;
-		at: #type 				put: 6;
+		at: #payee put: (Field at: 41@70);
+		at: #memo put: (Field at: 71@87);
+		at: #category put: (Field at: 88@122);
+		at: #reconciled put: (Field at: 123);	"R, blank"
+		at: #amount put: (Field at: 124@136);
 		yourself! !
