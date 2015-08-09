@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 9 August 2015 at 1:30:02.57181 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 9 August 2015 at 5:32:24.49781 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 77!
+!provides: 'Ledgerdemain' 1 78!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1315,7 +1315,7 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 20:54'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/9/2015 17:30'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
@@ -1326,7 +1326,7 @@ formatted
 	str data at: #category put: self category withoutTrailingBlanks.
 	str data at: #memo put: self memo withoutTrailingBlanks.
 	str data at: #reconciled put: self reconciled asString.
-	str data at: #amount put: self amount withoutTrailingBlanks.
+	str data at: #amount put: self amount dollarsToCents ledgerFormatted.
 	str data at: #balance put: self account balCur ledgerFormatted.
 	str data at: #type put: self type withoutTrailingBlanks.
 	^ str assemble: str data! !
