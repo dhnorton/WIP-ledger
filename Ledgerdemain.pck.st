@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 8 August 2015 at 9:08:50.164203 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 9 August 2015 at 1:30:02.57181 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 76!
+!provides: 'Ledgerdemain' 1 77!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1188,7 +1188,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'accessing' stamp: 'dhn 8/7/2015 16:24'!
+!LedgerLine class methodsFor: 'accessing' stamp: 'dhn 8/9/2015 13:20'!
 fields
 	"Answer the transaction list-item definition consisting of field names and positions"
 	
@@ -1197,14 +1197,14 @@ fields
 	^ Dictionary new
 		at: #date 			put: (Field at: 				1@11);	"mm/dd/yyyy"
 		at: #check 			put: (Field at: 				12@16);	"check number"
-		at: #payee 			put: (Field at: 				17@37);
-		at: #category 		put: (Field at: 				38@68);
-		at: #memo 			put: (Field at: 				69@104);
-		at: #reconciled	put: (Field at: 				105@106);	"reconciled: R, blank"
-		at: #amount 		put: (Field rightJustifyAt: 	107@122);
-		at: #Blank07 		put: (Field at: 				123);
-		at: #type 			put: (Field at: 				124@128);	"EFT, DEB, TOUT"
-		at: #balance 		put: (Field rightJustifyAt: 	129@144);
+		at: #payee 			put: (Field at: 				17@47);
+		at: #category 		put: (Field at: 				48@83);
+		at: #memo 			put: (Field at: 				84@113);
+		at: #reconciled	put: (Field at: 				114@115);	"reconciled: R, blank"
+		at: #amount 		put: (Field rightJustifyAt: 	116@128);
+		at: #Blank07 		put: (Field at: 				129);
+		at: #type 			put: (Field at: 				130@134);	"EFT, DEB, TOUT"
+		at: #balance 		put: (Field rightJustifyAt: 	135@146);
 		yourself! !
 
 !Payee methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:01'!
