@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 8 August 2015 at 3:31:45.431666 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 8 August 2015 at 9:08:50.164203 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 74!
+!provides: 'Ledgerdemain' 1 76!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -258,6 +258,36 @@ dollarsToCents
 					"fewer than 2 decimal places gets zeros appended"
 	^ y asNumber! !
 
+!Integer methodsFor: '*Ledgerdemain' stamp: 'cmm 6/8/2012 15:43'!
+asStringWithCommasSigned: aBoolean
+	"123456789 asStringWithCommasSigned: true"
+	"-123456789 asStringWithCommasSigned: false"
+	| digits |
+	digits := self abs printString.
+	^ String streamContents:
+		[:strm | 
+		self sign = -1 ifTrue: [strm nextPut: $-] ifFalse: [aBoolean ifTrue: [strm nextPut: $+]].
+		1 to: digits size do: 
+			[:i | strm nextPut: (digits at: i).
+			(i < digits size and: [(i - digits size) \\ 3 = 0])
+				ifTrue: [strm nextPut: $,]]]! !
+
+!Integer methodsFor: '*Ledgerdemain' stamp: 'dhn 8/8/2015 21:04'!
+ledgerFormatted
+	"Answer the receiver as a string with commas to two decimal places. It will be signed only if negative."
+	| x int frac partA str pos ios |
+	x _ (self / 100) roundTo: 0.01.
+	int _ x integerPart truncated.
+	partA _ int asStringWithCommasSigned: false.
+	ios _ String new writeStream.
+	ios nextPutAll: partA.
+	frac _ x fractionPart roundTo: 0.01.
+	str _ frac asString.
+	pos _ str findFirst: [:a | a = $.].
+	str size - pos < 2 ifTrue: [str _ str, '0'].
+	ios nextPutAll: (str copyFrom: pos count: 3).
+	^ ios contents! !
+
 !SmallInteger methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 13:34'!
 asMmDdYyyy
 	"Convert the receiver from Ledgerdemain date number to dd/mm/yyyy"
@@ -352,7 +382,7 @@ ledgerLines: anObject
 
 	ledgerLines _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 21:58'!
+!Account methodsFor: 'accessing' stamp: 'dhn 8/8/2015 19:32'!
 loadTransaction: anObject
 	"Update balances and add anObject to the ledger"
 	| amt tr |
@@ -362,7 +392,7 @@ loadTransaction: anObject
 	anObject reconciled = 'R' 
 		ifTrue: [self balRcon: self balRcon + amt].
 	tr _ anObject copy.
-	tr balance: ((self balCur / 100) roundTo: 0.01) asString.
+	tr balance: self balCur ledgerFormatted.
 	self addTransaction: tr! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:49'!
@@ -559,7 +589,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/8/2015 15:18'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/8/2015 19:30'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -595,7 +625,7 @@ newAccount
 			memo: '';
 			transfer: '';
 			check: '';
-			balance: ((acct balOpen / 100) roundTo: 0.01) asString.
+			balance: acct balOpen ledgerFormatted.
 		acct addTransaction: rec].
 		self changed: #accountList
 ! !
@@ -1216,11 +1246,11 @@ amount
 	amount ifNil: [amount _ String new].
 	^ amount! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 8/8/2015 14:36'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/8/2015 20:52'!
 amount: anObject
 	"Set the value of amount"
 
-	amount _ self format: anObject! !
+	amount _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:24'!
 balance
@@ -1229,11 +1259,11 @@ balance
 	balance ifNil: [balance _ String new].
 	^ balance! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 8/8/2015 13:43'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 8/8/2015 20:53'!
 balance: anObject
 	"Set the value of balance"
 
-	balance _ self format: anObject! !
+	balance _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:25'!
 category
@@ -1285,19 +1315,7 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 15:25'!
-format: anObject
-	"Answer anObject as a string with at least two decimal places"
-	| str pos |
-	str _ anObject asString.
-	pos _ str findFirst: [:a | a = $.].
-	str size > 0
-		ifTrue: [
-			(str size - pos) < 2
-				ifTrue: [^ str, '0']].
-	^ str! !
-
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 13:52'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 20:54'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
@@ -1309,8 +1327,7 @@ formatted
 	str data at: #memo put: self memo withoutTrailingBlanks.
 	str data at: #reconciled put: self reconciled asString.
 	str data at: #amount put: self amount withoutTrailingBlanks.
-	str data at: #balance 
-		put: (self format: ((self account balCur / 100) roundTo: 0.01) asString).
+	str data at: #balance put: self account balCur ledgerFormatted.
 	str data at: #type put: self type withoutTrailingBlanks.
 	^ str assemble: str data! !
 
