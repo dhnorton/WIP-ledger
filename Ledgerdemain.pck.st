@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 9 August 2015 at 5:32:24.49781 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 9 August 2015 at 8:52:09.78881 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 78!
+!provides: 'Ledgerdemain' 1 79!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -124,7 +124,7 @@ TransactionDate class
 
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
-	instanceVariableNames: 'account content date type payee amount category memo reconciled transfer check balance'
+	instanceVariableNames: 'account date type payee amount category memo reconciled transfer check balance'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1289,18 +1289,6 @@ check: anObject
 	"Set the value of check"
 
 	check _ anObject! !
-
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/1/2015 21:59'!
-content
-	"Answer the value of content"
-
-	^ content! !
-
-!Transaction methodsFor: 'accessing' stamp: 'dhn 7/1/2015 21:59'!
-content: anObject
-	"Set the value of content"
-
-	content _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:25'!
 date
