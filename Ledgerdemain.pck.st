@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 9 August 2015 at 8:52:09.78881 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 10 August 2015 at 9:27:17.7939 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 79!
+!provides: 'Ledgerdemain' 1 80!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1130,10 +1130,22 @@ date: anObject
 
 	date _ anObject! !
 
-!LedgerLine methodsFor: 'initialization' stamp: 'dhn 8/7/2015 13:33'!
+!LedgerLine methodsFor: 'initialization' stamp: 'dhn 8/10/2015 20:56'!
 initialize
 
-	super initialize.
+	CompileFields from: #(
+		#(#date 			11)		"mm/dd/yyyy"
+		#(#check 			  5)		"check number"
+		#(#payee 			31)
+		#(#category 		36)
+		#(#memo 			30)
+		#(#reconciled		  2)		"reconciled: R, blank"
+		#(#amount 		13  false)	"right justify"
+		#(#Blank07 		  1)
+		#(#type 				  5)		"EFT, DEB, TOUT"
+		#(#balance 		12  false)	"right justify"
+	) for: self class.
+	super initialize
 ! !
 
 !LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:06'!
@@ -1187,25 +1199,6 @@ type: anObject
 	"Set the value of type"
 
 	type _ anObject! !
-
-!LedgerLine class methodsFor: 'accessing' stamp: 'dhn 8/9/2015 13:20'!
-fields
-	"Answer the transaction list-item definition consisting of field names and positions"
-	
-	"Fields which are left-justified are defined one larger than actual data, obviating the need to define blank padding between fields."
-	
-	^ Dictionary new
-		at: #date 			put: (Field at: 				1@11);	"mm/dd/yyyy"
-		at: #check 			put: (Field at: 				12@16);	"check number"
-		at: #payee 			put: (Field at: 				17@47);
-		at: #category 		put: (Field at: 				48@83);
-		at: #memo 			put: (Field at: 				84@113);
-		at: #reconciled	put: (Field at: 				114@115);	"reconciled: R, blank"
-		at: #amount 		put: (Field rightJustifyAt: 	116@128);
-		at: #Blank07 		put: (Field at: 				129);
-		at: #type 			put: (Field at: 				130@134);	"EFT, DEB, TOUT"
-		at: #balance 		put: (Field rightJustifyAt: 	135@146);
-		yourself! !
 
 !Payee methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:01'!
 last
