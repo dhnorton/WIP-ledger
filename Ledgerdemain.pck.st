@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 10 August 2015 at 9:27:17.7939 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 11 August 2015 at 11:31:10.877633 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 80!
+!provides: 'Ledgerdemain' 1 81!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1312,9 +1312,27 @@ formatted
 	str data at: #type put: self type withoutTrailingBlanks.
 	^ str assemble: str data! !
 
-!Transaction methodsFor: 'initialization' stamp: 'dhn 8/6/2015 18:03'!
+!Transaction methodsFor: 'initialization' stamp: 'dhn 8/11/2015 11:27'!
 initialize
-	super initialize! !
+
+	"There should be a FillInTheBlank dialog here for the various input record formats"
+	self initializeS50! !
+
+!Transaction methodsFor: 'initialization' stamp: 'dhn 8/11/2015 11:23'!
+initializeS50
+	CompileFields from: #(
+		#(#type               5)	"EFT, DEB, TOUT"
+		#(#Blank1         15)
+		#(#date             10)	"mm/dd/yyyy"
+		#(#Blank2           5)
+		#(#check             4)	"check number"
+		#(#Blank3           1)
+		#(#payee          30)
+		#(#memo           17)
+		#(#category     35)
+		#(#reconciled    1)	"R, blank"
+		#(#amount       13)
+	) for: self class! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:26'!
 memo
@@ -1395,20 +1413,3 @@ type: anObject
 	"Set the value of type"
 
 	type _ anObject! !
-
-!Transaction class methodsFor: 'loading' stamp: 'dhn 8/7/2015 21:32'!
-fields
-	"Answer the S50 record definition consisting of field names and positions"
-	^ Dictionary new
-		at: #type put: (Field at: 1@5);	"EFT, DEB, TOUT"
-		at: #Blank1 put: (Field at: 6@20);
-		at: #date put: (Field at: 21@30);	"mm/dd/yyyy"
-		at: #Blank2 put: (Field at: 31@35);
-		at: #check put: (Field at: 36@39);	"check number"
-		at: #Blank3 put: (Field at: 40);
-		at: #payee put: (Field at: 41@70);
-		at: #memo put: (Field at: 71@87);
-		at: #category put: (Field at: 88@122);
-		at: #reconciled put: (Field at: 123);	"R, blank"
-		at: #amount put: (Field at: 124@136);
-		yourself! !
