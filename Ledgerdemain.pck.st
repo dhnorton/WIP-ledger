@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 11 August 2015 at 11:31:10.877633 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 11 August 2015 at 8:43:11.408359 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 81!
+!provides: 'Ledgerdemain' 1 82!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -511,26 +511,40 @@ initialize
 	super initialize.
 	modified _ false! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:46'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/11/2015 20:40'!
 listCategories
 
+	| entries pick |
+	entries _ OrderedCollection new.
 	Categories ifNotNil: [Categories keysDo: [:k |
-		Transcript show: k; newLine]]
+		entries add: k]].
+	entries size = 0 ifTrue: [^ Smalltalk beep].
+	pick _ (SelectionMenu selections: entries) startUpMenu.
+	{'the category selected is: '. pick} print
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/30/2015 21:43'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/11/2015 20:37'!
 listMemos
 
+	| entries pick |
+	entries _ OrderedCollection new.
 	Memos ifNotNil: [Memos keysDo: [:k |
-		Transcript show: k; newLine]]
+		entries add: k]].
+	entries size = 0 ifTrue: [^ Smalltalk beep].
+	pick _ (SelectionMenu selections: entries) startUpMenu.
+	{'the memo selected is: '. pick} print
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:48'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/11/2015 20:41'!
 listPayees
 
+	| entries pick |
+	entries _ OrderedCollection new.
 	Payees ifNotNil: [Payees keysDo: [:k |
-		Transcript show: k; newLine]]
-! !
+		entries add: k]].
+	entries size = 0 ifTrue: [^ Smalltalk beep].
+	pick _ (SelectionMenu selections: entries) startUpMenu.
+	{'the payee selected is: '. pick} print! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:17'!
 listType
