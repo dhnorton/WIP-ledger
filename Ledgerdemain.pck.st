@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 11 August 2015 at 8:43:11.408359 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 12 August 2015 at 9:30:21.610429 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 82!
+!provides: 'Ledgerdemain' 1 83!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -511,40 +511,19 @@ initialize
 	super initialize.
 	modified _ false! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/11/2015 20:40'!
-listCategories
-
-	| entries pick |
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/12/2015 21:25'!
+list: aSymbol
+	"Show the results of the method named aSymbol in a SelectionMenu"
+	| entries rcvr pick |
+	
 	entries _ OrderedCollection new.
-	Categories ifNotNil: [Categories keysDo: [:k |
-		entries add: k]].
+	rcvr _ self perform: aSymbol.
+	rcvr keysDo: [:k | entries add: k].
 	entries size = 0 ifTrue: [^ Smalltalk beep].
 	pick _ (SelectionMenu selections: entries) startUpMenu.
-	{'the category selected is: '. pick} print
+	{pick} print.
+	^ pick
 ! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/11/2015 20:37'!
-listMemos
-
-	| entries pick |
-	entries _ OrderedCollection new.
-	Memos ifNotNil: [Memos keysDo: [:k |
-		entries add: k]].
-	entries size = 0 ifTrue: [^ Smalltalk beep].
-	pick _ (SelectionMenu selections: entries) startUpMenu.
-	{'the memo selected is: '. pick} print
-! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/11/2015 20:41'!
-listPayees
-
-	| entries pick |
-	entries _ OrderedCollection new.
-	Payees ifNotNil: [Payees keysDo: [:k |
-		entries add: k]].
-	entries size = 0 ifTrue: [^ Smalltalk beep].
-	pick _ (SelectionMenu selections: entries) startUpMenu.
-	{'the payee selected is: '. pick} print! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:17'!
 listType
@@ -905,34 +884,34 @@ addAccountActionsTo: aMenu
 	subMenu add: 'Search all accounts...'		target: self model 	action: #searchAllAccounts.
 	aMenu add: 'Accounts...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:28'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 8/12/2015 21:23'!
 addCategoryActionsTo: aMenu
 	"Add items to aMenu for category actions"
 
 	| subMenu |
 	subMenu := MenuMorph new defaultTarget: self.
-	subMenu add: 'List categories'			target: self model 	action: #listCategories.
+	subMenu add: 'List categories'			target: self model 	selector: #list: argument: #categories.
 	subMenu add: 'Add a category'			target: self model 	action: #newCategory.
 	subMenu add: 'Categories from file'	target: self model 	action: #categoriesFromFile.
 	aMenu add: 'Categories...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 21:44'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 8/12/2015 21:23'!
 addMemoActionsTo: aMenu
 	"Add items to aMenu for payee actions"
 
 	| subMenu |
 	subMenu := MenuMorph new defaultTarget: self.
-	subMenu add: 'List memos'			target: self model 	action: #listMemos.
+	subMenu add: 'List memos'			target: self model 	selector: #list: argument: #memos.
 	subMenu add: 'Memos from file'		target: self model 	action: #memosFromFile.
 	aMenu add: 'Memos...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 20:09'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 8/12/2015 21:20'!
 addPayeeActionsTo: aMenu
 	"Add items to aMenu for payee actions"
 
 	| subMenu |
 	subMenu := MenuMorph new defaultTarget: self.
-	subMenu add: 'List payees'			target: self model 	action: #listPayees.
+	subMenu add: 'List payees'			target: self model 	selector: #list: argument: #payees.
 	subMenu add: 'Add a payee'		target: self model 	action: #newPayee.
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
