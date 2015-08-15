@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 12 August 2015 at 9:30:21.610429 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 15 August 2015 at 1:04:50.447633 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 83!
+!provides: 'Ledgerdemain' 1 84!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -172,11 +172,16 @@ Reconciliation responsibilities:
   update ledger
 !
 
-!LedgerWindow commentStamp: 'dhn 8/5/2015 20:23' prior: 0!
+!LedgerWindow commentStamp: 'dhn 8/15/2015 12:29' prior: 0!
 Window for Ledger d'Main. Provides pop-up menu for options.
 
 The window is a LedgerWindow.
-The window's model is a LedgerDeMain.!
+The window's model is a LedgerDeMain.
+
+To bring up Ledger d'Main, do:
+
+	LedgerWindow open.
+!
 
 !NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
 Abstract class for entities which have a specified name.!
@@ -916,17 +921,17 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 7/1/2015 12:37'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 12:25'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
-	| list1 list2 row |
-	list1 _ self windowAccountList.
-	list2 _ self windowLedgerList.
-	row _ LayoutMorph newRow.
-	row name: #Row.
-	row
-		addMorph: list1 proportionalWidth: 0.2;
-		addAdjusterAndMorph: list2 proportionalWidth: 0.8.
+	| row left right |
+	left _ (LayoutMorph newColumn name: 'Left Column')
+		addMorph: self windowAccountList.
+	right _ (LayoutMorph newColumn name: 'Right Column')
+		addMorph: self windowLedgerList.
+	row _ (LayoutMorph newRow name: #Row)
+		addMorph: left proportionalWidth: 0.2;
+		addAdjusterAndMorph: right proportionalWidth: 0.8.
 	self layoutMorph
 		addMorph: row.
 	self setLabel: 'Ledger d''Main'! !
@@ -1011,20 +1016,54 @@ windowAccountList
 			name: 'Account List'
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/7/2015 18:38'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 13:02'!
+windowEntries
+	"Answer the layout for transaction entry fields"
+	
+	^ (LayoutMorph newRow separation: 5)
+		name: #'Entry Fields';
+		color: Color lightGreen;
+		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Date)
+			layoutSpec: (LayoutSpec fixedWidth: 50);		
+		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Check)
+			layoutSpec: (LayoutSpec fixedWidth: 40);
+		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Payee)
+			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
+		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Category)
+			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
+		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Memo)
+			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
+		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #R)
+			layoutSpec: (LayoutSpec fixedWidth: 12);
+		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Amount)
+			layoutSpec: (LayoutSpec fixedWidth: 60).
+! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 12:55'!
 windowLedgerList
 	"Answer the specifications for the ledger list in the window"
+	| list entries |
 	
-	^ (PluggableListMorph
-		model: model
-		listGetter: #transactionList
-		indexGetter: #transactionListIndex
-		indexSetter: #transactionListIndex:
-		mainView: self
-		menuGetter: #menuLedger
-		keystrokeAction: nil)
-			name: #Ledger;
-			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9)
+	list _ (PluggableListMorph
+			model: model
+			listGetter: #transactionList
+			indexGetter: #transactionListIndex
+			indexSetter: #transactionListIndex:
+			mainView: self
+			menuGetter: #menuLedger
+			keystrokeAction: nil)
+				name: #Ledger;
+				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9).
+	list  layoutSpec: (LayoutSpec useAll).
+				
+	entries _ self windowEntries
+		layoutSpec: (LayoutSpec fixedHeight: 40).
+
+	
+	^ (LayoutMorph newColumn name: 'Ledger Column')
+		addMorph: list;
+		addMorph: entries
+		
 ! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
