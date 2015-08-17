@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 15 August 2015 at 1:04:50.447633 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 16 August 2015 at 8:19:25.1021 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 84!
+!provides: 'Ledgerdemain' 1 85!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -921,17 +921,14 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 12:25'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 20:05'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
-	| row left right |
-	left _ (LayoutMorph newColumn name: 'Left Column')
-		addMorph: self windowAccountList.
-	right _ (LayoutMorph newColumn name: 'Right Column')
-		addMorph: self windowLedgerList.
+	| row |
 	row _ (LayoutMorph newRow name: #Row)
-		addMorph: left proportionalWidth: 0.2;
-		addAdjusterAndMorph: right proportionalWidth: 0.8.
+		addMorph: self windowAccountList fixedWidth: 200;
+		addMorph: self windowLedgerList
+			layoutSpec: (LayoutSpec useAll).
 	self layoutMorph
 		addMorph: row.
 	self setLabel: 'Ledger d''Main'! !
@@ -1001,41 +998,50 @@ mouseButton2Activity
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 7/1/2015 12:36'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/16/2015 20:16'!
 windowAccountList
 	"Answer the specifications for the list of accounts in the window"
+	| list sums |
 	
-	^ (PluggableListMorph
-		model: model
-		listGetter: #accountList
-		indexGetter: #accountListIndex
-		indexSetter: #accountListIndex:
-		mainView: self
-		menuGetter: #menuMain
-		keystrokeAction: nil)
-			name: 'Account List'
-! !
+	list _ ((PluggableListMorph
+			model: model
+			listGetter: #accountList
+			indexGetter: #accountListIndex
+			indexSetter: #accountListIndex:
+			mainView: self
+			menuGetter: #menuMain
+			keystrokeAction: nil)
+				name: #Accounts;
+				name: 'Account List').
+	
+	sums _ (BorderedRectMorph new color: Color lightGreen; name: 'Account Summary')
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 200).
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 13:02'!
+	^ LayoutMorph newColumn
+		name: #Accounts;
+		addMorph: (list layoutSpec: LayoutSpec useAll);
+		addMorph: sums! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 20:10'!
 windowEntries
 	"Answer the layout for transaction entry fields"
 	
 	^ (LayoutMorph newRow separation: 5)
 		name: #'Entry Fields';
 		color: Color lightGreen;
-		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Date)
+		addMorph: (BorderedRectMorph new color: Color white; name: #Date)
 			layoutSpec: (LayoutSpec fixedWidth: 50);		
-		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Check)
+		addMorph: (BorderedRectMorph new color: Color white; name: #Check)
 			layoutSpec: (LayoutSpec fixedWidth: 40);
-		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Payee)
+		addMorph: (BorderedRectMorph new color: Color white; name: #Payee)
 			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Category)
+		addMorph: (BorderedRectMorph new color: Color white; name: #Category)
 			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Memo)
+		addMorph: (BorderedRectMorph new color: Color white; name: #Memo)
 			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #R)
+		addMorph: (BorderedRectMorph new color: Color white; name: #R)
 			layoutSpec: (LayoutSpec fixedWidth: 12);
-		addMorph: (BorderedRectMorph new color: (Color h: 60 s: 0.6 v: 0.6); name: #Amount)
+		addMorph: (BorderedRectMorph new color: Color white; name: #Amount)
 			layoutSpec: (LayoutSpec fixedWidth: 60).
 ! !
 
@@ -1077,13 +1083,14 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/26/2015 21:23'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 8/15/2015 20:07'!
 open
 	| wind main |
 	main _ LedgerDeMain new.
-	main window: (wind _ LedgerWindow new model: main).
-	wind buildMorphicWindow.
-	wind openInWorld.
+	main window: (wind _ self new model: main).
+	wind buildMorphicWindow
+		openInWorld;
+		morphExtent: 1250@500
 ! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
