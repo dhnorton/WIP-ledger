@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2533] on 16 August 2015 at 8:19:25.1021 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2505] on 9 October 2015 at 3:35:09.528718 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 85!
+!provides: 'Ledgerdemain' 1 86!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -40,6 +40,16 @@ Morph subclass: #Reconciliation
 	category: 'Ledgerdemain'!
 !classDefinition: 'Reconciliation class' category: #Ledgerdemain!
 Reconciliation class
+	instanceVariableNames: ''!
+
+!classDefinition: #EntryField category: #Ledgerdemain!
+LimitedHeightTextMorph subclass: #EntryField
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'EntryField class' category: #Ledgerdemain!
+EntryField class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
@@ -170,6 +180,12 @@ Reconciliation responsibilities:
 
   report withdrawals and deposits
   update ledger
+!
+
+!EntryField commentStamp: 'dhn 10/9/2015 15:02' prior: 0!
+A field in the transaction consisting of editable text from the ledger entry, if an entry is selected, or data to be entered for a new transaction.
+
+Previous contents can be supplied in a completer.
 !
 
 !LedgerWindow commentStamp: 'dhn 8/15/2015 12:29' prior: 0!
@@ -878,6 +894,11 @@ initialize
 
 	contents _ OrderedCollection new! !
 
+!EntryField methodsFor: 'initialization' stamp: 'dhn 10/9/2015 15:12'!
+initialize
+
+	super initialize! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
 addAccountActionsTo: aMenu
 	"Add items to aMenu for account actions"
@@ -1022,15 +1043,19 @@ windowAccountList
 		addMorph: (list layoutSpec: LayoutSpec useAll);
 		addMorph: sums! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 20:10'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/9/2015 15:31'!
 windowEntries
 	"Answer the layout for transaction entry fields"
 	
 	^ (LayoutMorph newRow separation: 5)
 		name: #'Entry Fields';
 		color: Color lightGreen;
-		addMorph: (BorderedRectMorph new color: Color white; name: #Date)
-			layoutSpec: (LayoutSpec fixedWidth: 50);		
+		addMorph: (EntryField new 
+			maxHeight: 48;
+			model: (TextModel new contents: Date today mmddyyyy);
+			color: Color white; 
+			name: #Date)
+			layoutSpec: (LayoutSpec fixedWidth: 85);		
 		addMorph: (BorderedRectMorph new color: Color white; name: #Check)
 			layoutSpec: (LayoutSpec fixedWidth: 40);
 		addMorph: (BorderedRectMorph new color: Color white; name: #Payee)
