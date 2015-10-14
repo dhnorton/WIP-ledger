@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2505] on 9 October 2015 at 3:35:09.528718 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 14 October 2015 at 7:26:29.528645 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 86!
+!provides: 'Ledgerdemain' 1 87!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 Workspace subclass: #LedgerDeMain
-	instanceVariableNames: 'window accounts accountListIndex selectedAccount net trail modified transactions transactionList transactionListIndex selectedTransaction'
+	instanceVariableNames: 'directory window accounts accountListIndex selectedAccount net trail modified transactions transactionList transactionListIndex selectedTransaction'
 	classVariableNames: 'Categories Memos Payees Type UniqueInstance'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -525,6 +525,12 @@ categoriesFromFile
 			whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 		ios close]! !
 
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/13/2015 21:11'!
+directory: dir
+	"Set the path of the directory containing the accounts."
+
+	directory _ dir! !
+
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/23/2015 10:19'!
 initialize
 	"initialize the state of the receiver"
@@ -942,7 +948,7 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 20:05'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/14/2015 19:23'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
 	| row |
@@ -951,8 +957,7 @@ buildMorphicWindow
 		addMorph: self windowLedgerList
 			layoutSpec: (LayoutSpec useAll).
 	self layoutMorph
-		addMorph: row.
-	self setLabel: 'Ledger d''Main'! !
+		addMorph: row! !
 
 !LedgerWindow methodsFor: 'open/close' stamp: 'dhn 6/25/2015 15:03'!
 delete
@@ -961,10 +966,6 @@ delete
 		(nil confirm: 'Save changes?') ifTrue: [
 			self model saveFile]].
 	super delete! !
-
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/23/2015 09:52'!
-handlesMouseDown: aMouseButtonEvent
-	^ true! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/25/2015 11:03'!
 initialize
@@ -1011,13 +1012,17 @@ of account ledgers'.
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:35'!
-mouseButton2Activity
-	self menuMain.! !
-
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
+
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 10/13/2015 21:01'!
+update: aSymbol
+	"Receive a change notice, as a dependent, from a dependee" 
+	
+	super update: aSymbol.
+	{aSymbol} print.
+! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/16/2015 20:16'!
 windowAccountList
@@ -1108,14 +1113,13 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 8/15/2015 20:07'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 10/14/2015 19:22'!
 open
-	| wind main |
-	main _ LedgerDeMain new.
-	main window: (wind _ self new model: main).
-	wind buildMorphicWindow
-		openInWorld;
-		morphExtent: 1250@500
+	"
+	LedgerWindow open.
+	"
+	(LedgerWindow open: LedgerDeMain new label: 'Ledger d''Main')
+		setWindowColor:  Theme current workspace
 ! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
@@ -1263,6 +1267,23 @@ type: anObject
 	"Set the value of type"
 
 	type _ anObject! !
+
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/13/2015 21:49'!
+fields
+	"Answer the record definition consisting of field names and positions"
+	^ Dictionary new
+		at: #date put: (Field at: 1@11);
+		at: #check put: (Field at: 12@16);
+		at: #payee put: (Field at: 17@47);
+		at: #category put: (Field at: 48@83);
+		at: #memo put: (Field at: 84@113);
+		at: #reconciled put: (Field at: 114@115);
+		at: #amount put: (Field at: 116@128 left: false);
+		at: #Blank07 put: (Field at: 129);
+		at: #type put: (Field at: 130@134);
+		at: #balance put: (Field at: 135@146 left: false);
+		yourself
+! !
 
 !Payee methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:01'!
 last
@@ -1477,3 +1498,21 @@ type: anObject
 	"Set the value of type"
 
 	type _ anObject! !
+
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/13/2015 21:49'!
+fields
+	"Answer the record definition consisting of field names and positions"
+	^ Dictionary new
+		at: #type put: (Field at: 1@5);
+		at: #Blank1 put: (Field at: 6@20);
+		at: #date put: (Field at: 21@30);
+		at: #Blank2 put: (Field at: 31@35);
+		at: #check put: (Field at: 36@39);
+		at: #Blank3 put: (Field at: 40);
+		at: #payee put: (Field at: 41@70);
+		at: #memo put: (Field at: 71@87);
+		at: #category put: (Field at: 88@122);
+		at: #reconciled put: (Field at: 123);
+		at: #amount put: (Field at: 124@136);
+		yourself
+! !
