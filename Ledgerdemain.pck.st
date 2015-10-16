@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 14 October 2015 at 7:26:29.528645 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 16 October 2015 at 5:30:06.48131 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 87!
+!provides: 'Ledgerdemain' 1 88!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -13,7 +13,7 @@ Account class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
-Workspace subclass: #LedgerDeMain
+TextModel subclass: #LedgerDeMain
 	instanceVariableNames: 'directory window accounts accountListIndex selectedAccount net trail modified transactions transactionList transactionListIndex selectedTransaction'
 	classVariableNames: 'Categories Memos Payees Type UniqueInstance'
 	poolDictionaries: ''
@@ -42,19 +42,9 @@ Morph subclass: #Reconciliation
 Reconciliation class
 	instanceVariableNames: ''!
 
-!classDefinition: #EntryField category: #Ledgerdemain!
-LimitedHeightTextMorph subclass: #EntryField
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'EntryField class' category: #Ledgerdemain!
-EntryField class
-	instanceVariableNames: ''!
-
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: ''
+	instanceVariableNames: 'entries'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -180,12 +170,6 @@ Reconciliation responsibilities:
 
   report withdrawals and deposits
   update ledger
-!
-
-!EntryField commentStamp: 'dhn 10/9/2015 15:02' prior: 0!
-A field in the transaction consisting of editable text from the ledger entry, if an entry is selected, or data to be entered for a new transaction.
-
-Previous contents can be supplied in a completer.
 !
 
 !LedgerWindow commentStamp: 'dhn 8/15/2015 12:29' prior: 0!
@@ -455,39 +439,46 @@ accountFromFile
 					acct loadTransaction: rec]].
 		ios close]! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:21'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 13:25'!
 accountList
 	"Answer a list of accounts"
-	^ self accounts keys asOrderedCollection! !
+	| list |
+	
+	list _ OrderedCollection new.
+	accounts
+		ifNotNil: [
+			accounts do: [:a | list addLast: a accountName]].
+	^ list! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:22'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/16/2015 17:06'!
 accountListIndex
-	self accountList ifNil: [ ^ accountListIndex _ 0 ].
-	^ self accountList indexOf: selectedAccount! !
+	"Answer the value of accountListIndex"
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 12:18'!
+	accountListIndex ifNil: [accountListIndex _ 0].
+	^ accountListIndex! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/16/2015 17:04'!
 accountListIndex: index
-	"Set the value of accountListIndex"
+	"Set the values of accountListIndex"
 
-	accountListIndex _ index.
-	self selectedAccount: 
-		(self accountList at: index ifAbsent: nil)! !
+	accountListIndex _ index! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/15/2015 07:31'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 13:09'!
 accounts
 	"Answer the value of accounts"
 
-	accounts ifNil: [accounts _ Dictionary new].
+	accounts ifNil: [accounts _ OrderedCollection new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/7/2015 11:40'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 16:21'!
 accounts: anObject
 	"Save anObject in accounts"
 
-	(self accounts includesKey: anObject asSymbol)
+	(self accounts detect: [:a | (a accountName) = anObject accountName] ifNone: [false])
 		ifTrue: [self inform: anObject,' is already an account']
 		ifFalse: [
-			self accounts at: anObject asSymbol put: (Account new accountName: anObject).
+			self accounts addLast: anObject.
+			self selectedAccount: anObject.
 			self modified: true]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:28'!
@@ -530,6 +521,74 @@ directory: dir
 	"Set the path of the directory containing the accounts."
 
 	directory _ dir! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/15/2015 19:30'!
+getAmount
+	"Answer the amount"
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [^ (transactions at: transactionListIndex) amount]! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/15/2015 19:26'!
+getCategory
+	"Answer the category"
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [^ (transactions at: transactionListIndex) category]! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/15/2015 19:25'!
+getCheck
+	"Answer the check number"
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [^ (transactions at: transactionListIndex) check]! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 10/15/2015 20:39'!
+getDataFor: anEntry
+	"Set the contents of entry field anEntry"
+	| method x |
+	
+	method _ anEntry valueOfProperty: #input.
+	x _ self perform: method.
+	{method. x. } print.
+	^ x
+	
+	! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/15/2015 19:23'!
+getDate
+	"Answer the date"
+	
+	transactionListIndex = 0
+		ifTrue: [^ Date today mmddyyyy]
+		ifFalse: [^ (transactions at: transactionListIndex) date]! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/15/2015 19:28'!
+getMemo
+	"Answer the memo"
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [^ (transactions at: transactionListIndex) memo]! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/15/2015 19:27'!
+getPayee
+	"Answer the payee"
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [^ (transactions at: transactionListIndex) payee]! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/15/2015 19:29'!
+getR
+	"Answer the reconciled indicator"
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [^ (transactions at: transactionListIndex) reconciled]! !
 
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/23/2015 10:19'!
 initialize
@@ -609,13 +668,13 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 8/8/2015 19:30'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 16:33'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
-		self accounts: temp.
+		acct _ Account new accountName: temp.
 		bal _ FillInTheBlankMorph 
 			request: 'Opening balance for ', temp
 			initialAnswer: '0.00'.
@@ -628,12 +687,11 @@ newAccount
 				bal _ '0'.
 				balDate _ Date today mmddyyyy].
 		amt _ bal dollarsToCents.
-		acct _ (self accounts at: temp)
+		acct
 			openDate: balDate;
 			balOpen: amt;
 			balCur: amt;
 			balRcon: amt.
-		self modified: true.
 		rec _ Transaction new account: acct.
 		rec
 			date: (rec mmddyyyy: acct openDate);
@@ -646,9 +704,8 @@ newAccount
 			transfer: '';
 			check: '';
 			balance: acct balOpen ledgerFormatted.
-		acct addTransaction: rec].
-		self changed: #accountList
-! !
+		acct addTransaction: rec.
+		self accounts: acct]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
 newCategory
@@ -757,28 +814,29 @@ selectedAccount
 
 	^ selectedAccount! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 7/1/2015 22:13'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 19:56'!
 selectedAccount: anObject
 	"Set the value of selectedAccount"
 
-	selectedAccount _ anObject.
 	anObject ifNotNil: [
-		self transactionList: (self accounts at: anObject) ledgerLines].
-	self changed: #accountListIndex.
-	self changed: #transactionList! !
+		selectedAccount _ anObject.
+		self transactionList: selectedAccount ledgerLines.
+		transactionListIndex _ 0.
+		self changed: #transactionListIndex.
+		self changed: #accountListIndex.
+		self changed: #transactionList]! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:34'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 21:34'!
 selectedTransaction
 	"Answer the value of selectedTransaction"
 
 	^ selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 7/1/2015 17:57'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/16/2015 16:46'!
 selectedTransaction: anObject
 	"Set the value of selectedTransaction"
 
-	selectedTransaction _ anObject.
-	self changed: #transactionListIndex! !
+	selectedTransaction _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 trail
@@ -793,43 +851,38 @@ trail: anObject
 	trail _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 7/1/2015 22:06'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/16/2015 17:00'!
 transactionList
 	"Answer a list of transactions"
 
-	self accounts isEmpty ifFalse: [
-		self accountListIndex > 0 ifTrue: [
-			^ (self accounts at: (self accountList at: accountListIndex))
-				ledgerLines]].
-	^ OrderedCollection new
-! !
+	transactionList ifNil: [transactionList _ OrderedCollection new].
+	^ transactionList! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/28/2015 19:58'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/28/2015 19:58'!
 transactionList: anObject
 	"Set the value of transactionList"
 
 	transactionList _ anObject! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/24/2015 22:16'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/16/2015 17:13'!
 transactionListIndex
-	self transactionList ifNil: [ ^ self transactionListIndex: 0].
-	^ self transactionList indexOf: self selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:37'!
+	transactionListIndex ifNil: [transactionListIndex _ 0].
+	^ transactionListIndex! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/16/2015 16:51'!
 transactionListIndex: index
 	"Set the value of transactionListIndex"
 
-	transactionListIndex _ index.
-	self selectedTransaction: 
-		(self transactionList at: index ifAbsent: nil)! !
+	transactionListIndex _ index! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:28'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 21:28'!
 transactions
 	"Answer the value of transactions"
 
 	^ transactions! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 6/26/2015 21:28'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 21:28'!
 transactions: anObject
 	"Set the value of transactions"
 
@@ -853,6 +906,24 @@ type: anObject
 
 	(self type includesKey: anObject)
 		ifFalse: [self type at: anObject put: 1]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/14/2015 20:31'!
+update: aSymbol
+	"Receive a change notice, as a dependent, from a dependee" 
+	
+	super update: aSymbol.
+	self halt.
+	{aSymbol. self} print.
+! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/15/2015 20:38'!
+updateEntries
+	"Populate entry fields with transaction data"
+	| y |
+
+	window entries submorphs do: [:ea | 
+		y _ self getDataFor: ea.
+		ea model actualContents: y]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:08'!
 window
@@ -899,11 +970,6 @@ uniqueInstance
 initialize
 
 	contents _ OrderedCollection new! !
-
-!EntryField methodsFor: 'initialization' stamp: 'dhn 10/9/2015 15:12'!
-initialize
-
-	super initialize! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
 addAccountActionsTo: aMenu
@@ -967,10 +1033,16 @@ delete
 			self model saveFile]].
 	super delete! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 6/25/2015 11:03'!
+!LedgerWindow methodsFor: 'access' stamp: 'dhn 10/15/2015 12:30'!
+entries
+	
+	^ entries! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/14/2015 20:56'!
 initialize
 
-	super initialize! !
+	super initialize.
+	self addDependent: model! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:49'!
 menuLedger
@@ -1016,12 +1088,13 @@ of account ledgers'.
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 10/13/2015 21:01'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 10/15/2015 19:50'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
 	super update: aSymbol.
-	{aSymbol} print.
+	aSymbol == #transactionListIndex
+		ifTrue: [model updateEntries]
 ! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/16/2015 20:16'!
@@ -1048,37 +1121,68 @@ windowAccountList
 		addMorph: (list layoutSpec: LayoutSpec useAll);
 		addMorph: sums! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/9/2015 15:31'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/16/2015 16:28'!
 windowEntries
 	"Answer the layout for transaction entry fields"
 	
 	^ (LayoutMorph newRow separation: 5)
 		name: #'Entry Fields';
 		color: Color lightGreen;
-		addMorph: (EntryField new 
-			maxHeight: 48;
-			model: (TextModel new contents: Date today mmddyyyy);
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getDate;
+			setProperty: #output toValue: #putDate:;
 			color: Color white; 
 			name: #Date)
 			layoutSpec: (LayoutSpec fixedWidth: 85);		
-		addMorph: (BorderedRectMorph new color: Color white; name: #Check)
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getCheck;
+			setProperty: #output toValue: #putCheck:; 
+			color: Color white; 
+			name: #Check)
 			layoutSpec: (LayoutSpec fixedWidth: 40);
-		addMorph: (BorderedRectMorph new color: Color white; name: #Payee)
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getPayee;
+			setProperty: #output toValue: #putPayee:; 
+			color: Color white; 
+			name: #Payee)
 			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (BorderedRectMorph new color: Color white; name: #Category)
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getCategory;
+			setProperty: #output toValue: #putCategory:; 
+			color: Color white; 
+			name: #Category)
 			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (BorderedRectMorph new color: Color white; name: #Memo)
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getMemo;
+			setProperty: #output toValue: #putMemo:; 
+			color: Color white; 
+			name: #Memo)
 			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (BorderedRectMorph new color: Color white; name: #R)
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getR;
+			setProperty: #output toValue: #putR:; 
+			color: Color white; 
+			name: #R)
 			layoutSpec: (LayoutSpec fixedWidth: 12);
-		addMorph: (BorderedRectMorph new color: Color white; name: #Amount)
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getAmount;
+			setProperty: #output toValue: #putAmount:; 
+			color: Color white; 
+			name: #Amount)
 			layoutSpec: (LayoutSpec fixedWidth: 60).
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/15/2015 12:55'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/15/2015 12:14'!
 windowLedgerList
 	"Answer the specifications for the ledger list in the window"
-	| list entries |
+	| list |
 	
 	list _ (PluggableListMorph
 			model: model
@@ -1113,13 +1217,16 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 10/14/2015 19:22'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 10/14/2015 21:00'!
 open
 	"
 	LedgerWindow open.
 	"
-	(LedgerWindow open: LedgerDeMain new label: 'Ledger d''Main')
-		setWindowColor:  Theme current workspace
+	| win mod |
+	(win _ LedgerWindow open: (mod _ LedgerDeMain new) label: 'Ledger d''Main')
+		morphExtent: 1250@500;
+		setWindowColor:  Theme current workspace.
+	mod window: win
 ! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
@@ -1268,7 +1375,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/13/2015 21:49'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 17:14'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1499,7 +1606,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/13/2015 21:49'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 17:14'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
