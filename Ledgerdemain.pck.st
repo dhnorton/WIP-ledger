@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 16 October 2015 at 5:30:06.48131 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 16 October 2015 at 7:55:20.99331 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 88!
+!provides: 'Ledgerdemain' 1 89!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -439,7 +439,7 @@ accountFromFile
 					acct loadTransaction: rec]].
 		ios close]! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 13:25'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 19:41'!
 accountList
 	"Answer a list of accounts"
 	| list |
@@ -470,7 +470,7 @@ accounts
 	accounts ifNil: [accounts _ OrderedCollection new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 16:21'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 19:49'!
 accounts: anObject
 	"Save anObject in accounts"
 
@@ -479,7 +479,8 @@ accounts: anObject
 		ifFalse: [
 			self accounts addLast: anObject.
 			self selectedAccount: anObject.
-			self modified: true]! !
+			self modified: true.
+			self changed: #accountList]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:28'!
 addCategory: aString
@@ -668,7 +669,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 16:33'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 19:52'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -814,7 +815,7 @@ selectedAccount
 
 	^ selectedAccount! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 19:56'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 19:49'!
 selectedAccount: anObject
 	"Set the value of selectedAccount"
 
@@ -822,9 +823,7 @@ selectedAccount: anObject
 		selectedAccount _ anObject.
 		self transactionList: selectedAccount ledgerLines.
 		transactionListIndex _ 0.
-		self changed: #transactionListIndex.
-		self changed: #accountListIndex.
-		self changed: #transactionList]! !
+		self changed: #accountListIndex]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 21:34'!
 selectedTransaction
@@ -1375,7 +1374,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 17:14'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 19:53'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1606,7 +1605,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 17:14'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 19:53'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
