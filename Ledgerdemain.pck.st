@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 16 October 2015 at 8:42:43.416558 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 17 October 2015 at 12:23:04.576146 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 90!
+!provides: 'Ledgerdemain' 1 91!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -44,7 +44,7 @@ Reconciliation class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'entries'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -457,9 +457,9 @@ accountListIndex
 	accountListIndex ifNil: [accountListIndex _ 0].
 	^ accountListIndex! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/16/2015 17:04'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 12:05'!
 accountListIndex: index
-	"Set the values of accountListIndex"
+	"Set the value of accountListIndex"
 
 	accountListIndex _ index! !
 
@@ -915,12 +915,12 @@ update: aSymbol
 	{aSymbol. self} print.
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/15/2015 20:38'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 12:00'!
 updateEntries
 	"Populate entry fields with transaction data"
 	| y |
 
-	window entries submorphs do: [:ea | 
+	window windowEntries submorphs do: [:ea | 
 		y _ self getDataFor: ea.
 		ea model actualContents: y]! !
 
@@ -1006,13 +1006,122 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/14/2015 19:23'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 12:20'!
+buildAccountList
+	"Answer the specifications for the list of accounts in the window"
+	| sums |
+	
+	windowAccountList _ ((PluggableListMorph
+			model: model
+			listGetter: #accountList
+			indexGetter: #accountListIndex
+			indexSetter: #accountListIndex:
+			mainView: self
+			menuGetter: #menuMain
+			keystrokeAction: nil)
+				name: #Accounts;
+				borderWidth: 1;
+				name: 'Account List').
+	
+	sums _ (BorderedRectMorph new color: Color lightGreen; name: 'Account Summary')
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 200).
+
+	^ LayoutMorph newColumn
+		name: #Accounts;
+		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
+		addMorph: sums! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:54'!
+buildEntries
+	"Answer the layout for transaction entry fields"
+	
+	^ (LayoutMorph newRow separation: 5)
+		name: #'Entry Fields';
+		color: Color lightGreen;
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getDate;
+			setProperty: #output toValue: #putDate:;
+			color: Color white; 
+			name: #Date)
+			layoutSpec: (LayoutSpec fixedWidth: 85);		
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getCheck;
+			setProperty: #output toValue: #putCheck:; 
+			color: Color white; 
+			name: #Check)
+			layoutSpec: (LayoutSpec fixedWidth: 40);
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getPayee;
+			setProperty: #output toValue: #putPayee:; 
+			color: Color white; 
+			name: #Payee)
+			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getCategory;
+			setProperty: #output toValue: #putCategory:; 
+			color: Color white; 
+			name: #Category)
+			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getMemo;
+			setProperty: #output toValue: #putMemo:; 
+			color: Color white; 
+			name: #Memo)
+			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getR;
+			setProperty: #output toValue: #putR:; 
+			color: Color white; 
+			name: #R)
+			layoutSpec: (LayoutSpec fixedWidth: 12);
+		addMorph: (TextModelMorph new 
+			model: model;
+			setProperty: #input toValue: #getAmount;
+			setProperty: #output toValue: #putAmount:; 
+			color: Color white; 
+			name: #Amount)
+			layoutSpec: (LayoutSpec fixedWidth: 60).
+! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:59'!
+buildLedgerList
+	"Answer the specifications for the ledger list in the window"
+	
+	windowLedgerList _ (PluggableListMorph
+			model: model
+			listGetter: #transactionList
+			indexGetter: #transactionListIndex
+			indexSetter: #transactionListIndex:
+			mainView: self
+			menuGetter: #menuLedger
+			keystrokeAction: nil)
+				name: #Ledger;
+				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9).
+	windowLedgerList  layoutSpec: (LayoutSpec useAll).
+				
+	windowEntries _ self buildEntries
+		layoutSpec: (LayoutSpec fixedHeight: 40).
+
+	
+	^ (LayoutMorph newColumn name: 'Ledger Column')
+		addMorph: windowLedgerList;
+		addMorph: windowEntries
+		
+! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:56'!
 buildMorphicWindow
 	"Answer a window for Ledger d'Main"
 	| row |
 	row _ (LayoutMorph newRow name: #Row)
-		addMorph: self windowAccountList fixedWidth: 200;
-		addMorph: self windowLedgerList
+		addMorph: self buildAccountList fixedWidth: 200;
+		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll).
 	self layoutMorph
 		addMorph: row! !
@@ -1028,11 +1137,6 @@ delete
 			self model saveFile]].
 	cancel ifFalse: [super delete]		"terminate"
 	"otherwise, cancel this"! !
-
-!LedgerWindow methodsFor: 'access' stamp: 'dhn 10/15/2015 12:30'!
-entries
-	
-	^ entries! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/14/2015 20:56'!
 initialize
@@ -1093,114 +1197,10 @@ update: aSymbol
 		ifTrue: [model updateEntries]
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 8/16/2015 20:16'!
-windowAccountList
-	"Answer the specifications for the list of accounts in the window"
-	| list sums |
-	
-	list _ ((PluggableListMorph
-			model: model
-			listGetter: #accountList
-			indexGetter: #accountListIndex
-			indexSetter: #accountListIndex:
-			mainView: self
-			menuGetter: #menuMain
-			keystrokeAction: nil)
-				name: #Accounts;
-				name: 'Account List').
-	
-	sums _ (BorderedRectMorph new color: Color lightGreen; name: 'Account Summary')
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 200).
-
-	^ LayoutMorph newColumn
-		name: #Accounts;
-		addMorph: (list layoutSpec: LayoutSpec useAll);
-		addMorph: sums! !
-
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/16/2015 16:28'!
+!LedgerWindow methodsFor: 'access' stamp: 'dhn 10/17/2015 12:01'!
 windowEntries
-	"Answer the layout for transaction entry fields"
 	
-	^ (LayoutMorph newRow separation: 5)
-		name: #'Entry Fields';
-		color: Color lightGreen;
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getDate;
-			setProperty: #output toValue: #putDate:;
-			color: Color white; 
-			name: #Date)
-			layoutSpec: (LayoutSpec fixedWidth: 85);		
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getCheck;
-			setProperty: #output toValue: #putCheck:; 
-			color: Color white; 
-			name: #Check)
-			layoutSpec: (LayoutSpec fixedWidth: 40);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getPayee;
-			setProperty: #output toValue: #putPayee:; 
-			color: Color white; 
-			name: #Payee)
-			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getCategory;
-			setProperty: #output toValue: #putCategory:; 
-			color: Color white; 
-			name: #Category)
-			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getMemo;
-			setProperty: #output toValue: #putMemo:; 
-			color: Color white; 
-			name: #Memo)
-			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getR;
-			setProperty: #output toValue: #putR:; 
-			color: Color white; 
-			name: #R)
-			layoutSpec: (LayoutSpec fixedWidth: 12);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getAmount;
-			setProperty: #output toValue: #putAmount:; 
-			color: Color white; 
-			name: #Amount)
-			layoutSpec: (LayoutSpec fixedWidth: 60).
-! !
-
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/15/2015 12:14'!
-windowLedgerList
-	"Answer the specifications for the ledger list in the window"
-	| list |
-	
-	list _ (PluggableListMorph
-			model: model
-			listGetter: #transactionList
-			indexGetter: #transactionListIndex
-			indexSetter: #transactionListIndex:
-			mainView: self
-			menuGetter: #menuLedger
-			keystrokeAction: nil)
-				name: #Ledger;
-				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9).
-	list  layoutSpec: (LayoutSpec useAll).
-				
-	entries _ self windowEntries
-		layoutSpec: (LayoutSpec fixedHeight: 40).
-
-	
-	^ (LayoutMorph newColumn name: 'Ledger Column')
-		addMorph: list;
-		addMorph: entries
-		
-! !
+	^ windowEntries! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
