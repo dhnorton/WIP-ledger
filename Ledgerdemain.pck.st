@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 17 October 2015 at 12:23:04.576146 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 17 October 2015 at 2:57:43.177924 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 91!
+!provides: 'Ledgerdemain' 1 92!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -457,11 +457,12 @@ accountListIndex
 	accountListIndex ifNil: [accountListIndex _ 0].
 	^ accountListIndex! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 12:05'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 14:08'!
 accountListIndex: index
 	"Set the value of accountListIndex"
 
-	accountListIndex _ index! !
+	accountListIndex _ index.
+	self changed: #accountListIndex! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 13:09'!
 accounts
@@ -470,17 +471,18 @@ accounts
 	accounts ifNil: [accounts _ OrderedCollection new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 19:49'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/17/2015 14:50'!
 accounts: anObject
 	"Save anObject in accounts"
 
-	(self accounts detect: [:a | (a accountName) = anObject accountName] ifNone: [false])
-		ifTrue: [self inform: anObject,' is already an account']
-		ifFalse: [
+	(self accounts allSatisfy: [:a | (a accountName) ~= anObject accountName])
+		ifTrue: [
 			self accounts addLast: anObject.
 			self selectedAccount: anObject.
 			self modified: true.
-			self changed: #accountList]! !
+			self changed: #accountList]
+		ifFalse: [nil inform: anObject accountName,' is already an account']
+! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:28'!
 addCategory: aString
@@ -1197,10 +1199,22 @@ update: aSymbol
 		ifTrue: [model updateEntries]
 ! !
 
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 10/17/2015 13:52'!
+windowAccountList
+	"Answer the value of windowAccountList"
+
+	^ windowAccountList! !
+
 !LedgerWindow methodsFor: 'access' stamp: 'dhn 10/17/2015 12:01'!
 windowEntries
 	
 	^ windowEntries! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 10/17/2015 13:52'!
+windowLedgerList
+	"Answer the value of windowLedgerList"
+
+	^ windowLedgerList! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
@@ -1371,7 +1385,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:41'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/17/2015 14:51'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1611,7 +1625,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:41'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/17/2015 14:51'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
