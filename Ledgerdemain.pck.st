@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 16 October 2015 at 7:55:20.99331 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 16 October 2015 at 8:42:43.416558 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 89!
+!provides: 'Ledgerdemain' 1 90!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -958,13 +958,6 @@ keyTable
 look
 	Payees explore! !
 
-!LedgerDeMain class methodsFor: 'class initialization' stamp: 'dhn 6/25/2015 11:07'!
-uniqueInstance
-	"Ensure that there is only one of me"
-
-	UniqueInstance ifNil: [UniqueInstance _ self  basicNew initialize].
-	^ UniqueInstance! !
-
 !Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
 initialize
 
@@ -1024,13 +1017,17 @@ buildMorphicWindow
 	self layoutMorph
 		addMorph: row! !
 
-!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 6/25/2015 15:03'!
+!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 10/16/2015 20:39'!
 delete
+	"Close the window"
+	| cancel |
 
+	cancel _ false.
 	self model modified ifTrue: [
-		(nil confirm: 'Save changes?') ifTrue: [
+		(nil confirm: 'Save changes?' orCancel: [(cancel _ true) not]) ifTrue: [
 			self model saveFile]].
-	super delete! !
+	cancel ifFalse: [super delete]		"terminate"
+	"otherwise, cancel this"! !
 
 !LedgerWindow methodsFor: 'access' stamp: 'dhn 10/15/2015 12:30'!
 entries
@@ -1374,7 +1371,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 19:53'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:41'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1387,6 +1384,15 @@ fields
 		at: #amount put: (Field at: 116@128 left: false);
 		at: #Blank07 put: (Field at: 129);
 		at: #type put: (Field at: 130@134);
+		at: #balance put: (Field at: 135@146 left: false);
+		yourself
+! !
+
+!Suggestion class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:37'!
+try
+	"see if this shows up in unsaved changes"
+	^ Dictionary new
+		at: #date put: (Field at: 1@11);
 		at: #balance put: (Field at: 135@146 left: false);
 		yourself
 ! !
@@ -1605,7 +1611,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 19:53'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:41'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
