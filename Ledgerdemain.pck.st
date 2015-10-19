@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 19 October 2015 at 11:17:26.875397 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 19 October 2015 at 1:20:35.153861 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 93!
+!provides: 'Ledgerdemain' 1 94!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -819,16 +819,15 @@ selectedAccount
 
 	^ selectedAccount ledgerLines! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/19/2015 11:14'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/19/2015 13:16'!
 selectedAccount: anObject
 	"Set the value of selectedAccount and set the contents of the transaction list "
 
+	selectedAccount _ anObject.
 	anObject ifNotNil: [
-		selectedAccount _ anObject.
-		anObject ifNotNil: [
-			self transactionList: selectedAccount ledgerLines].
-		self changed: #accountListIndex.
-		self changed: #transactionList]! !
+		self transactionList: selectedAccount ledgerLines].
+	self changed: #accountListIndex.
+	self changed: #transactionList! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 21:34'!
 selectedTransaction
