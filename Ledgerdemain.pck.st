@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 19 October 2015 at 1:20:35.153861 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 19 October 2015 at 2:12:02.760882 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 94!
+!provides: 'Ledgerdemain' 1 95!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -473,17 +473,15 @@ accounts
 	accounts ifNil: [accounts _ OrderedCollection new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/17/2015 14:50'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/19/2015 14:02'!
 accounts: anObject
 	"Save anObject in accounts"
 
-	(self accounts allSatisfy: [:a | (a accountName) ~= anObject accountName])
-		ifTrue: [
-			self accounts addLast: anObject.
-			self selectedAccount: anObject.
-			self modified: true.
-			self changed: #accountList]
-		ifFalse: [nil inform: anObject accountName,' is already an account']
+	self accounts addLast: anObject.
+	self selectedAccount: anObject.
+	self modified: true.
+	self changed: #accountListIndex.
+	self changed: #accountList
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:28'!
@@ -673,44 +671,48 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/16/2015 19:52'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/19/2015 13:58'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
-		acct _ Account new accountName: temp.
-		bal _ FillInTheBlankMorph 
-			request: 'Opening balance for ', temp
-			initialAnswer: '0.00'.
-		bal ~= '' 
+		(accounts allSatisfy: [:a | temp ~= a accountName])
 			ifTrue: [
-				balDate _ FillInTheBlankMorph 
-					request: 'Date of opening balance'
-					initialAnswer: Date today mmddyyyy]
-			ifFalse: [
-				bal _ '0'.
-				balDate _ Date today mmddyyyy].
-		amt _ bal dollarsToCents.
-		acct
-			openDate: balDate;
-			balOpen: amt;
-			balCur: amt;
-			balRcon: amt.
-		rec _ Transaction new account: acct.
-		rec
-			date: (rec mmddyyyy: acct openDate);
-			payee: '**Opening Balance';
-			reconciled: 'R';
-			type: '';
-			amount: '';
-			category: '';
-			memo: '';
-			transfer: '';
-			check: '';
-			balance: acct balOpen ledgerFormatted.
-		acct addTransaction: rec.
-		self accounts: acct]! !
+				acct _ Account new accountName: temp.
+				bal _ FillInTheBlankMorph 
+					request: 'Opening balance for ', temp
+					initialAnswer: '0.00'.
+				bal ~= '' 
+					ifTrue: [
+						balDate _ FillInTheBlankMorph 
+							request: 'Date of opening balance'
+							initialAnswer: Date today mmddyyyy]
+					ifFalse: [
+						bal _ '0'.
+						balDate _ Date today mmddyyyy].
+				amt _ bal dollarsToCents.
+				acct
+					openDate: balDate;
+					balOpen: amt;
+					balCur: amt;
+					balRcon: amt.
+				rec _ Transaction new account: acct.
+				rec
+					date: (rec mmddyyyy: acct openDate);
+					payee: '**Opening Balance';
+					reconciled: 'R';
+					type: '';
+					amount: '';
+					category: '';
+					memo: '';
+					transfer: '';
+					check: '';
+					balance: acct balOpen ledgerFormatted.
+				acct addTransaction: rec.
+				self accounts: acct]
+			ifFalse: [nil inform: temp,' is already an account']]
+! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
 newCategory
@@ -1382,7 +1384,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 11:09'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 14:03'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1622,7 +1624,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 11:09'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 14:03'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
