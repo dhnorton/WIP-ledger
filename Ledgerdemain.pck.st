@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 19 October 2015 at 2:12:02.760882 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 19 October 2015 at 3:07:48.463882 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 95!
+!provides: 'Ledgerdemain' 1 96!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -412,7 +412,7 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 10/19/2015 10:57'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 10/19/2015 15:01'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
@@ -420,10 +420,10 @@ accountFromFile
 	file ~= '' ifTrue: [
 		ios _ FileStream oldFileNamed: file.
 		acct _ accounts at: accountListIndex.
-		rec _ Transaction new account: acct.
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 
 				ifTrue: [
+					rec _ Transaction new account: acct.
 					rec type: (rec acquire: #type from: line).
 					rec date: (rec acquire: #date from: line).
 					rec check: (rec acquire: #check from: line).
@@ -831,18 +831,20 @@ selectedAccount: anObject
 	self changed: #accountListIndex.
 	self changed: #transactionList! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 21:34'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 14:55'!
 selectedTransaction
 	"Answer the value of selectedTransaction"
 
-	^ selectedTransaction! !
+	{selectedTransaction} print! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 20:45'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 14:58'!
 selectedTransaction: anObject
 	"Set the value of selectedTransaction"
 
 	selectedTransaction _ anObject.
-	self changed: #transactionListIndex! !
+	anObject ifNotNil: [Smalltalk beep].
+	self changed: #transactionList
+	! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
 trail
@@ -879,12 +881,13 @@ transactionListIndex
 	transactionList ifNil: [^ transactionListIndex _ 0].
 	^ transactionList indexOf: selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 21:11'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 14:43'!
 transactionListIndex: index
-	"Set the value of transactionListIndex"
+	"Set the value of transactionListIndex and set value of selected transaction"
 
 	transactionListIndex _ index.
-	selectedTransaction _ transactionList at: index ifAbsent: nil
+	self selectedTransaction:
+		(selectedAccount ledger at: index ifAbsent: nil)
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
@@ -1384,7 +1387,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 14:03'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 15:04'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1624,7 +1627,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 14:03'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 15:04'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
