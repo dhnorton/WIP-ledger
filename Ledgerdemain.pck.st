@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 19 October 2015 at 3:07:48.463882 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 20 October 2015 at 6:42:56.12564 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 96!
+!provides: 'Ledgerdemain' 1 98!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -815,35 +815,24 @@ searchAllAccounts! !
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 14:47'!
 searchOneAccount! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/18/2015 15:39'!
-selectedAccount
-	"Answer the ledger lines of the selectedAccount"
-
-	^ selectedAccount ledgerLines! !
-
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/19/2015 13:16'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/20/2015 18:05'!
 selectedAccount: anObject
-	"Set the value of selectedAccount and set the contents of the transaction list "
+	"Set the value of selectedAccount "
 
 	selectedAccount _ anObject.
-	anObject ifNotNil: [
-		self transactionList: selectedAccount ledgerLines].
 	self changed: #accountListIndex.
 	self changed: #transactionList! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 14:55'!
-selectedTransaction
-	"Answer the value of selectedTransaction"
-
-	{selectedTransaction} print! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 14:58'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 20:36'!
 selectedTransaction: anObject
-	"Set the value of selectedTransaction"
+	"Set the value of selectedTransaction and refetch the entries"
 
 	selectedTransaction _ anObject.
-	anObject ifNotNil: [Smalltalk beep].
-	self changed: #transactionList
+	anObject ifNotNil: [
+		window windowEntries submorphs do: [:ea |
+			ea model refetch]].
+	self changed: #transactionListIndex.
+	self changed: #updateEntries
 	! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
@@ -869,25 +858,22 @@ transactionList
 	^ OrderedCollection new 
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 21:05'!
-transactionList: anObject
-	"Set the value of transactionList"
-
-	transactionList _ anObject! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 21:23'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 18:33'!
 transactionListIndex
+	"Answer the value of transactionListIndex"
 
-	transactionList ifNil: [^ transactionListIndex _ 0].
-	^ transactionList indexOf: selectedTransaction! !
+	^ transactionListIndex! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 14:43'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 18:40'!
 transactionListIndex: index
-	"Set the value of transactionListIndex and set value of selected transaction"
+	"Set the value of transactionListIndex and set value of the entries"
 
 	transactionListIndex _ index.
-	self selectedTransaction:
-		(selectedAccount ledger at: index ifAbsent: nil)
+	window windowEntries submorphs do: [:ea |
+		ea model refetch].
+	self changed: #transactionListIndex.
+	self changed: #acceptedContents
+
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
@@ -918,14 +904,12 @@ update: aSymbol
 	{aSymbol. self} print.
 ! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 12:00'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 20:41'!
 updateEntries
 	"Populate entry fields with transaction data"
-	| y |
 
 	window windowEntries submorphs do: [:ea | 
-		y _ self getDataFor: ea.
-		ea model actualContents: y]! !
+		ea model refetch]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/22/2015 16:08'!
 window
@@ -1034,21 +1018,22 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: sums! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:54'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/19/2015 19:31'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
 	^ (LayoutMorph newRow separation: 5)
 		name: #'Entry Fields';
 		color: Color lightGreen;
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getDate;
-			setProperty: #output toValue: #putDate:;
-			color: Color white; 
-			name: #Date)
-			layoutSpec: (LayoutSpec fixedWidth: 85);		
-		addMorph: (TextModelMorph new 
+		addMorph: ((TextModelMorph 
+			textProvider: model
+			textGetter: #getDate 
+			textSetter: #putDate:)
+				borderWidth: 1;
+				color: Color white; 
+				name: #Date;
+				layoutSpec: (LayoutSpec fixedWidth: 85));		
+"		addMorph: (TextModelMorph new 
 			model: model;
 			setProperty: #input toValue: #getCheck;
 			setProperty: #output toValue: #putCheck:; 
@@ -1082,13 +1067,14 @@ buildEntries
 			setProperty: #output toValue: #putR:; 
 			color: Color white; 
 			name: #R)
-			layoutSpec: (LayoutSpec fixedWidth: 12);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getAmount;
-			setProperty: #output toValue: #putAmount:; 
-			color: Color white; 
-			name: #Amount)
+			layoutSpec: (LayoutSpec fixedWidth: 12);"
+		addMorph: ((TextModelMorph 
+			textProvider: model
+			textGetter: #getAmount 
+			textSetter: #putAmount:)
+				borderWidth: 1;
+				color: Color white; 
+				name: #Amount)
 			layoutSpec: (LayoutSpec fixedWidth: 60).
 ! !
 
@@ -1387,7 +1373,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 15:04'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 17:19'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1627,7 +1613,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/19/2015 15:04'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 17:19'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
