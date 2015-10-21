@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 20 October 2015 at 9:27:00.804141 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 21 October 2015 at 12:50:16.578848 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 100!
+!provides: 'Ledgerdemain' 1 101!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -40,6 +40,16 @@ Morph subclass: #Reconciliation
 	category: 'Ledgerdemain'!
 !classDefinition: 'Reconciliation class' category: #Ledgerdemain!
 Reconciliation class
+	instanceVariableNames: ''!
+
+!classDefinition: #EntryField category: #Ledgerdemain!
+TextModelMorph subclass: #EntryField
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'EntryField class' category: #Ledgerdemain!
+EntryField class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
@@ -534,21 +544,21 @@ getAmount
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction amount withBlanksCondensed]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:34'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:28'!
 getCategory
 	"Answer the category"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ 'punt']! !
+		ifFalse: [^ selectedTransaction category]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:34'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:18'!
 getCheck
 	"Answer the check number"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ 'punt']! !
+		ifFalse: [^ selectedTransaction check]! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 10/15/2015 20:39'!
 getDataFor: anEntry
@@ -570,29 +580,29 @@ getDate
 		ifTrue: [^ Date today mmddyyyy]
 		ifFalse: [^ selectedTransaction date]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:33'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:28'!
 getMemo
 	"Answer the memo"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ 'punt']! !
+		ifFalse: [^ selectedTransaction memo]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:33'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:26'!
 getPayee
 	"Answer the payee"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ 'punt']! !
+		ifFalse: [^ selectedTransaction payee]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:33'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:30'!
 getR
 	"Answer the reconciled indicator"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ 'X']! !
+		ifFalse: [^ selectedTransaction reconciled]! !
 
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/20/2015 19:00'!
 initialize
@@ -955,6 +965,25 @@ initialize
 
 	contents _ OrderedCollection new! !
 
+!EntryField methodsFor: 'initialization' stamp: 'dhn 10/21/2015 12:02'!
+initialize
+
+	super initialize.
+	self
+		borderWidth: 1;
+		color: Color white
+
+! !
+
+!EntryField class methodsFor: 'class initialization' stamp: 'dhn 10/21/2015 12:15'!
+textProvider: aTextProvider getter: symb1 setter: symb2 name: aName
+	"Establish an entry field morph"
+	^ (self
+		textProvider: aTextProvider
+		textGetter: symb1
+		textSetter: symb2)
+	name: aName! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
 addAccountActionsTo: aMenu
 	"Add items to aMenu for account actions"
@@ -1023,64 +1052,55 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: sums! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/19/2015 19:31'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/21/2015 12:46'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
 	^ (LayoutMorph newRow separation: 5)
 		name: #'Entry Fields';
 		color: Color lightGreen;
-		addMorph: ((TextModelMorph 
+		addMorph: ((EntryField 
 			textProvider: model
-			textGetter: #getDate 
-			textSetter: #putDate:)
-				borderWidth: 1;
-				color: Color white; 
-				name: #Date;
+			getter: #getDate 
+			setter: #putDate:
+			name: #Date)
 				layoutSpec: (LayoutSpec fixedWidth: 85));		
-"		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getCheck;
-			setProperty: #output toValue: #putCheck:; 
-			color: Color white; 
-			name: #Check)
-			layoutSpec: (LayoutSpec fixedWidth: 40);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getPayee;
-			setProperty: #output toValue: #putPayee:; 
-			color: Color white; 
-			name: #Payee)
-			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getCategory;
-			setProperty: #output toValue: #putCategory:; 
-			color: Color white; 
-			name: #Category)
-			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getMemo;
-			setProperty: #output toValue: #putMemo:; 
-			color: Color white; 
-			name: #Memo)
-			layoutSpec: (LayoutSpec proportionalWidth: 0.8);
-		addMorph: (TextModelMorph new 
-			model: model;
-			setProperty: #input toValue: #getR;
-			setProperty: #output toValue: #putR:; 
-			color: Color white; 
-			name: #R)
-			layoutSpec: (LayoutSpec fixedWidth: 12);"
-		addMorph: ((TextModelMorph 
+		addMorph: ((EntryField 
 			textProvider: model
-			textGetter: #getAmount 
-			textSetter: #putAmount:)
-				borderWidth: 1;
-				color: Color white; 
-				name: #Amount)
-			layoutSpec: (LayoutSpec fixedWidth: 60).
+			getter: #getCheck
+			setter: #putCheck:
+			name: #Check)
+				layoutSpec: (LayoutSpec fixedWidth: 40));
+		addMorph: ((EntryField 
+			textProvider: model
+			getter: #getPayee
+			setter: #putPayee:
+			name: #Payee)
+				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
+		addMorph: ((EntryField 
+			textProvider: model
+			getter: #getCategory
+			setter: #putCategory: 
+			name: #Category)
+				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
+		addMorph: ((EntryField 
+			textProvider: model
+			getter: #getMemo
+			setter: #putMemo: 
+			name: #Memo)
+				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
+		addMorph: ((EntryField 
+			textProvider: model
+			getter: #getR
+			setter: #putR: 
+			name: #R)
+				layoutSpec: (LayoutSpec fixedWidth: 12));
+		addMorph: ((EntryField 
+			textProvider: model
+			getter: #getAmount
+			setter: #putAmount: 
+			name: #Amount)
+				layoutSpec: (LayoutSpec fixedWidth: 60)).
 ! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:59'!
@@ -1378,7 +1398,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 21:07'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 12:48'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1618,7 +1638,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 21:07'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 12:48'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
