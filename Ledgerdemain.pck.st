@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 20 October 2015 at 6:42:56.12564 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 20 October 2015 at 8:50:50.55164 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 98!
+!provides: 'Ledgerdemain' 1 99!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -450,12 +450,12 @@ accountList
 			accounts do: [:a | list addLast: a accountName]].
 	^ list! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/18/2015 15:53'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 20:03'!
 accountListIndex
 	"Answer the value of accountListIndex"
 
 	accounts ifNil: [^ accountListIndex _ 0].
-	^ accounts indexOf: selectedAccount! !
+	^ accountListIndex _ accounts indexOf: selectedAccount! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/19/2015 10:51'!
 accountListIndex: index
@@ -473,13 +473,14 @@ accounts
 	accounts ifNil: [accounts _ OrderedCollection new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/19/2015 14:02'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/20/2015 19:57'!
 accounts: anObject
 	"Save anObject in accounts"
 
 	self accounts addLast: anObject.
 	self selectedAccount: anObject.
 	self modified: true.
+	self changed: #selectedAccount.
 	self changed: #accountListIndex.
 	self changed: #accountList
 ! !
@@ -593,11 +594,12 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ 'X']! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 6/23/2015 10:19'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/20/2015 19:00'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
+	transactionListIndex _ 0.
 	modified _ false! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/12/2015 21:25'!
@@ -848,14 +850,14 @@ trail: anObject
 	trail _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/17/2015 17:30'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 20:19'!
 transactionList
 	"Answer a list of transactions"
 
 	self accounts isEmpty ifFalse: [ 
 		self accountListIndex > 0 ifTrue: [ 
-			^ selectedAccount ledgerLines]]. 
-	^ OrderedCollection new 
+			^ transactionList _ selectedAccount ledgerLines]]. 
+	^ transactionList _ OrderedCollection new 
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 18:33'!
@@ -864,11 +866,14 @@ transactionListIndex
 
 	^ transactionListIndex! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 18:40'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 20:41'!
 transactionListIndex: index
-	"Set the value of transactionListIndex and set value of the entries"
+	"Set the values of transactionListIndex, selectedTransaction, and the entries"
 
 	transactionListIndex _ index.
+	transactionListIndex > 0
+		ifTrue: [selectedTransaction _ selectedAccount ledger at: transactionListIndex]
+		ifFalse: [selectedTransaction _ nil].
 	window windowEntries submorphs do: [:ea |
 		ea model refetch].
 	self changed: #transactionListIndex.
@@ -1373,7 +1378,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 17:19'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 20:47'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1613,7 +1618,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 17:19'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 20:47'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
