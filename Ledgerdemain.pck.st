@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 21 October 2015 at 4:12:09.047848 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 21 October 2015 at 4:40:05.275848 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 102!
+!provides: 'Ledgerdemain' 1 103!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1239,7 +1239,7 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 10/18/2015 15:26'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 10/21/2015 16:22'!
 open
 	"
 	LedgerWindow open.
@@ -1248,9 +1248,7 @@ open
 	(win _ LedgerWindow open: (mod _ LedgerDeMain new) label: 'Ledger d''Main')
 		morphExtent: 1250@500;
 		setWindowColor:  Theme current workspace.
-	mod window: win;
-		changed: #actualContents
-! !
+	mod window: win! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
 named: aName
@@ -1398,7 +1396,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 15:58'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 16:37'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1640,7 +1638,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 15:58'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 16:37'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
