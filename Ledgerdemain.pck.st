@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 20 October 2015 at 8:50:50.55164 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 20 October 2015 at 9:27:00.804141 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 99!
+!provides: 'Ledgerdemain' 1 100!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -526,13 +526,13 @@ directory: dir
 
 	directory _ dir! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:34'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/20/2015 21:24'!
 getAmount
 	"Answer the amount"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ 'punt']! !
+		ifFalse: [^ selectedTransaction amount withBlanksCondensed]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:34'!
 getCategory
@@ -562,13 +562,13 @@ getDataFor: anEntry
 	
 	! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:34'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/20/2015 21:13'!
 getDate
 	"Answer the date"
 	
 	transactionListIndex = 0
 		ifTrue: [^ Date today mmddyyyy]
-		ifFalse: [^ 'punt']! !
+		ifFalse: [^ selectedTransaction date]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/17/2015 21:33'!
 getMemo
@@ -1378,7 +1378,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 20:47'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 21:07'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1618,7 +1618,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 20:47'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/20/2015 21:07'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
