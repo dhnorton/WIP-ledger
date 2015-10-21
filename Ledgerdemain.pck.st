@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 21 October 2015 at 12:50:16.578848 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 21 October 2015 at 4:12:09.047848 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 101!
+!provides: 'Ledgerdemain' 1 102!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1052,7 +1052,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: sums! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/21/2015 12:46'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/21/2015 15:57'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
@@ -1070,7 +1070,7 @@ buildEntries
 			getter: #getCheck
 			setter: #putCheck:
 			name: #Check)
-				layoutSpec: (LayoutSpec fixedWidth: 40));
+				layoutSpec: (LayoutSpec fixedWidth: 50));
 		addMorph: ((EntryField 
 			textProvider: model
 			getter: #getPayee
@@ -1100,7 +1100,7 @@ buildEntries
 			getter: #getAmount
 			setter: #putAmount: 
 			name: #Amount)
-				layoutSpec: (LayoutSpec fixedWidth: 60)).
+				layoutSpec: (LayoutSpec fixedWidth: 65)).
 ! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:59'!
@@ -1398,7 +1398,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 12:48'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 15:58'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1495,11 +1495,13 @@ category: anObject
 
 	category _ anObject! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 21:41'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 10/21/2015 15:22'!
 check
 	"Answer the value of check"
 
-	^ check! !
+	(check allSatisfy: [:a | (a = $ )])
+		ifTrue: [^ type]
+		ifFalse: [^ check]! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 21:41'!
 check: anObject
@@ -1638,7 +1640,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 12:48'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 15:58'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
