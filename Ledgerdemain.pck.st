@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 21 October 2015 at 4:40:05.275848 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 21 October 2015 at 9:06:24.85856 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 103!
+!provides: 'Ledgerdemain' 1 104!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -683,7 +683,7 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/19/2015 13:58'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/21/2015 18:52'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -715,7 +715,7 @@ newAccount
 					payee: '**Opening Balance';
 					reconciled: 'R';
 					type: '';
-					amount: '';
+					amount: '0.00';
 					category: '';
 					memo: '';
 					transfer: '';
@@ -1396,7 +1396,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 16:37'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 20:12'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1638,7 +1638,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 16:37'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/21/2015 20:12'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
