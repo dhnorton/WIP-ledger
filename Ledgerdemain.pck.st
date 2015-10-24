@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 24 October 2015 at 12:57:06.143104 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 24 October 2015 at 3:55:07.124021 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 105!
+!provides: 'Ledgerdemain' 1 106!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1378,8 +1378,25 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 12:53'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 15:53'!
 fields
+	"Answer the record definition consisting of field names and positions"
+	^ Dictionary new
+		at: #date put: (Field at: 1@11);
+		at: #check put: (Field at: 12@16);
+		at: #payee put: (Field at: 17@47);
+		at: #category put: (Field at: 48@83);
+		at: #memo put: (Field at: 84@113);
+		at: #reconciled put: (Field at: 114@115);
+		at: #amount put: (Field at: 116@128 left: false);
+		at: #Blank07 put: (Field at: 129);
+		at: #type put: (Field at: 130@134);
+		at: #balance put: (Field at: 135@146 left: false);
+		yourself
+! !
+
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 15:48'!
+lineFields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
 		at: #date put: (Field at: 1@11);
@@ -1429,11 +1446,11 @@ account: anObject
 
 	account _ anObject! !
 
-!Transaction methodsFor: 'loading' stamp: 'dhn 10/17/2015 15:16'!
+!Transaction methodsFor: 'loading' stamp: 'dhn 10/24/2015 15:42'!
 acquire: aField from: aRecord
 	"Answer the subset of aString which is defined by aField. Input aRecord is an input file record."
 	| loc |
-	loc _ (self class fields at: aField asSymbol) location.
+	loc _ (self class fileFields at: aField asSymbol) location.
 	^ aRecord copyFrom: loc x to: loc y.! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:24'!
@@ -1620,8 +1637,26 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 12:53'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 15:53'!
 fields
+	"Answer the record definition consisting of field names and positions"
+	^ Dictionary new
+		at: #type put: (Field at: 1@5);
+		at: #Blank1 put: (Field at: 6@20);
+		at: #date put: (Field at: 21@30);
+		at: #Blank2 put: (Field at: 31@35);
+		at: #check put: (Field at: 36@39);
+		at: #Blank3 put: (Field at: 40);
+		at: #payee put: (Field at: 41@70);
+		at: #memo put: (Field at: 71@87);
+		at: #category put: (Field at: 88@122);
+		at: #reconciled put: (Field at: 123);
+		at: #amount put: (Field at: 124@136);
+		yourself
+! !
+
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 15:39'!
+fileFields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
 		at: #type put: (Field at: 1@5);
