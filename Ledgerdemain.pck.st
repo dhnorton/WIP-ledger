@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 24 October 2015 at 5:20:04.590021 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 24 October 2015 at 7:38:42.970021 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 109!
+!provides: 'Ledgerdemain' 1 110!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -422,14 +422,14 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 10/24/2015 17:17'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 10/24/2015 19:34'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
 	selectedAccount ifNil: [self newAccount].
 	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.txt'.
 	file ~= '' ifTrue: [
-		ios _ FileStream oldFileNamed: file.
+		ios _ ReadStream on: file asFileEntry fileContents.
 		acct _ accounts at: accountListIndex.
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 
@@ -447,10 +447,9 @@ accountFromFile
 					self payees: rec payee withoutTrailingBlanks.
 					self memos: rec memo withoutTrailingBlanks.
 					self type: rec type withoutTrailingBlanks.
-					acct loadTransaction: rec.
-					self changed: #acctList.
-					self changed: #xactList]].
-		ios close]! !
+					acct loadTransaction: rec]].
+		self changed: #acctList.
+		self changed: #xactList]! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/23/2015 21:20'!
 accountList
@@ -1380,7 +1379,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 17:18'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 19:37'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1639,7 +1638,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 17:18'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 19:37'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
