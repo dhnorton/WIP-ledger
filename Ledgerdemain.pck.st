@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 24 October 2015 at 7:38:42.970021 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 24 October 2015 at 9:07:54.303021 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 110!
+!provides: 'Ledgerdemain' 1 111!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory window accounts accountListIndex selectedAccount net trail modified transactionList transactionListIndex selectedTransaction'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net trail modified transactionList transactionListIndex selectedTransaction'
 	classVariableNames: 'Categories Memos Payees Type UniqueInstance'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -422,7 +422,7 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 10/24/2015 19:34'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 10/24/2015 20:41'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
@@ -449,7 +449,8 @@ accountFromFile
 					self type: rec type withoutTrailingBlanks.
 					acct loadTransaction: rec]].
 		self changed: #acctList.
-		self changed: #xactList]! !
+		self changed: #xactList.
+		self changed: #lastOnList]! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/23/2015 21:20'!
 accountList
@@ -466,14 +467,15 @@ accountListIndex
 	accounts ifNil: [^ accountListIndex _ 0].
 	^ accountListIndex _ accounts indexOf: selectedAccount! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/23/2015 21:00'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/24/2015 21:01'!
 accountListIndex: index
 	"Set the value of accountListIndex"
 
 	accountListIndex _ index.
 	self selectedAccount:
 		(accounts at: index ifAbsent: nil).
-	self changed: #acctList
+	self changed: #acctList.
+	self changed: #lastOnList
 	! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 13:09'!
@@ -603,12 +605,12 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction reconciled]! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/23/2015 20:19'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/24/2015 20:50'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
-	transactionListIndex _ 0.
+	self transactionListIndex: 0.
 	modified _ false.
 	self changed: #acctList.
 	self changed: #xactList! !
@@ -1173,7 +1175,7 @@ of account ledgers'.
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 10/24/2015 12:09'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 10/24/2015 21:04'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1187,6 +1189,12 @@ update: aSymbol
 			windowLedgerList 
 				getList;
 				updateList].
+		
+	aSymbol == #lastOnList
+		ifTrue: [
+			model 
+				transactionListIndex: windowLedgerList getListSize;
+				transactionListIndex: 0 	"prepare to add a transaction" ].
 		
 	aSymbol == #acctList
 		ifTrue: [
@@ -1379,7 +1387,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 19:37'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 21:05'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1638,7 +1646,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 19:37'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 21:05'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
