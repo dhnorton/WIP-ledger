@@ -1,7 +1,7 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2528] on 24 October 2015 at 9:07:54.303021 pm'!
-'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 111!
-!requires: 'Records' 1 10 nil!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 9 November 2015 at 12:15:36.154255 pm'!
+'Description Please enter a description for this package'!
+!provides: 'Ledgerdemain' 1 1!
+!requires: 'Records' 1 15 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -239,74 +239,6 @@ Transaction responsibilities:
   split categories
   record actions in audit trail
 !
-
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 12:59'!
-asLdmDate
-	"Convert receiver in the form of dd/mm/yyyy to a Ledgerdemain date number"
-	"Covers dates from 1/1/1901 to 2/27/2935093 (quite a long time)"
-	| digits w x y dt |
-	digits _ $0 to: $9.
-	w _ self select: [:a | (digits includes: a) or: a = $/].
-	x _ w findTokens: '/'.
-	x size ~= 3 
-		ifTrue: [nil error: 'not a date'].
-	y _ OrderedCollection new.
-	x do: [:ea | y add: ea asNumber].
-
-	dt _ Date newDay: (y at: 2) month: (y at: 1) year: (y at: 3).
-	^ dt julianDayNumber - Time squeakEpoch! !
-
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 6/30/2015 18:48'!
-dollarsToCents
-	"Answer the conversion of the receiver to a number of cents"
-	| digits w x y |
-	digits _ $0 to: $9.
-	w _ self select: [:a | (digits includes: a) or: ('-.' includes: a)].
-	x _ w findDelimiters: '.' startingAt: 1. 
-	x > w size 
-		ifTrue: [y _ w, '00'] "no decimal point specified"
-		ifFalse: [	"a decimal point exists"
-			w size - x >= 2
-				ifTrue: [y _ (w copyFrom: 1 to: x - 1), (w copyFrom: x + 1 to: x + 2)]
-					"fractions of cents are dropped"
-				ifFalse: [y _ (w copyFrom: 1 to: x - 1), '00']]. 
-					"fewer than 2 decimal places gets zeros appended"
-	^ y asNumber! !
-
-!Integer methodsFor: '*Ledgerdemain' stamp: 'cmm 6/8/2012 15:43'!
-asStringWithCommasSigned: aBoolean
-	"123456789 asStringWithCommasSigned: true"
-	"-123456789 asStringWithCommasSigned: false"
-	| digits |
-	digits := self abs printString.
-	^ String streamContents:
-		[:strm | 
-		self sign = -1 ifTrue: [strm nextPut: $-] ifFalse: [aBoolean ifTrue: [strm nextPut: $+]].
-		1 to: digits size do: 
-			[:i | strm nextPut: (digits at: i).
-			(i < digits size and: [(i - digits size) \\ 3 = 0])
-				ifTrue: [strm nextPut: $,]]]! !
-
-!Integer methodsFor: '*Ledgerdemain' stamp: 'dhn 8/8/2015 21:04'!
-ledgerFormatted
-	"Answer the receiver as a string with commas to two decimal places. It will be signed only if negative."
-	| x int frac partA str pos ios |
-	x _ (self / 100) roundTo: 0.01.
-	int _ x integerPart truncated.
-	partA _ int asStringWithCommasSigned: false.
-	ios _ String new writeStream.
-	ios nextPutAll: partA.
-	frac _ x fractionPart roundTo: 0.01.
-	str _ frac asString.
-	pos _ str findFirst: [:a | a = $.].
-	str size - pos < 2 ifTrue: [str _ str, '0'].
-	ios nextPutAll: (str copyFrom: pos count: 3).
-	^ ios contents! !
-
-!SmallInteger methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 13:34'!
-asMmDdYyyy
-	"Convert the receiver from Ledgerdemain date number to dd/mm/yyyy"
-	^ (Date fromDays: self) mmddyyyy! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
@@ -1103,16 +1035,14 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:56'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/9/2015 12:10'!
 buildMorphicWindow
-	"Answer a window for Ledger d'Main"
-	| row |
-	row _ (LayoutMorph newRow name: #Row)
+	"Lay out a window for Ledger d'Main"
+
+	(self layoutMorph beRow name: #Row)
 		addMorph: self buildAccountList fixedWidth: 200;
 		addMorph: self buildLedgerList
-			layoutSpec: (LayoutSpec useAll).
-	self layoutMorph
-		addMorph: row! !
+			layoutSpec: (LayoutSpec useAll)! !
 
 !LedgerWindow methodsFor: 'open/close' stamp: 'dhn 10/16/2015 20:39'!
 delete
