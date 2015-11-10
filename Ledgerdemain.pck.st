@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 9 November 2015 at 2:15:09.984037 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 9 November 2015 at 8:32:21.963225 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 112!
+!provides: 'Ledgerdemain' 1 113!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -20,6 +20,16 @@ TextModel subclass: #LedgerDeMain
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
 LedgerDeMain class
+	instanceVariableNames: ''!
+
+!classDefinition: #LedgerCompleter category: #Ledgerdemain!
+AutoCompleter subclass: #LedgerCompleter
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerCompleter class' category: #Ledgerdemain!
+LedgerCompleter class
 	instanceVariableNames: ''!
 
 !classDefinition: #Ledger category: #Ledgerdemain!
@@ -42,9 +52,19 @@ Morph subclass: #Reconciliation
 Reconciliation class
 	instanceVariableNames: ''!
 
+!classDefinition: #LedgerCompleterMorph category: #Ledgerdemain!
+AutoCompleterMorph subclass: #LedgerCompleterMorph
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerCompleterMorph class' category: #Ledgerdemain!
+LedgerCompleterMorph class
+	instanceVariableNames: ''!
+
 !classDefinition: #EntryField category: #Ledgerdemain!
 TextModelMorph subclass: #EntryField
-	instanceVariableNames: ''
+	instanceVariableNames: 'ref'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -172,6 +192,9 @@ recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
 reported amount _ dollars (examples: 29.95 5.00)!
 
+!LedgerCompleter commentStamp: 'dhn 11/9/2015 15:31' prior: 0!
+The AutoCompleter for LedgerDeMain.!
+
 !Ledger commentStamp: 'dhn 6/24/2015 21:11' prior: 0!
 Ledger is an ordered collection of transactions.!
 
@@ -181,6 +204,9 @@ Reconciliation responsibilities:
   report withdrawals and deposits
   update ledger
 !
+
+!LedgerCompleterMorph commentStamp: 'dhn 11/9/2015 17:10' prior: 0!
+The auto completion menu for Ledgerdemain.!
 
 !LedgerWindow commentStamp: 'dhn 8/15/2015 12:29' prior: 0!
 Window for Ledger d'Main. Provides pop-up menu for options.
@@ -505,6 +531,11 @@ addCategory: aString
 		ifTrue: [self categories at: aString put: 1] "primary category"
 		ifFalse: [self categories at: aString put: 2]. "sub-category"
 	self modified: true! !
+
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/9/2015 19:30'!
+autoCompleterClassFor: textGetter
+
+	^ LedgerCompleter! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:29'!
 categories
@@ -931,10 +962,53 @@ keyTable
 look
 	Payees explore! !
 
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/9/2015 16:47'!
+addEntriesTo: aStream
+	"Supply content to the completer"
+	
+	{aStream} print.
+	aStream
+		nextPutAll: (model ref 
+			forPrefix: model actualContents
+			keysAndValuesDo: [:key :val | key])! !
+
+!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 11/9/2015 20:17'!
+openCompletionMenu
+	| theEditor |
+	theEditor _ textMorph editor.
+	position _ theEditor startIndex - 1.
+	self closeMenu.
+	self computeEntries.
+	entries notEmpty
+		ifTrue: [ 
+			menuMorph _  LedgerCompleterMorph 
+				completer: self
+				position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld ]! !
+
 !Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
 initialize
 
 	contents _ OrderedCollection new! !
+
+!LedgerCompleterMorph class methodsFor: 'instance creation' stamp: 'dhn 11/9/2015 17:08'!
+initializedInstance
+	| completer m |
+	completer _ LedgerCompleter withModel: (TextModel withText: 'Small').
+	completer
+		instVarNamed: 'position'
+		put: 5.
+	completer computeEntries.
+	m _ LedgerCompleterMorph
+		completer: completer
+		position: 200 @ 200.
+	completer instVarNamed: 'menuMorph' put: m.
+	^m! !
+
+!EntryField methodsFor: 'updating' stamp: 'dhn 11/9/2015 15:24'!
+completeWith: anObject
+	"Set the completer database"
+	
+	ref _ anObject! !
 
 !EntryField methodsFor: 'initialization' stamp: 'dhn 10/21/2015 12:02'!
 initialize
@@ -945,6 +1019,11 @@ initialize
 		color: Color white
 
 ! !
+
+!EntryField methodsFor: 'accessing' stamp: 'dhn 11/9/2015 16:42'!
+ref
+
+	^ ref! !
 
 !EntryField class methodsFor: 'class initialization' stamp: 'dhn 10/21/2015 12:15'!
 textProvider: aTextProvider getter: symb1 setter: symb2 name: aName
@@ -1023,7 +1102,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: sums! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/24/2015 17:06'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/9/2015 19:37'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
@@ -1054,6 +1133,7 @@ buildEntries
 			getter: #getCategory
 			setter: #putCategory: 
 			name: #Category)
+				completeWith: model categories;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
 		addMorph: ((EntryField 
@@ -1385,7 +1465,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 21:05'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/9/2015 20:20'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1644,7 +1724,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 21:05'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/9/2015 20:20'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
