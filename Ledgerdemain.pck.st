@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 9 November 2015 at 8:32:21.963225 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 10 November 2015 at 6:30:04.375205 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 113!
+!provides: 'Ledgerdemain' 1 114!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #LedgerCompleter category: #Ledgerdemain!
 AutoCompleter subclass: #LedgerCompleter
-	instanceVariableNames: ''
+	instanceVariableNames: 'pane'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -64,7 +64,7 @@ LedgerCompleterMorph class
 
 !classDefinition: #EntryField category: #Ledgerdemain!
 TextModelMorph subclass: #EntryField
-	instanceVariableNames: 'ref'
+	instanceVariableNames: 'completeDb'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -576,12 +576,12 @@ getAmount
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction amount withBlanksCondensed]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:28'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 11/10/2015 15:40'!
 getCategory
 	"Answer the category"
 	
 	transactionListIndex = 0
-		ifTrue: [^ '']
+		ifTrue: [^ self actualContents asString]
 		ifFalse: [^ selectedTransaction category]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:18'!
@@ -962,15 +962,16 @@ keyTable
 look
 	Payees explore! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/9/2015 16:47'!
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/10/2015 18:27'!
 addEntriesTo: aStream
 	"Supply content to the completer"
-	
-	{aStream} print.
-	aStream
-		nextPutAll: (model ref 
-			forPrefix: model actualContents
-			keysAndValuesDo: [:key :val | key])! !
+	| db pref x |
+
+	db _ model textProvider categories.
+	pref _ model actualContents asString.
+	x _ db 
+			forPrefix: pref
+			keysAndValuesDo: [:key :val | {key. val} print. aStream nextPut: key]! !
 
 !LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 11/9/2015 20:17'!
 openCompletionMenu
@@ -1004,11 +1005,17 @@ initializedInstance
 	completer instVarNamed: 'menuMorph' put: m.
 	^m! !
 
-!EntryField methodsFor: 'updating' stamp: 'dhn 11/9/2015 15:24'!
-completeWith: anObject
+!EntryField methodsFor: 'accessing' stamp: 'dhn 11/10/2015 15:13'!
+completeDb
+	"Answer the completer database"
+
+	^ completeDb! !
+
+!EntryField methodsFor: 'accessing' stamp: 'dhn 11/10/2015 15:13'!
+completeDb: anObject
 	"Set the completer database"
-	
-	ref _ anObject! !
+
+	completeDb _ anObject! !
 
 !EntryField methodsFor: 'initialization' stamp: 'dhn 10/21/2015 12:02'!
 initialize
@@ -1019,11 +1026,6 @@ initialize
 		color: Color white
 
 ! !
-
-!EntryField methodsFor: 'accessing' stamp: 'dhn 11/9/2015 16:42'!
-ref
-
-	^ ref! !
 
 !EntryField class methodsFor: 'class initialization' stamp: 'dhn 10/21/2015 12:15'!
 textProvider: aTextProvider getter: symb1 setter: symb2 name: aName
@@ -1102,7 +1104,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: sums! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/9/2015 19:37'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/10/2015 15:16'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
@@ -1133,7 +1135,7 @@ buildEntries
 			getter: #getCategory
 			setter: #putCategory: 
 			name: #Category)
-				completeWith: model categories;
+				completeDb: model categories;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
 		addMorph: ((EntryField 
