@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 10 November 2015 at 6:30:04.375205 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 10 November 2015 at 8:29:57.169205 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 114!
+!provides: 'Ledgerdemain' 1 115!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,8 +14,8 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net trail modified transactionList transactionListIndex selectedTransaction'
-	classVariableNames: 'Categories Memos Payees Type UniqueInstance'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net trail modified transactionList transactionListIndex selectedTransaction entryTable'
+	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #LedgerCompleter category: #Ledgerdemain!
 AutoCompleter subclass: #LedgerCompleter
-	instanceVariableNames: 'pane'
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -568,6 +568,18 @@ directory: dir
 
 	directory _ dir! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/10/2015 20:15'!
+entryTable
+	"Answer the value of entryTable"
+
+	^ entryTable! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/10/2015 20:16'!
+entryTable: anObject
+	"Set the value of entryTable"
+
+	entryTable _ anObject! !
+
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/20/2015 21:24'!
 getAmount
 	"Answer the amount"
@@ -636,13 +648,14 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction reconciled]! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/24/2015 20:50'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/10/2015 20:18'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
 	self transactionListIndex: 0.
 	modified _ false.
+	entryTable _ Dictionary new.
 	self changed: #acctList.
 	self changed: #xactList! !
 
@@ -962,16 +975,16 @@ keyTable
 look
 	Payees explore! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/10/2015 18:27'!
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/10/2015 20:29'!
 addEntriesTo: aStream
 	"Supply content to the completer"
-	| db pref x |
+	| db pref |
 
-	db _ model textProvider categories.
+	db _ model textProvider categories. "needs generalization"
 	pref _ model actualContents asString.
-	x _ db 
-			forPrefix: pref
-			keysAndValuesDo: [:key :val | {key. val} print. aStream nextPut: key]! !
+	db 
+		forPrefix: pref
+		keysAndValuesDo: [:key :val | aStream nextPut: key]! !
 
 !LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 11/9/2015 20:17'!
 openCompletionMenu
