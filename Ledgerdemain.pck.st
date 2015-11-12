@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 11 November 2015 at 7:11:33.751321 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 11 November 2015 at 8:03:56.174321 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 116!
+!provides: 'Ledgerdemain' 1 117!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -470,7 +470,7 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 10/24/2015 20:41'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 11/11/2015 19:59'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
@@ -496,6 +496,7 @@ accountFromFile
 					self memos: rec memo withoutTrailingBlanks.
 					self type: rec type withoutTrailingBlanks.
 					acct loadTransaction: rec]].
+		self computeNet.
 		self changed: #acctList.
 		self changed: #xactList.
 		self changed: #lastOnList]! !
@@ -585,7 +586,7 @@ categoriesFromFile
 			whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 		ios close]! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 11/11/2015 19:08'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 11/11/2015 19:53'!
 computeNet
 	"Display the net sum of all accounts"
 	| ttl str |
@@ -606,7 +607,7 @@ computeNet
 	ttl _ ttl abs centsToDollars.
 	str 
 		nextPut: $$;
-		nextPutAll: ttl first withCommas;
+		nextPutAll: ttl first;
 		nextPut: $.;
 		nextPutAll: ttl second.
 	netEditor contents: str contents.
@@ -1546,7 +1547,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 19:09'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 20:00'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1805,7 +1806,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 19:09'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 20:00'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
