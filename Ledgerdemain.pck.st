@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 10 November 2015 at 8:29:57.169205 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 11 November 2015 at 7:11:33.751321 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 115!
+!provides: 'Ledgerdemain' 1 116!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net trail modified transactionList transactionListIndex selectedTransaction entryTable'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net trail modified transactionList transactionListIndex selectedTransaction entryTable netEditor'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -299,6 +299,15 @@ dollarsToCents
 					"fewer than 2 decimal places gets zeros appended"
 	^ y asNumber! !
 
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 11/11/2015 19:01'!
+withCommas
+	"Answer the receiver with commas at the thousands, millions, etc positions"
+
+	self size > 3
+		ifTrue: [
+			^ (self copyFrom: 1 to: self size - 3) withCommas, 
+				',', (self copyFrom: self size - 2 to: self size)]! !
+
 !Integer methodsFor: '*Ledgerdemain' stamp: 'cmm 6/8/2012 15:43'!
 asStringWithCommasSigned: aBoolean
 	"123456789 asStringWithCommasSigned: true"
@@ -333,6 +342,19 @@ ledgerFormatted
 asMmDdYyyy
 	"Convert the receiver from Ledgerdemain date number to dd/mm/yyyy"
 	^ (Date fromDays: self) mmddyyyy! !
+
+!SmallInteger methodsFor: '*Ledgerdemain' stamp: 'dhn 11/11/2015 18:18'!
+centsToDollars
+	"Answer the receiver as an array of strings in the form {'d,ddd'. 'cc'} "
+	| all sd sc |
+	
+	all _ self asString.
+	all size < 2 ifTrue: [all _ ('0', all, '0') copyFrom: 1 to: 2].
+	sc _ all copyFrom: all size - 1 to: all size.
+	all size > 2
+		ifTrue: [sd _ (all copyFrom: 1 to: all size - 2) withCommas]
+		ifFalse: [sd _ '0'].
+	^ {sd. sc}! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
@@ -511,12 +533,13 @@ accounts
 	accounts ifNil: [accounts _ OrderedCollection new].
 	^ accounts! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/23/2015 20:22'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 11/11/2015 16:15'!
 accounts: anObject
 	"Save anObject in accounts"
 
 	self accounts addLast: anObject.
 	self selectedAccount: anObject.
+	self computeNet.
 	self modified: true.
 	self changed: #acctList.
 	self changed: #xactList
@@ -561,6 +584,33 @@ categoriesFromFile
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 		ios close]! !
+
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 11/11/2015 19:08'!
+computeNet
+	"Display the net sum of all accounts"
+	| ttl str |
+	
+	ttl _ 0.
+	accounts
+		ifNotNil: [accounts do: [:a | ttl _ ttl + a balCur]]
+		ifNil: [ttl _ 0].
+	(str _ String new writeStream)
+		nextPutAll: '    Net'.
+	ttl >= 0
+		ifTrue: [
+			netEditor color: Color black.
+			str nextPutAll: ' Total  ']
+		ifFalse: [
+			netEditor color: Color red.
+			str nextPutAll: ' Loss  '].
+	ttl _ ttl abs centsToDollars.
+	str 
+		nextPut: $$;
+		nextPutAll: ttl first withCommas;
+		nextPut: $.;
+		nextPutAll: ttl second.
+	netEditor contents: str contents.
+! !
 
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/13/2015 21:11'!
 directory: dir
@@ -729,6 +779,18 @@ net: anObject
 
 	net _ anObject.
 	self modified: true! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/11/2015 14:31'!
+netEditor
+	"Answer the value of netEditor"
+
+	^ netEditor! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/11/2015 14:32'!
+netEditor: anObject
+	"Set the value of netEditor"
+
+	netEditor _ anObject! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/23/2015 20:17'!
 newAccount
@@ -1092,10 +1154,10 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 12:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/11/2015 16:06'!
 buildAccountList
 	"Answer the specifications for the list of accounts in the window"
-	| sums |
+	| net ttl |
 	
 	windowAccountList _ ((PluggableListMorph
 			model: model
@@ -1109,13 +1171,17 @@ buildAccountList
 				borderWidth: 1;
 				name: 'Account List').
 	
-	sums _ (BorderedRectMorph new color: Color lightGreen; name: 'Account Summary')
-		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 200).
+	net _ (LayoutMorph newColumn color: Color lightGreen; name: 'Net Total')
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 100).
+	ttl _  (OneLineEditorMorph new contents: '    Net Total:   $0.00'; name: #Total)
+		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.1 minorDirectionPadding: #center).
+	model netEditor: ttl.
+	net addMorph: ttl.
 
 	^ LayoutMorph newColumn
 		name: #Accounts;
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
-		addMorph: sums! !
+		addMorph: net! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/10/2015 15:16'!
 buildEntries
@@ -1480,7 +1546,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/9/2015 20:20'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 19:09'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1739,7 +1805,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/9/2015 20:20'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 19:09'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
