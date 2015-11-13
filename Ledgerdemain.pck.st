@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 11 November 2015 at 8:03:56.174321 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 13 November 2015 at 5:39:32.306378 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 117!
+!provides: 'Ledgerdemain' 1 118!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -208,6 +208,9 @@ Reconciliation responsibilities:
 !LedgerCompleterMorph commentStamp: 'dhn 11/9/2015 17:10' prior: 0!
 The auto completion menu for Ledgerdemain.!
 
+!EntryField commentStamp: '<historical>' prior: 0!
+A data entry and display morph with the ability to encapsulate a symbol of the method to load the Trie for a completer.!
+
 !LedgerWindow commentStamp: 'dhn 8/15/2015 12:29' prior: 0!
 Window for Ledger d'Main. Provides pop-up menu for options.
 
@@ -355,6 +358,29 @@ centsToDollars
 		ifTrue: [sd _ (all copyFrom: 1 to: all size - 2) withCommas]
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 11/13/2015 17:18'!
+keyStroke: aKeyboardEvent
+	(self focusKeyboardFor: aKeyboardEvent)
+		ifTrue: [ ^ self ].
+	(self closeWindowFor: aKeyboardEvent)
+		ifTrue: [ ^ self ].
+		
+	"Maybe disable? Precludes the use of up and down arrows with control,
+	that are standard keystrokes in Windows to control the cursor.
+	Problem: At least Mac and Win VM generate ctrl-up and ctrl-down for
+	mouse wheel events.
+	I guess most people would prefer the mouse wheel to work properly..."
+	(owner scrollByKeyboard: aKeyboardEvent)
+		ifTrue: [ ^self ].
+
+	self owner triggerEvent: #atEntry.
+	autoCompleter 
+		ifNil: [ self processKeyStroke: aKeyboardEvent ]
+		ifNotNil: [
+			autoCompleter
+				autoCompletionAround: [ self processKeyStroke: aKeyboardEvent ]
+				keyStroke: aKeyboardEvent ]! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
@@ -625,11 +651,11 @@ entryTable
 
 	^ entryTable! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/10/2015 20:16'!
-entryTable: anObject
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/13/2015 16:08'!
+entryTable: aSymbol
 	"Set the value of entryTable"
 
-	entryTable _ anObject! !
+	entryTable _ self perform: aSymbol! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/20/2015 21:24'!
 getAmount
@@ -699,14 +725,13 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction reconciled]! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/10/2015 20:18'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/13/2015 15:04'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
 	self transactionListIndex: 0.
 	modified _ false.
-	entryTable _ Dictionary new.
 	self changed: #acctList.
 	self changed: #xactList! !
 
@@ -1038,12 +1063,12 @@ keyTable
 look
 	Payees explore! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/10/2015 20:29'!
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/13/2015 16:25'!
 addEntriesTo: aStream
 	"Supply content to the completer"
 	| db pref |
 
-	db _ model textProvider categories. "needs generalization"
+	db _ model textProvider entryTable.
 	pref _ model actualContents asString.
 	db 
 		forPrefix: pref
@@ -1093,14 +1118,13 @@ completeDb: anObject
 
 	completeDb _ anObject! !
 
-!EntryField methodsFor: 'initialization' stamp: 'dhn 10/21/2015 12:02'!
+!EntryField methodsFor: 'initialization' stamp: 'dhn 11/13/2015 15:26'!
 initialize
 
 	super initialize.
 	self
 		borderWidth: 1;
 		color: Color white
-
 ! !
 
 !EntryField class methodsFor: 'class initialization' stamp: 'dhn 10/21/2015 12:15'!
@@ -1184,7 +1208,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/10/2015 15:16'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/13/2015 16:14'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
@@ -1208,6 +1232,7 @@ buildEntries
 			getter: #getPayee
 			setter: #putPayee:
 			name: #Payee)
+				when: #atEntry send: #entryTable: to: model with: #payees;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
 		addMorph: ((EntryField 
@@ -1215,6 +1240,7 @@ buildEntries
 			getter: #getCategory
 			setter: #putCategory: 
 			name: #Category)
+				when: #atEntry send: #entryTable: to: model with: #categories;
 				completeDb: model categories;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
@@ -1223,6 +1249,7 @@ buildEntries
 			getter: #getMemo
 			setter: #putMemo: 
 			name: #Memo)
+				when: #atEntry send: #entryTable: to: model with: #memos;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
 		addMorph: ((EntryField 
@@ -1547,7 +1574,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 20:00'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/13/2015 16:17'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1806,7 +1833,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/11/2015 20:00'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/13/2015 16:17'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
