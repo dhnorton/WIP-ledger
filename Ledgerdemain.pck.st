@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 29 November 2015 at 4:48:04.194715 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 29 November 2015 at 8:56:35.112715 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 119!
+!provides: 'Ledgerdemain' 1 120!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -284,23 +284,23 @@ asLdmDate
 	dt _ Date newDay: (y at: 2) month: (y at: 1) year: (y at: 3).
 	^ dt julianDayNumber - Time squeakEpoch! !
 
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 11/29/2015 16:38'!
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 11/29/2015 20:49'!
 dollarsToCents
-	"Answer the conversion of the receiver to a number of cents"
-	| w x y |
-	w _ self select: [:a | a isDigit or: ('-.' includes: a)].
-	x _ w findDelimiters: '.' startingAt: 1. 
-	x > w size 
-		ifTrue: [y _ w, '00'] "no decimal point specified"
-		ifFalse: [	"a decimal point exists"
-			w size - x >= 2
-				ifTrue: [y _ (w copyFrom: 1 to: x - 1), (w copyFrom: x + 1 to: x + 2)]
-					"fractions of cents are dropped"
-				ifFalse: [
-					y _ (w copyFrom: 1 to: x - 1), (w copyFrom: x + 1 to: w size), '00'.
-					y _ y copyFrom: 1 to: x + 1]]. 
-					"fewer than 2 decimal places gets zeros appended"
-	^ y asNumber! !
+	"Convert the receiver to a number of cents"
+	| x y |
+	(self  allSatisfy: [:c | c isDigit or: ('-.' includes: c)])	"a modest test"
+		ifTrue: [
+			x _ self findDelimiters: '.' startingAt: 1. 
+			x > self size 
+				ifTrue: [y _ self, '00'] "no decimal point specified"
+				ifFalse: [	"a decimal point exists"
+					y _ self select: [:a | a isDigit or: ('-' includes: a)].	"rm the decimal point"
+					y size - x >= 1
+						ifFalse: [y _ y, '00'].	"fewer than 2 decimal places gets zeros appended"
+					y _ y copyFrom: 1 to: x + 1]. 	"fractions of cents are dropped"
+			^ y asNumber]
+		ifFalse: [^ nil 	"unfriendly, but effective, result of garbage in self"]
+! !
 
 !String methodsFor: '*Ledgerdemain' stamp: 'dhn 11/11/2015 19:01'!
 withCommas
