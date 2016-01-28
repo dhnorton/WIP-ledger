@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2571] on 29 November 2015 at 8:56:35.112715 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 28 January 2016 at 3:45:07.215398 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 120!
+!provides: 'Ledgerdemain' 1 121!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -359,11 +359,12 @@ centsToDollars
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 11/13/2015 17:18'!
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'len 11/15/2015 06:45'!
 keyStroke: aKeyboardEvent
+
+	(Theme current keyStroke: aKeyboardEvent morph: self)
+		ifTrue: [^ self].
 	(self focusKeyboardFor: aKeyboardEvent)
-		ifTrue: [ ^ self ].
-	(self closeWindowFor: aKeyboardEvent)
 		ifTrue: [ ^ self ].
 		
 	"Maybe disable? Precludes the use of up and down arrows with control,
@@ -374,7 +375,6 @@ keyStroke: aKeyboardEvent
 	(owner scrollByKeyboard: aKeyboardEvent)
 		ifTrue: [ ^self ].
 
-	self owner triggerEvent: #atEntry.
 	autoCompleter 
 		ifNil: [ self processKeyStroke: aKeyboardEvent ]
 		ifNotNil: [
@@ -1198,10 +1198,10 @@ buildAccountList
 	
 	net _ (LayoutMorph newColumn color: Color lightGreen; name: 'Net Total')
 		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 100).
-	ttl _  (OneLineEditorMorph new contents: '    Net Total:   $0.00'; name: #Total)
+	"ttl _  (OneLineEditorMorph new contents: '    Net Total:   $0.00'; name: #Total)
 		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.1 minorDirectionPadding: #center).
 	model netEditor: ttl.
-	net addMorph: ttl.
+	net addMorph: ttl."
 
 	^ LayoutMorph newColumn
 		name: #Accounts;
