@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 28 January 2016 at 3:45:07.215398 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 28 January 2016 at 7:46:40.523191 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 121!
+!provides: 'Ledgerdemain' 1 122!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1179,7 +1179,7 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/11/2015 16:06'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 1/28/2016 19:41'!
 buildAccountList
 	"Answer the specifications for the list of accounts in the window"
 	| net ttl |
@@ -1198,10 +1198,10 @@ buildAccountList
 	
 	net _ (LayoutMorph newColumn color: Color lightGreen; name: 'Net Total')
 		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 100).
-	"ttl _  (OneLineEditorMorph new contents: '    Net Total:   $0.00'; name: #Total)
+	ttl _  (StringMorph new contents: '    Net Total:   $0.00'; name: #Total)
 		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.1 minorDirectionPadding: #center).
 	model netEditor: ttl.
-	net addMorph: ttl."
+	net addMorph: ttl.
 
 	^ LayoutMorph newColumn
 		name: #Accounts;
@@ -1574,7 +1574,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 11/13/2015 16:17'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 19:43'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1833,7 +1833,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 11/13/2015 16:17'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 19:43'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
