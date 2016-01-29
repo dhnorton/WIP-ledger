@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 28 January 2016 at 7:46:40.523191 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 28 January 2016 at 9:29:54.648191 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 122!
+!provides: 'Ledgerdemain' 1 123!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -284,17 +284,19 @@ asLdmDate
 	dt _ Date newDay: (y at: 2) month: (y at: 1) year: (y at: 3).
 	^ dt julianDayNumber - Time squeakEpoch! !
 
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 11/29/2015 20:49'!
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 1/28/2016 21:25'!
 dollarsToCents
 	"Convert the receiver to a number of cents"
-	| x y |
-	(self  allSatisfy: [:c | c isDigit or: ('-.' includes: c)])	"a modest test"
+	| w x y |
+
+	w _ self withBlanksCondensed.
+	(w  allSatisfy: [:c | c isDigit or: (' -.' includes: c)])	"a modest test"
 		ifTrue: [
-			x _ self findDelimiters: '.' startingAt: 1. 
-			x > self size 
-				ifTrue: [y _ self, '00'] "no decimal point specified"
+			x _ w findDelimiters: '.' startingAt: 1. 
+			x > w size 
+				ifTrue: [y _ w, '00'] "no decimal point specified"
 				ifFalse: [	"a decimal point exists"
-					y _ self select: [:a | a isDigit or: ('-' includes: a)].	"rm the decimal point"
+					y _ w select: [:a | a isDigit or: ('-' includes: a)].	"rm the decimal point"
 					y size - x >= 1
 						ifFalse: [y _ y, '00'].	"fewer than 2 decimal places gets zeros appended"
 					y _ y copyFrom: 1 to: x + 1]. 	"fractions of cents are dropped"
@@ -1574,7 +1576,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 19:43'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 21:27'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1833,7 +1835,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 19:43'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 21:27'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
