@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 28 January 2016 at 9:29:54.648191 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 30 January 2016 at 9:22:17.848055 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 123!
+!provides: 'Ledgerdemain' 1 124!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -64,7 +64,7 @@ LedgerCompleterMorph class
 
 !classDefinition: #EntryField category: #Ledgerdemain!
 TextModelMorph subclass: #EntryField
-	instanceVariableNames: 'completeDb'
+	instanceVariableNames: 'textModel'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -727,6 +727,16 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction reconciled]! !
 
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 1/30/2016 20:48'!
+getTrieFor: aSymbol
+	"Answer the contents Trie for the field named aSymbol"
+	| method |
+	
+	method _ self class completerTable at: aSymbol.
+	^ self perform: method
+	
+	! !
+
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/13/2015 15:04'!
 initialize
 	"initialize the state of the receiver"
@@ -1048,6 +1058,17 @@ withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
 	^ self forPrefix: aString keysAndValuesDo: [:key :v | key]! !
 
+!LedgerDeMain class methodsFor: 'completer' stamp: 'dhn 1/29/2016 21:13'!
+completerTable
+	"Translate entry field names to methods for completer entries"
+	
+	^ Dictionary new
+		at: #Category put: #categories;
+		at: #Memo put: #memos;
+		at: #Payee put: #payees;
+		at: #Type put: #type;
+		yourself! !
+
 !LedgerDeMain class methodsFor: 'fileIn/Out' stamp: 'dhn 6/23/2015 21:10'!
 keyTable
 	"Answer a dictionary of keys and their hash values"
@@ -1075,6 +1096,19 @@ addEntriesTo: aStream
 	db 
 		forPrefix: pref
 		keysAndValuesDo: [:key :val | aStream nextPut: key]! !
+
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 1/30/2016 21:17'!
+computeEntries
+	"Signal that focus is on the field"
+	| signal trie char col |
+	
+	signal _ textMorph owner valueOfProperty: #morphName.
+	trie _ textMorph owner textModel getTrieFor: signal.
+	char _ textMorph editor text first asString.
+	col _ OrderedCollection new.
+	trie forPrefix: char keysAndValuesDo: [:key :val | col add: key].
+	entries _ col.
+	self triggerEvent: signal! !
 
 !LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 11/9/2015 20:17'!
 openCompletionMenu
@@ -1108,18 +1142,6 @@ initializedInstance
 	completer instVarNamed: 'menuMorph' put: m.
 	^m! !
 
-!EntryField methodsFor: 'accessing' stamp: 'dhn 11/10/2015 15:13'!
-completeDb
-	"Answer the completer database"
-
-	^ completeDb! !
-
-!EntryField methodsFor: 'accessing' stamp: 'dhn 11/10/2015 15:13'!
-completeDb: anObject
-	"Set the completer database"
-
-	completeDb _ anObject! !
-
 !EntryField methodsFor: 'initialization' stamp: 'dhn 11/13/2015 15:26'!
 initialize
 
@@ -1128,6 +1150,18 @@ initialize
 		borderWidth: 1;
 		color: Color white
 ! !
+
+!EntryField methodsFor: 'accessing' stamp: 'dhn 1/29/2016 21:01'!
+textModel
+	"Answer the value of textModel"
+
+	^ textModel! !
+
+!EntryField methodsFor: 'accessing' stamp: 'dhn 1/29/2016 21:01'!
+textModel: anObject
+	"Set the value of textModel"
+
+	textModel _ anObject! !
 
 !EntryField class methodsFor: 'class initialization' stamp: 'dhn 10/21/2015 12:15'!
 textProvider: aTextProvider getter: symb1 setter: symb2 name: aName
@@ -1210,7 +1244,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/13/2015 16:14'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 1/30/2016 19:51'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
@@ -1235,6 +1269,7 @@ buildEntries
 			setter: #putPayee:
 			name: #Payee)
 				when: #atEntry send: #entryTable: to: model with: #payees;
+				textModel: model;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
 		addMorph: ((EntryField 
@@ -1243,7 +1278,7 @@ buildEntries
 			setter: #putCategory: 
 			name: #Category)
 				when: #atEntry send: #entryTable: to: model with: #categories;
-				completeDb: model categories;
+				textModel: model;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
 		addMorph: ((EntryField 
@@ -1252,6 +1287,7 @@ buildEntries
 			setter: #putMemo: 
 			name: #Memo)
 				when: #atEntry send: #entryTable: to: model with: #memos;
+				textModel: model;
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
 		addMorph: ((EntryField 
@@ -1576,7 +1612,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 21:27'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 1/30/2016 19:53'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1835,7 +1871,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 1/28/2016 21:27'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 1/30/2016 19:53'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
