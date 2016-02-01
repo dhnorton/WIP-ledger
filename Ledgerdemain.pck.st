@@ -1,7 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 1 February 2016 at 10:32:13.086029 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 1 February 2016 at 6:17:54.704029 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 125!
+!provides: 'Ledgerdemain' 1 126!
 !requires: 'Records' 1 10 nil!
+!requires: 'Calendar' 1 0 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
