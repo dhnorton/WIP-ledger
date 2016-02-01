@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 30 January 2016 at 9:22:17.848055 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 1 February 2016 at 10:32:13.086029 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 124!
+!provides: 'Ledgerdemain' 1 125!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1097,18 +1097,19 @@ addEntriesTo: aStream
 		forPrefix: pref
 		keysAndValuesDo: [:key :val | aStream nextPut: key]! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 1/30/2016 21:17'!
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 2/1/2016 10:28'!
 computeEntries
-	"Signal that focus is on the field"
+	"Set the list for the completer"
 	| signal trie char col |
 	
-	signal _ textMorph owner valueOfProperty: #morphName.
-	trie _ textMorph owner textModel getTrieFor: signal.
-	char _ textMorph editor text first asString.
+	signal _ textMorph owner valueOfProperty: #morphName. 	"where are we?"
+	trie _ textMorph owner textModel getTrieFor: signal. 	"get the Trie for this field"
+	char _ textMorph editor text first asString. 	"hack, cough"
+	prefix _ char. 	"hack, cough"
 	col _ OrderedCollection new.
-	trie forPrefix: char keysAndValuesDo: [:key :val | col add: key].
+	trie forPrefix: char keysAndValuesDo: [:key :val | col add: key]. 	"extract entries from the Trie"
 	entries _ col.
-	self triggerEvent: signal! !
+	self triggerEvent: signal 	"notify that the completer entries have changed"! !
 
 !LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 11/9/2015 20:17'!
 openCompletionMenu
