@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 1 February 2016 at 8:56:34.628627 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 1 February 2016 at 9:44:30.824627 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 1!
+!provides: 'Calendar' 1 2!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days'
@@ -55,14 +55,23 @@ initialize
 	super initialize.
 	days _ self formDays: Date today! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/1/2016 20:44'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/1/2016 21:43'!
 buildMorphicWindow
 	"Answer a window for the calendar"
-	| row |
+	| row arr |
 
-	self morphExtent: 230@200.
+	self morphExtent: 230@230.
 	(row _ LayoutMorph newRow)
-		name: #buttons.
+		addMorph: (RectangleLikeMorph new	color: Color lightGray);
+		name: #'day names'.
+		
+	(arr _ LayoutMorph newColumn)
+		name: #array.
 
 	self layoutMorph
-		addMorph: row! !
+		addMorph: row
+			layoutSpec: (LayoutSpec proportionalHeight: 0.1);
+		addMorph: arr
+			layoutSpec: (LayoutSpec useAll);
+		name: #calendar
+! !
