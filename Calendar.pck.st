@@ -1,6 +1,7 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 1 February 2016 at 9:44:30.824627 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 2 February 2016 at 1:29:01.065608 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 2!
+!provides: 'Calendar' 1 4!
+!requires: 'Morphic-Misc1' 1 70 nil!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days'
@@ -55,12 +56,16 @@ initialize
 	super initialize.
 	days _ self formDays: Date today! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/1/2016 21:43'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/2/2016 13:25'!
 buildMorphicWindow
 	"Answer a window for the calendar"
 	| row arr |
 
 	self morphExtent: 230@230.
+	
+	self setLabel: 'Febtober 2019'.
+	self titleMorph showButtonsNamed: #( close expand collapse ).
+	
 	(row _ LayoutMorph newRow)
 		addMorph: (RectangleLikeMorph new	color: Color lightGray);
 		name: #'day names'.
@@ -75,3 +80,39 @@ buildMorphicWindow
 			layoutSpec: (LayoutSpec useAll);
 		name: #calendar
 ! !
+
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/2/2016 13:09'!
+createEarlierBox
+	^ (PluggableButtonMorph model: self action: #earlier)
+		icon: Theme current collapseIcon;
+		iconName: #drawCollapseIcon;
+		setBalloonText: 'month before';
+		morphExtent: self boxExtent! !
+
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/2/2016 13:11'!
+createLaterBox
+	^ (PluggableButtonMorph model: self action: #later)
+		icon: Theme current expandIcon;
+		iconName: #drawExpandIcon;
+		setBalloonText: 'month after';
+		morphExtent: self boxExtent! !
+
+!CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/2/2016 12:30'!
+dayNames
+	"Answer the names for the days of the week"
+	
+	^ OrderedCollection new
+		add: 'Sun';
+		add: 'Mon';
+		add: 'Tue';
+		add: 'Wed';
+		add: 'Thu';
+		add: 'Fri';
+		add: 'Sat';
+		yourself! !
+
+!CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/2/2016 13:27'!
+how
+"
+	CalendarPage open: CalendarModel new.
+"! !
