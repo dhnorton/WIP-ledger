@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 3 February 2016 at 12:33:50.639491 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 3 February 2016 at 3:05:29.888453 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 6!
+!provides: 'Calendar' 1 7!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date month year'
@@ -73,7 +73,7 @@ formDays: aDate
 	col _ col addAll: (1 to: 42 - col size); yourself. "days following the month containing aDate"
 	^ col! !
 
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/2/2016 18:38'!
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/3/2016 15:02'!
 indexMonthBy: aNumber
 	"Answer the month as a symbol resulting from changing the current month index by aNumber. Adjust year as required"
 	| m |
@@ -82,7 +82,9 @@ indexMonthBy: aNumber
 	m > 12 ifTrue: [year _ year + 1].
 	m < 1 ifTrue: [year _ year - 1].
 	
-	^ Date nameOfMonth: (self class monthNumbers atWrap: m)
+	m _ m mod: 12.
+	m = 0 ifTrue: [m _ 12].
+	^ Date nameOfMonth: m
 	! !
 
 !CalendarModel methodsFor: 'initialization' stamp: 'dhn 2/2/2016 17:57'!
@@ -151,12 +153,6 @@ year: anObject
 	"Set the value of year"
 
 	year _ anObject! !
-
-!CalendarModel class methodsFor: 'enumerating' stamp: 'dhn 2/2/2016 18:34'!
-monthNumbers
-	"Answer the numbers of the months"
-	
-	^ #(1 2 3 4 5 6 7 8 9 10 11 12)! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:18'!
 buildMorphicWindow
