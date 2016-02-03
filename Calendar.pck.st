@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 3 February 2016 at 3:05:29.888453 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 3 February 2016 at 5:03:42.851453 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 7!
+!provides: 'Calendar' 1 8!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date month year'
@@ -154,7 +154,7 @@ year: anObject
 
 	year _ anObject! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:18'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 16:41'!
 buildMorphicWindow
 	"Answer a window for the calendar"
 	| row arr |
@@ -164,9 +164,10 @@ buildMorphicWindow
 	self when: #plus send: #monthAfter to: model.
 	self when: #minus send: #monthBefore to: model.
 	
-	(row _ LayoutMorph newRow)
-		addMorph: (RectangleLikeMorph new	color: Color lightGray);
-		name: #'day names'.
+	row _ LayoutMorph newRow
+		name: #'day names';
+		separation: 1@0;
+		addAllMorphs: self setDays.
 		
 	(arr _ LayoutMorph newColumn)
 		name: #array.
@@ -233,6 +234,21 @@ openInWorld
 	
 	super openInWorld.
 	self morphExtent: 250@250! !
+
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 17:00'!
+setDays
+	"Answer the morphs which name the days"
+	| col |
+	
+	col _ OrderedCollection new.
+	self class dayNames do: [:ea | | r |
+		col addFirst: 
+			((r _ RectangleLikeMorph new)
+				color: Color lightBlue;
+				layoutSpec: (LayoutSpec proportionalWidth: 0.2)).
+			r addMorph: (StringMorph contents: ea)
+		].
+	^ col! !
 
 !CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/2/2016 12:30'!
 dayNames
