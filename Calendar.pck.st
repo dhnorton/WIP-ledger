@@ -1,7 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 2 February 2016 at 6:59:41.949608 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 3 February 2016 at 12:33:50.639491 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 5!
-!requires: 'Morphic-Misc1' 1 70 nil!
+!provides: 'Calendar' 1 6!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date month year'
@@ -13,7 +12,7 @@ CalendarModel class
 	instanceVariableNames: ''!
 
 !classDefinition: #CalendarPage category: #Calendar!
-Panel subclass: #CalendarPage
+SystemWindow subclass: #CalendarPage
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -159,15 +158,12 @@ monthNumbers
 	
 	^ #(1 2 3 4 5 6 7 8 9 10 11 12)! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/2/2016 18:50'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:18'!
 buildMorphicWindow
 	"Answer a window for the calendar"
 	| row arr |
-
-	self morphExtent: 230@230.
 	
 	self setLabel: model month, ' ', model year asString.
-	self setUpTitle.
 	
 	self when: #plus send: #monthAfter to: model.
 	self when: #minus send: #monthBefore to: model.
@@ -203,38 +199,44 @@ createLaterBox
 		setBalloonText: 'month after';
 		morphExtent: self boxExtent! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/2/2016 18:58'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 12:26'!
 earlier
+	"Indicate the need for the model to go to the previous month. Change label to the result"
 
 	self triggerEvent: #minus.
 	self setLabel: model month, ' ', model year asString
 ! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/2/2016 18:59'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 11:47'!
+initialize
+
+	super initialize.
+! !
+
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:21'!
+initializeLabelArea
+	"Specify the buttons for the title bar"
+
+	| spacing |
+	spacing _ self boxExtent x.
+	self addMorph: self createCloseBox position: 2@2.
+	self addMorph: self createEarlierBox position: spacing+2@2.
+	self addMorph: self createLaterBox position: spacing*2+2@2! !
+
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 12:25'!
 later
+	"Indicate the need for the model to go to the next month. Change label to the result"
 
 	self triggerEvent: #plus.
 	self setLabel: model month, ' ', model year asString
 ! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/2/2016 17:38'!
-setUpTitle
-	"Arrange buttons and title"
-	| spec |
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:23'!
+openInWorld
+	"Override the extent"
 	
-	(self titleMorph buttonNamed: #expand) delete.
-	(self titleMorph buttonNamed: #collapse) delete.
-
-	spec := LayoutSpec keepMorphExtent.
-	spec minorDirectionPadding: 0.001.
-
-	self titleMorph addMorph: self createEarlierBox layoutSpec: spec.
-	self titleMorph addMorph: self createLaterBox layoutSpec: spec.
-
-	(self titleMorph buttonNamed: #close) show.
-	(self titleMorph buttonNamed: #earlier) show.
-	(self titleMorph buttonNamed: #later) show.
-! !
+	super openInWorld.
+	self morphExtent: 250@250! !
 
 !CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/2/2016 12:30'!
 dayNames
