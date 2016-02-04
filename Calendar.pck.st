@@ -1,9 +1,9 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 1:18:36.456656 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 5:58:53.186827 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 12!
+!provides: 'Calendar' 1 14!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
-	instanceVariableNames: 'days selectedDate date month year'
+	instanceVariableNames: 'days selectedDate date day month year'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Calendar'!
@@ -42,6 +42,18 @@ date: anObject
 	"Set the value of date"
 
 	date _ anObject! !
+
+!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/4/2016 15:16'!
+day
+	"Answer the value of day"
+
+	^ day! !
+
+!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/4/2016 15:16'!
+day: anObject
+	"Set the value of day"
+
+	day _ anObject! !
 
 !CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/2/2016 17:41'!
 days
@@ -129,10 +141,11 @@ pickDate
 	
 	Smalltalk beep! !
 
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/2/2016 17:57'!
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/4/2016 15:20'!
 reset
 
 	days _ self formDays: date.
+	day _ date dayOfMonth.
 	month _ date monthName.
 	year _ date yearNumber! !
 
@@ -159,6 +172,49 @@ year: anObject
 	"Set the value of year"
 
 	year _ anObject! !
+
+!CalendarPage methodsFor: 'menu' stamp: 'dhn 2/4/2016 16:05'!
+addMonthChoice
+	"Add a menu for changing months to aMenu"
+	| x |
+	
+	x _ ((PopUpMenu labelArray: self class monthNames) startUpWithCaption: 'Choose month.').
+	x > 0 ifTrue: [
+		model date: (Date 
+			newDay: model day 
+			month: (self class monthNames at: x) asSymbol
+			year: model year).
+		model reset.
+		self fillPage.
+		self triggerEvent: #dateChange]
+! !
+
+!CalendarPage methodsFor: 'menu' stamp: 'dhn 2/4/2016 17:55'!
+addYearChoice
+	"Add a menu for changing year to aMenu"
+	| arr col y x lin yr |
+	
+	y _ self model year.
+	arr _ (y - 4 to: y + 4) asArray.
+	col _ OrderedCollection new.
+	arr do: [:ea | col add: ea asString].
+	col add: 'Other...'.
+	lin _ {arr size}.
+	
+	x _ (PopUpMenu labelArray: col lines: lin) startUpWithCaption: nil.
+	((x > 0) and: x <= arr size) ifTrue: [yr _ arr at: x].
+	x = col size ifTrue: [
+		yr _ (FillInTheBlankMorph request: 'Enter the year' initialAnswer: y asString) asNumber].
+	
+	yr ifNotNil: [
+		model date: (Date 
+			newDay: model day 
+			month: model month
+			year: yr).
+		model reset.
+		self fillPage.
+		self triggerEvent: #dateChange]
+! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:32'!
 buildMorphicWindow
@@ -254,13 +310,13 @@ daysForWeek: aNumber
 		^ (model days copyFrom: (n - 6) to: n)	].
 	^ #()! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 12:26'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 15:41'!
 earlier
-	"Indicate the need for the model to go to the previous month. Change label to the result"
+	"Indicate the need for the model to go to the previous month"
 
-	self triggerEvent: #minus.
-	self setLabel: model month, ' ', model year asString
-! !
+	self 
+		triggerEvent: #minus;
+		newDate! !
 
 !CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 11:04'!
 fillPage
@@ -270,7 +326,7 @@ fillPage
 		(buttons at: i) label: ((model days at: i) asString);
 			redrawNeeded]! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 12:57'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 17:13'!
 initialize
 
 	super initialize.
@@ -288,22 +344,38 @@ initializeLabelArea
 	self addMorph: self createEarlierBox position: spacing+2@2.
 	self addMorph: self createLaterBox position: spacing*2+2@2! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 12:25'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 15:42'!
 later
-	"Indicate the need for the model to go to the next month. Change label to the result"
+	"Indicate the need for the model to go to the next month"
 
-	self triggerEvent: #plus.
-	self setLabel: model month, ' ', model year asString
+	self 
+		triggerEvent: #plus;
+		newDate! !
+
+!CalendarPage methodsFor: 'menu' stamp: 'dhn 2/4/2016 15:06'!
+menuMain
+	"Main pop-up menu"
+	| aMenu |
+
+	aMenu _ (PopUpMenu withCaption: 'Change...' chooseFrom: 'Month\Year').
+	aMenu = 1 ifTrue: [self addMonthChoice].
+	aMenu = 2 ifTrue: [self addYearChoice].
+	
 ! !
 
-!CalendarPage methodsFor: 'events' stamp: 'dhn 2/4/2016 13:17'!
-mouseButton2Down: event localPosition: point
+!CalendarPage methodsFor: 'events' stamp: 'dhn 2/4/2016 17:08'!
+mouseButton2Down: event localPosition: point 
 	"Bring up menu for the calendar"
-	| x |
 
-	x _ (PopUpMenu withCaption: 'Change...' chooseFrom: 'Month\Year').
-	x _ (PopUpMenu labelArray: self class monthNames) startUpWithCaption: 'Choose month.'.
-	{x} print! !
+	self menuMain.
+	super mouseButton2Down: event localPosition: point! !
+
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 15:47'!
+newDate
+	"Change label to show the current month and year"
+
+	self setLabel: model month, ' ', model year asString
+! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 20:17'!
 openInWorld
@@ -326,7 +398,7 @@ row: index
 	buttons addAll: col reversed.
 	^ col ! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:03'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 15:53'!
 sayWhen
 	"Establish the receiving half of the Observer Pattern"
 	
@@ -334,6 +406,7 @@ sayWhen
 	self when: #plus send: #fillPage to: self.
 	self when: #minus send: #monthBefore to: model.
 	self when: #minus send: #fillPage to: self.
+	self when: #dateChange send: #newDate to: self.
 ! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 17:00'!
