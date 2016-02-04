@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 3 February 2016 at 5:03:42.851453 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 10:13:11.707656 am'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 8!
+!provides: 'Calendar' 1 9!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date month year'
@@ -123,6 +123,13 @@ monthBefore
 	self reset.
 	^ month! !
 
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/4/2016 09:52'!
+pickDate
+	"Answer the date selected from the calendar"
+	
+	self halt.
+	Smalltalk beep! !
+
 !CalendarModel methodsFor: 'operating' stamp: 'dhn 2/2/2016 17:57'!
 reset
 
@@ -154,29 +161,59 @@ year: anObject
 
 	year _ anObject! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 16:41'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 18:27'!
 buildMorphicWindow
 	"Answer a window for the calendar"
-	| row arr |
+	| nam row1 row2 row3 row4 row5 row6 |
 	
 	self setLabel: model month, ' ', model year asString.
 	
 	self when: #plus send: #monthAfter to: model.
 	self when: #minus send: #monthBefore to: model.
 	
-	row _ LayoutMorph newRow
+	nam _ LayoutMorph newRow
 		name: #'day names';
-		separation: 1@0;
+		separation: 2@0;
 		addAllMorphs: self setDays.
 		
-	(arr _ LayoutMorph newColumn)
-		name: #array.
+	row1 _ LayoutMorph newRow
+		name: #row1;
+		separation: 2@2;
+		addAllMorphs: (self row: 1).
+		
+	row2 _ LayoutMorph newRow
+		name: #row2;
+		separation: 2@2;
+		addAllMorphs: (self row: 2).
+		
+	row3 _ LayoutMorph newRow
+		name: #row3;
+		separation: 2@2;
+		addAllMorphs: (self row: 3).
+		
+	row4 _ LayoutMorph newRow
+		name: #row4;
+		separation: 2@2;
+		addAllMorphs: (self row: 4).
+		
+	row5 _ LayoutMorph newRow
+		name: #row5;
+		separation: 2@2;
+		addAllMorphs: (self row: 5).
+		
+	row6 _ LayoutMorph newRow
+		name: #row6;
+		separation: 2@2;
+		addAllMorphs: (self row: 6).
 
 	self layoutMorph
-		addMorph: row
-			layoutSpec: (LayoutSpec proportionalHeight: 0.1);
-		addMorph: arr
-			layoutSpec: (LayoutSpec useAll);
+		addMorph: nam;
+		addMorph: row1;
+		addMorph: row2;
+		addMorph: row3;
+		addMorph: row4;
+		addMorph: row5;
+		addMorph: row6;
 		name: #calendar
 ! !
 
@@ -195,6 +232,16 @@ createLaterBox
 		iconName: #later;
 		setBalloonText: 'month after';
 		morphExtent: self boxExtent! !
+
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 19:37'!
+daysForWeek: aNumber
+	"Answer 7 days from the model for week aNumber"
+	| n |
+	
+	n _ 7 * aNumber.
+	((n <= model days size) and: n > 0) ifTrue: [	
+		^ (model days copyFrom: (n - 6) to: n)	].
+	^ #()! !
 
 !CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 12:26'!
 earlier
@@ -228,12 +275,25 @@ later
 	self setLabel: model month, ' ', model year asString
 ! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:23'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 20:17'!
 openInWorld
 	"Override the extent"
 	
 	super openInWorld.
-	self morphExtent: 250@250! !
+	self morphExtent: 220@200! !
+
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 10:10'!
+row: index
+	"Answer a row of days from the model"
+	| col |
+	
+	col _ OrderedCollection new.
+	7 timesRepeat: [
+		col add: 
+			((PluggableButtonMorph model: model action: #pickDate label: 'Z')
+				roundButtonStyle: false;
+				layoutSpec: (LayoutSpec proportionalWidth: 0.2))].
+	^ col ! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 17:00'!
 setDays
@@ -250,18 +310,18 @@ setDays
 		].
 	^ col! !
 
-!CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/2/2016 12:30'!
+!CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/3/2016 20:15'!
 dayNames
 	"Answer the names for the days of the week"
 	
 	^ OrderedCollection new
-		add: 'Sun';
-		add: 'Mon';
-		add: 'Tue';
-		add: 'Wed';
-		add: 'Thu';
-		add: 'Fri';
-		add: 'Sat';
+		add: 'S';
+		add: 'M';
+		add: 'T';
+		add: 'W';
+		add: 'T';
+		add: 'F';
+		add: 'S';
 		yourself! !
 
 !CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/2/2016 13:27'!
