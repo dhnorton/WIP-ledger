@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 11:06:19.599656 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 11:33:15.179656 am'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 10!
+!provides: 'Calendar' 1 11!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date month year'
@@ -160,7 +160,7 @@ year: anObject
 
 	year _ anObject! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:04'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:32'!
 buildMorphicWindow
 	"Answer a window for the calendar"
 	| nam row1 row2 row3 row4 row5 row6 |
@@ -202,6 +202,8 @@ buildMorphicWindow
 		name: #row6;
 		separation: 2@2;
 		addAllMorphs: (self row: 6).
+		
+	self fillPage.
 
 	self layoutMorph
 		addMorph: nam;
@@ -300,7 +302,7 @@ openInWorld
 	super openInWorld.
 	self morphExtent: 220@200! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 10:56'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:30'!
 row: index
 	"Answer a row of days from the model"
 	| col |
@@ -308,7 +310,7 @@ row: index
 	col _ OrderedCollection new.
 	7 timesRepeat: [
 		col add: 
-			((PluggableButtonMorph model: model action: #pickDate label: 'Z')
+			((PluggableButtonMorph model: model action: #pickDate)
 				roundButtonStyle: false;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.2))].
 	buttons addAll: col reversed.
