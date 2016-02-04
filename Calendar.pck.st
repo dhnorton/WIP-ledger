@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 10:13:11.707656 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 11:06:19.599656 am'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 9!
+!provides: 'Calendar' 1 10!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date month year'
@@ -13,7 +13,7 @@ CalendarModel class
 
 !classDefinition: #CalendarPage category: #Calendar!
 SystemWindow subclass: #CalendarPage
-	instanceVariableNames: ''
+	instanceVariableNames: 'buttons'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Calendar'!
@@ -123,11 +123,10 @@ monthBefore
 	self reset.
 	^ month! !
 
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/4/2016 09:52'!
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/4/2016 10:55'!
 pickDate
 	"Answer the date selected from the calendar"
 	
-	self halt.
 	Smalltalk beep! !
 
 !CalendarModel methodsFor: 'operating' stamp: 'dhn 2/2/2016 17:57'!
@@ -161,15 +160,13 @@ year: anObject
 
 	year _ anObject! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 18:27'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:04'!
 buildMorphicWindow
 	"Answer a window for the calendar"
 	| nam row1 row2 row3 row4 row5 row6 |
 	
 	self setLabel: model month, ' ', model year asString.
-	
-	self when: #plus send: #monthAfter to: model.
-	self when: #minus send: #monthBefore to: model.
+	self sayWhen.
 	
 	nam _ LayoutMorph newRow
 		name: #'day names';
@@ -217,6 +214,18 @@ buildMorphicWindow
 		name: #calendar
 ! !
 
+!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/4/2016 10:35'!
+buttons
+	"Answer the value of buttons"
+
+	^ buttons! !
+
+!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/4/2016 10:35'!
+buttons: anObject
+	"Set the value of buttons"
+
+	buttons _ anObject! !
+
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/2/2016 16:15'!
 createEarlierBox
 	^ (PluggableButtonMorph model: self action: #earlier)
@@ -251,10 +260,19 @@ earlier
 	self setLabel: model month, ' ', model year asString
 ! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 11:47'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 11:04'!
+fillPage
+	"Label the date buttons"
+
+	1 to: buttons size do: [:i |
+		(buttons at: i) label: ((model days at: i) asString);
+			redrawNeeded]! !
+
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 10:42'!
 initialize
 
 	super initialize.
+	buttons _ OrderedCollection new
 ! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:21'!
@@ -282,7 +300,7 @@ openInWorld
 	super openInWorld.
 	self morphExtent: 220@200! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 10:10'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 10:56'!
 row: index
 	"Answer a row of days from the model"
 	| col |
@@ -293,7 +311,18 @@ row: index
 			((PluggableButtonMorph model: model action: #pickDate label: 'Z')
 				roundButtonStyle: false;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.2))].
+	buttons addAll: col reversed.
 	^ col ! !
+
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:03'!
+sayWhen
+	"Establish the receiving half of the Observer Pattern"
+	
+	self when: #plus send: #monthAfter to: model.
+	self when: #plus send: #fillPage to: self.
+	self when: #minus send: #monthBefore to: model.
+	self when: #minus send: #fillPage to: self.
+! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 17:00'!
 setDays
