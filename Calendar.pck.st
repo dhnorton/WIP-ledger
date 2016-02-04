@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 11:33:15.179656 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 1:18:36.456656 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 11!
+!provides: 'Calendar' 1 12!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date month year'
@@ -270,11 +270,12 @@ fillPage
 		(buttons at: i) label: ((model days at: i) asString);
 			redrawNeeded]! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 10:42'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 12:57'!
 initialize
 
 	super initialize.
-	buttons _ OrderedCollection new
+	buttons _ OrderedCollection new.
+	self setProperty: #'handlesMouseDown:' toValue: true
 ! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 12:21'!
@@ -294,6 +295,15 @@ later
 	self triggerEvent: #plus.
 	self setLabel: model month, ' ', model year asString
 ! !
+
+!CalendarPage methodsFor: 'events' stamp: 'dhn 2/4/2016 13:17'!
+mouseButton2Down: event localPosition: point
+	"Bring up menu for the calendar"
+	| x |
+
+	x _ (PopUpMenu withCaption: 'Change...' chooseFrom: 'Month\Year').
+	x _ (PopUpMenu labelArray: self class monthNames) startUpWithCaption: 'Choose month.'.
+	{x} print! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 20:17'!
 openInWorld
@@ -341,22 +351,20 @@ setDays
 		].
 	^ col! !
 
-!CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/3/2016 20:15'!
+!CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/4/2016 11:48'!
 dayNames
 	"Answer the names for the days of the week"
 	
-	^ OrderedCollection new
-		add: 'S';
-		add: 'M';
-		add: 'T';
-		add: 'W';
-		add: 'T';
-		add: 'F';
-		add: 'S';
-		yourself! !
+	^ #('S' 'M' 'T' 'W' 'T' 'F' 'S')! !
 
 !CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/2/2016 13:27'!
 how
 "
 	CalendarPage open: CalendarModel new.
 "! !
+
+!CalendarPage class methodsFor: 'instance creation' stamp: 'dhn 2/4/2016 11:52'!
+monthNames
+	"Answer the names for the months"
+	
+	^ #('January' 'February' 'March' 'April' 'May' 'June' 'July' 'August' 'September' 'October' 'November' 'December')! !
