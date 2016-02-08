@@ -1,9 +1,9 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 4 February 2016 at 5:58:53.186827 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 8 February 2016 at 5:09:18.896618 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 14!
+!provides: 'Calendar' 1 17!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
-	instanceVariableNames: 'days selectedDate date day month year'
+	instanceVariableNames: 'days selectedDate date theDay month year'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Calendar'!
@@ -11,9 +11,19 @@ TextModel subclass: #CalendarModel
 CalendarModel class
 	instanceVariableNames: ''!
 
+!classDefinition: #CalendarButton category: #Calendar!
+PluggableButtonMorph subclass: #CalendarButton
+	instanceVariableNames: 'index'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Calendar'!
+!classDefinition: 'CalendarButton class' category: #Calendar!
+CalendarButton class
+	instanceVariableNames: ''!
+
 !classDefinition: #CalendarPage category: #Calendar!
 SystemWindow subclass: #CalendarPage
-	instanceVariableNames: 'buttons'
+	instanceVariableNames: 'buttons dayIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Calendar'!
@@ -42,18 +52,6 @@ date: anObject
 	"Set the value of date"
 
 	date _ anObject! !
-
-!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/4/2016 15:16'!
-day
-	"Answer the value of day"
-
-	^ day! !
-
-!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/4/2016 15:16'!
-day: anObject
-	"Set the value of day"
-
-	day _ anObject! !
 
 !CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/2/2016 17:41'!
 days
@@ -135,17 +133,11 @@ monthBefore
 	self reset.
 	^ month! !
 
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/4/2016 10:55'!
-pickDate
-	"Answer the date selected from the calendar"
-	
-	Smalltalk beep! !
-
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/4/2016 15:20'!
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/5/2016 15:12'!
 reset
 
 	days _ self formDays: date.
-	day _ date dayOfMonth.
+	theDay _ date dayOfMonth.
 	month _ date monthName.
 	year _ date yearNumber! !
 
@@ -161,6 +153,18 @@ selectedDate: anObject
 
 	selectedDate _ anObject! !
 
+!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/5/2016 15:11'!
+theDay
+	"Answer the value of theDay"
+
+	^ theDay! !
+
+!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/5/2016 15:11'!
+theDay: anObject
+	"Set the value of theDay"
+
+	theDay _ anObject! !
+
 !CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/2/2016 17:41'!
 year
 	"Answer the value of year"
@@ -172,6 +176,25 @@ year: anObject
 	"Set the value of year"
 
 	year _ anObject! !
+
+!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:08'!
+index
+	"Answer the value of index"
+
+	^ index! !
+
+!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:08'!
+index: anObject
+	"Set the value of index"
+
+	index _ anObject! !
+
+!CalendarButton methodsFor: 'event handling' stamp: 'dhn 2/8/2016 15:42'!
+performAction
+	"For the view, identify the calendar button that was pressed"
+	
+	model dayIndex: index.
+	super performAction! !
 
 !CalendarPage methodsFor: 'menu' stamp: 'dhn 2/4/2016 16:05'!
 addMonthChoice
@@ -300,6 +323,18 @@ createLaterBox
 		setBalloonText: 'month after';
 		morphExtent: self boxExtent! !
 
+!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:33'!
+dayIndex
+	"Answer the value of dayIndex"
+
+	^ dayIndex! !
+
+!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:33'!
+dayIndex: anObject
+	"Set the value of dayIndex"
+
+	dayIndex _ anObject! !
+
 !CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 19:37'!
 daysForWeek: aNumber
 	"Answer 7 days from the model for week aNumber"
@@ -318,12 +353,14 @@ earlier
 		triggerEvent: #minus;
 		newDate! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 11:04'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/8/2016 15:24'!
 fillPage
-	"Label the date buttons"
+	"Label the date buttons and set their index numbers"
 
 	1 to: buttons size do: [:i |
-		(buttons at: i) label: ((model days at: i) asString);
+		(buttons at: i) 
+			label: ((model days at: i) asString);
+			index: i;
 			redrawNeeded]! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 17:13'!
@@ -363,12 +400,11 @@ menuMain
 	
 ! !
 
-!CalendarPage methodsFor: 'events' stamp: 'dhn 2/4/2016 17:08'!
+!CalendarPage methodsFor: 'events' stamp: 'dhn 2/4/2016 18:07'!
 mouseButton2Down: event localPosition: point 
 	"Bring up menu for the calendar"
 
-	self menuMain.
-	super mouseButton2Down: event localPosition: point! !
+	self menuMain! !
 
 !CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 15:47'!
 newDate
@@ -384,7 +420,21 @@ openInWorld
 	super openInWorld.
 	self morphExtent: 220@200! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 11:30'!
+!CalendarPage methodsFor: 'events' stamp: 'dhn 2/8/2016 17:06'!
+pickDate
+	"Set the date selected from the calendar"
+	| mx mo da dt |
+	
+	mx _ model date class indexOfMonth: model month.
+	da _ model days at: dayIndex.
+	((dayIndex <= 14) and: da >= 14) ifTrue: [mx _ mx - 1]. "previous month"
+	((dayIndex >= 28) and: da <= 28) ifTrue: [mx _ mx + 1]. "succeeding month"
+	mo _ Date nameOfMonth: mx.
+	dt _ Date newDay: da month: mo year: model year.
+	
+	model selectedDate: dt mmddyyyy! !
+
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/8/2016 15:26'!
 row: index
 	"Answer a row of days from the model"
 	| col |
@@ -392,7 +442,7 @@ row: index
 	col _ OrderedCollection new.
 	7 timesRepeat: [
 		col add: 
-			((PluggableButtonMorph model: model action: #pickDate)
+			((CalendarButton model: self action: #pickDate)
 				roundButtonStyle: false;
 				layoutSpec: (LayoutSpec proportionalWidth: 0.2))].
 	buttons addAll: col reversed.
