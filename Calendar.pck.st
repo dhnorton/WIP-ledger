@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 8 February 2016 at 5:09:18.896618 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 9 February 2016 at 4:52:09.008111 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 17!
+!provides: 'Calendar' 1 18!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -13,7 +13,7 @@ CalendarModel class
 
 !classDefinition: #CalendarButton category: #Calendar!
 PluggableButtonMorph subclass: #CalendarButton
-	instanceVariableNames: 'index'
+	instanceVariableNames: 'index offColor onColor'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Calendar'!
@@ -23,7 +23,7 @@ CalendarButton class
 
 !classDefinition: #CalendarPage category: #Calendar!
 SystemWindow subclass: #CalendarPage
-	instanceVariableNames: 'buttons dayIndex'
+	instanceVariableNames: 'buttons dayIndex oldButtonIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Calendar'!
@@ -117,29 +117,36 @@ month: anObject
 
 	month _ anObject! !
 
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/2/2016 18:22'!
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/9/2016 16:45'!
 monthAfter
 	"Change month later"
+	| yr |
 	
-	date _ Date newDay: 12 month: (self indexMonthBy: 1) year: year.
+	yr _ year.
+	(Date indexOfMonth: month) = 12 ifTrue: [yr _ year + 1].
+	date _ Date newDay: 12 month: (self indexMonthBy: 1) year: yr.
 	self reset.
 	^ month! !
 
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/2/2016 18:20'!
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/9/2016 16:44'!
 monthBefore
 	"Change month earlier"
+	| yr |
 	
-	date _ Date newDay: 12 month: (self indexMonthBy: -1) year: year.
+	yr _ year.
+	(Date indexOfMonth: month) = 1 ifTrue: [yr _ year - 1].
+	date _ Date newDay: 12 month: (self indexMonthBy: -1) year: yr.
 	self reset.
 	^ month! !
 
-!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/5/2016 15:12'!
+!CalendarModel methodsFor: 'operating' stamp: 'dhn 2/9/2016 16:39'!
 reset
 
 	days _ self formDays: date.
 	theDay _ date dayOfMonth.
 	month _ date monthName.
-	year _ date yearNumber! !
+	year _ date yearNumber.
+	selectedDate _ nil! !
 
 !CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/2/2016 17:41'!
 selectedDate
@@ -189,6 +196,37 @@ index: anObject
 
 	index _ anObject! !
 
+!CalendarButton methodsFor: 'initialization' stamp: 'dhn 2/8/2016 19:13'!
+initialize
+
+	super initialize.
+	offColor _ self color.
+	onColor _ Color lightGreen! !
+
+!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 19:12'!
+offColor
+	"Answer the value of offColor"
+
+	^ offColor! !
+
+!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 19:12'!
+offColor: anObject
+	"Set the value of offColor"
+
+	offColor _ anObject! !
+
+!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 19:12'!
+onColor
+	"Answer the value of onColor"
+
+	^ onColor! !
+
+!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 19:12'!
+onColor: anObject
+	"Set the value of onColor"
+
+	onColor _ anObject! !
+
 !CalendarButton methodsFor: 'event handling' stamp: 'dhn 2/8/2016 15:42'!
 performAction
 	"For the view, identify the calendar button that was pressed"
@@ -196,7 +234,7 @@ performAction
 	model dayIndex: index.
 	super performAction! !
 
-!CalendarPage methodsFor: 'menu' stamp: 'dhn 2/4/2016 16:05'!
+!CalendarPage methodsFor: 'menu' stamp: 'dhn 2/9/2016 16:19'!
 addMonthChoice
 	"Add a menu for changing months to aMenu"
 	| x |
@@ -204,7 +242,7 @@ addMonthChoice
 	x _ ((PopUpMenu labelArray: self class monthNames) startUpWithCaption: 'Choose month.').
 	x > 0 ifTrue: [
 		model date: (Date 
-			newDay: model day 
+			newDay: model theDay 
 			month: (self class monthNames at: x) asSymbol
 			year: model year).
 		model reset.
@@ -212,7 +250,7 @@ addMonthChoice
 		self triggerEvent: #dateChange]
 ! !
 
-!CalendarPage methodsFor: 'menu' stamp: 'dhn 2/4/2016 17:55'!
+!CalendarPage methodsFor: 'menu' stamp: 'dhn 2/8/2016 18:56'!
 addYearChoice
 	"Add a menu for changing year to aMenu"
 	| arr col y x lin yr |
@@ -231,7 +269,7 @@ addYearChoice
 	
 	yr ifNotNil: [
 		model date: (Date 
-			newDay: model day 
+			newDay: model theDay 
 			month: model month
 			year: yr).
 		model reset.
@@ -306,6 +344,21 @@ buttons: anObject
 	"Set the value of buttons"
 
 	buttons _ anObject! !
+
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/9/2016 08:49'!
+changeButtonColors
+	"Change any prior button selection to the off color. Change new button selection to the on color"
+	| old new |
+	
+	oldButtonIndex ifNotNil: [
+		old _ buttons at: oldButtonIndex.
+		old color: old offColor.
+		old redrawNeeded].
+	
+	new _ buttons at: dayIndex.
+	new color: new onColor.
+	new redrawNeeded.
+	oldButtonIndex _ dayIndex! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/2/2016 16:15'!
 createEarlierBox
@@ -406,12 +459,28 @@ mouseButton2Down: event localPosition: point
 
 	self menuMain! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 15:47'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/9/2016 16:31'!
 newDate
 	"Change label to show the current month and year"
 
+	oldButtonIndex ifNotNil: [| b |
+		b _ buttons at: oldButtonIndex.
+		b color: b offColor.
+		oldButtonIndex _ nil].
 	self setLabel: model month, ' ', model year asString
 ! !
+
+!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/9/2016 08:28'!
+oldButtonIndex
+	"Answer the value of oldButtonIndex"
+
+	^ oldButtonIndex! !
+
+!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/9/2016 08:28'!
+oldButtonIndex: anObject
+	"Set the value of oldButtonIndex"
+
+	oldButtonIndex _ anObject! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 20:17'!
 openInWorld
@@ -420,19 +489,29 @@ openInWorld
 	super openInWorld.
 	self morphExtent: 220@200! !
 
-!CalendarPage methodsFor: 'events' stamp: 'dhn 2/8/2016 17:06'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/9/2016 09:41'!
 pickDate
 	"Set the date selected from the calendar"
-	| mx mo da dt |
+	| mx mo da yr dt |
 	
 	mx _ model date class indexOfMonth: model month.
 	da _ model days at: dayIndex.
-	((dayIndex <= 14) and: da >= 14) ifTrue: [mx _ mx - 1]. "previous month"
+	((dayIndex <= 14) and: da >= 14) ifTrue: [mx _ mx - 1]. "preceding month"
 	((dayIndex >= 28) and: da <= 28) ifTrue: [mx _ mx + 1]. "succeeding month"
-	mo _ Date nameOfMonth: mx.
-	dt _ Date newDay: da month: mo year: model year.
 	
-	model selectedDate: dt mmddyyyy! !
+	yr _ model year.
+	mx = 13 ifTrue: [yr _ yr + 1].	"succeeding year"
+	mx _ mx mod: 12.
+	mx = 0 ifTrue: [	"preceding year"
+		yr _ yr - 1.
+		mx _ 12].
+
+	mo _ Date nameOfMonth: mx.
+	dt _ Date newDay: da month: mo year: yr.
+	
+	model selectedDate: dt mmddyyyy.
+	
+	self changeButtonColors! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/8/2016 15:26'!
 row: index
