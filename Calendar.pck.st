@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 9 February 2016 at 4:52:09.008111 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 9 February 2016 at 6:47:00.526088 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 18!
+!provides: 'Calendar' 1 19!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -489,22 +489,26 @@ openInWorld
 	super openInWorld.
 	self morphExtent: 220@200! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/9/2016 09:41'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/9/2016 18:41'!
 pickDate
 	"Set the date selected from the calendar"
 	| mx mo da yr dt |
 	
-	mx _ model date class indexOfMonth: model month.
-	da _ model days at: dayIndex.
-	((dayIndex <= 14) and: da >= 14) ifTrue: [mx _ mx - 1]. "preceding month"
-	((dayIndex >= 28) and: da <= 28) ifTrue: [mx _ mx + 1]. "succeeding month"
-	
+	mx _ Date indexOfMonth: model month.
 	yr _ model year.
-	mx = 13 ifTrue: [yr _ yr + 1].	"succeeding year"
+
+	da _ model days at: dayIndex.
+	((dayIndex <= 14) and: da >= 14) ifTrue: [	"preceding month"
+		mx _ mx - 1.
+		mx = 0 ifTrue: [yr _ yr - 1]		"preceding year"
+		]. 
+	((dayIndex >= 28) and: da <= 28) ifTrue: [	"succeeding month"
+		mx _ mx + 1.
+		mx = 13 ifTrue: [yr _ yr + 1]	"succeeding year"
+		]. 
+	
 	mx _ mx mod: 12.
-	mx = 0 ifTrue: [	"preceding year"
-		yr _ yr - 1.
-		mx _ 12].
+	mx = 0 ifTrue: [mx _ 12].
 
 	mo _ Date nameOfMonth: mx.
 	dt _ Date newDay: da month: mo year: yr.
