@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 1:18:38.84832 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 2:07:34.72332 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 20!
+!provides: 'Calendar' 1 21!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -185,12 +185,6 @@ year: anObject
 	year _ anObject! !
 
 !CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:08'!
-index
-	"Answer the value of index"
-
-	^ index! !
-
-!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:08'!
 index: anObject
 	"Set the value of index"
 
@@ -210,22 +204,10 @@ offColor
 	^ offColor! !
 
 !CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 19:12'!
-offColor: anObject
-	"Set the value of offColor"
-
-	offColor _ anObject! !
-
-!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 19:12'!
 onColor
 	"Answer the value of onColor"
 
 	^ onColor! !
-
-!CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 19:12'!
-onColor: anObject
-	"Set the value of onColor"
-
-	onColor _ anObject! !
 
 !CalendarButton methodsFor: 'event handling' stamp: 'dhn 2/8/2016 15:42'!
 performAction
