@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 9 February 2016 at 6:47:00.526088 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 1:18:38.84832 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 19!
+!provides: 'Calendar' 1 20!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -489,7 +489,7 @@ openInWorld
 	super openInWorld.
 	self morphExtent: 220@200! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/9/2016 18:41'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/10/2016 13:15'!
 pickDate
 	"Set the date selected from the calendar"
 	| mx mo da yr dt |
@@ -502,7 +502,7 @@ pickDate
 		mx _ mx - 1.
 		mx = 0 ifTrue: [yr _ yr - 1]		"preceding year"
 		]. 
-	((dayIndex >= 28) and: da <= 28) ifTrue: [	"succeeding month"
+	((dayIndex >= 28) and: da <= 14) ifTrue: [	"succeeding month"
 		mx _ mx + 1.
 		mx = 13 ifTrue: [yr _ yr + 1]	"succeeding year"
 		]. 
