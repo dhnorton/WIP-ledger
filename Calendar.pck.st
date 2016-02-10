@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 2:13:28.87132 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 2:26:53.34532 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 22!
+!provides: 'Calendar' 1 23!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -303,12 +303,6 @@ buttons
 
 	^ buttons! !
 
-!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/4/2016 10:35'!
-buttons: anObject
-	"Set the value of buttons"
-
-	buttons _ anObject! !
-
 !CalendarPage methodsFor: 'updating' stamp: 'dhn 2/9/2016 08:49'!
 changeButtonColors
 	"Change any prior button selection to the off color. Change new button selection to the on color"
@@ -341,26 +335,10 @@ createLaterBox
 		morphExtent: self boxExtent! !
 
 !CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:33'!
-dayIndex
-	"Answer the value of dayIndex"
-
-	^ dayIndex! !
-
-!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:33'!
 dayIndex: anObject
 	"Set the value of dayIndex"
 
 	dayIndex _ anObject! !
-
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/3/2016 19:37'!
-daysForWeek: aNumber
-	"Answer 7 days from the model for week aNumber"
-	| n |
-	
-	n _ 7 * aNumber.
-	((n <= model days size) and: n > 0) ifTrue: [	
-		^ (model days copyFrom: (n - 6) to: n)	].
-	^ #()! !
 
 !CalendarPage methodsFor: 'updating' stamp: 'dhn 2/4/2016 15:41'!
 earlier
@@ -433,18 +411,6 @@ newDate
 		oldButtonIndex _ nil].
 	self setLabel: model month, ' ', model year asString
 ! !
-
-!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/9/2016 08:28'!
-oldButtonIndex
-	"Answer the value of oldButtonIndex"
-
-	^ oldButtonIndex! !
-
-!CalendarPage methodsFor: 'accessing' stamp: 'dhn 2/9/2016 08:28'!
-oldButtonIndex: anObject
-	"Set the value of oldButtonIndex"
-
-	oldButtonIndex _ anObject! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 20:17'!
 openInWorld
