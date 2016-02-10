@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 2:07:34.72332 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 2:13:28.87132 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 21!
+!provides: 'Calendar' 1 22!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -111,12 +111,6 @@ month
 
 	^ month! !
 
-!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/2/2016 17:41'!
-month: anObject
-	"Set the value of month"
-
-	month _ anObject! !
-
 !CalendarModel methodsFor: 'operating' stamp: 'dhn 2/9/2016 16:45'!
 monthAfter
 	"Change month later"
@@ -166,23 +160,11 @@ theDay
 
 	^ theDay! !
 
-!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/5/2016 15:11'!
-theDay: anObject
-	"Set the value of theDay"
-
-	theDay _ anObject! !
-
 !CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/2/2016 17:41'!
 year
 	"Answer the value of year"
 
 	^ year! !
-
-!CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/2/2016 17:41'!
-year: anObject
-	"Set the value of year"
-
-	year _ anObject! !
 
 !CalendarButton methodsFor: 'accessing' stamp: 'dhn 2/8/2016 15:08'!
 index: anObject
