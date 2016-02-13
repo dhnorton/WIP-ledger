@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 13 February 2016 at 3:11:40.586412 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 13 February 2016 at 4:19:42.572412 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 129!
+!provides: 'Ledgerdemain' 1 130!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -938,6 +938,12 @@ payeesFromFile
 			whileTrue: [	line size > 0 ifTrue: [self payees at: line put: Payee new]].
 		ios close]! !
 
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 15:48'!
+putDebit: aString
+	"Set the amount"
+	
+	self halt! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:51'!
 reconcile! !
 
@@ -1338,7 +1344,7 @@ buildDateEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 14:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 15:41'!
 buildDebitEntry
 	"Answer the label and entry field for the Debit amount"
 	| m |
@@ -1353,6 +1359,7 @@ buildDebitEntry
 			getter: #getDebit
 			setter: #putDebit: 
 			name: #Debit)
+				color: Color lightRed muchLighter;
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
@@ -1741,7 +1748,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 14:51'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 15:42'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2000,7 +2007,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 14:51'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 15:42'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
