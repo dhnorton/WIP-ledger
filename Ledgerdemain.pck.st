@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 13 February 2016 at 2:15:43.886412 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 13 February 2016 at 3:11:40.586412 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 128!
+!provides: 'Ledgerdemain' 1 129!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -658,14 +658,6 @@ entryTable: aSymbol
 
 	entryTable _ self perform: aSymbol! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/20/2015 21:24'!
-getAmount
-	"Answer the amount"
-	
-	transactionListIndex = 0
-		ifTrue: [^ '']
-		ifFalse: [^ selectedTransaction amount withBlanksCondensed]! !
-
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 11/10/2015 15:40'!
 getCategory
 	"Answer the category"
@@ -681,6 +673,19 @@ getCheck
 	transactionListIndex = 0
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction check]! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:45'!
+getCredit
+	"Answer the amount if positive; '' otherwise"
+	| x |
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [
+			x _ selectedTransaction amount withBlanksCondensed.
+			x dollarsToCents < 0 ifTrue: [^ '']].
+		
+	^ x! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 10/15/2015 20:39'!
 getDataFor: anEntry
@@ -701,6 +706,20 @@ getDate
 	transactionListIndex = 0
 		ifTrue: [^ Date today mmddyyyy]
 		ifFalse: [^ selectedTransaction date]! !
+
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:57'!
+getDebit
+	"Answer the amount if negative; '' otherwise"
+	| x y |
+	
+	transactionListIndex = 0
+		ifTrue: [^ '']
+		ifFalse: [
+			x _ selectedTransaction amount withBlanksCondensed dollarsToCents.
+			x >= 0 ifTrue: [^ ''].
+			y _ x negated ledgerFormatted].
+		
+	^ y! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:28'!
 getMemo
@@ -1283,6 +1302,24 @@ buildCheckEntry
 	^ m
 		! !
 
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 14:33'!
+buildCreditEntry
+	"Answer the label and entry field for the Credit amount"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec fixedWidth: 65).
+	m addMorph: ((StringMorph contents: 'Credit')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
+			textProvider: model
+			getter: #getCredit
+			setter: #putCredit: 
+			name: #Credit)
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
+
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:37'!
 buildDateEntry
 	"Answer the label and entry field for Date"
@@ -1301,7 +1338,7 @@ buildDateEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 10:38'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 14:32'!
 buildDebitEntry
 	"Answer the label and entry field for the Debit amount"
 	| m |
@@ -1313,14 +1350,14 @@ buildDebitEntry
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
 			textProvider: model
-			getter: #getAmount
-			setter: #putAmount: 
-			name: #Amount)
+			getter: #getDebit
+			setter: #putDebit: 
+			name: #Debit)
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 10:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 14:35'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	
@@ -1332,7 +1369,8 @@ buildEntries
 		addMorph: self buildCategoryEntry;		
 		addMorph: self buildMemoEntry;		
 		addMorph: self buildREntry;		
-		addMorph: self buildDebitEntry
+		addMorph: self buildDebitEntry;
+		addMorph: self buildCreditEntry
 ! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:26'!
@@ -1703,7 +1741,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 13:42'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 14:51'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1962,7 +2000,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 13:42'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 14:51'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
