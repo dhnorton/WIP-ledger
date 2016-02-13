@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 13 February 2016 at 11:04:14.674527 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 13 February 2016 at 2:15:43.886412 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 127!
-!requires: 'Records' 1 10 nil!
+!provides: 'Ledgerdemain' 1 128!
 !requires: 'Calendar' 1 23 nil!
+!requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -178,14 +178,14 @@ Account responsibilities:
   report
   export and import!
 
-!LedgerDeMain commentStamp: 'dhn 8/5/2015 20:22' prior: 0!
-LedgerDeMain is the model for LedgerWindow and a cover class. Its responsibilities are:
+!LedgerDeMain commentStamp: 'dhn 2/13/2016 12:00' prior: 0!
+LedgerDeMain is the model for LedgerWindow. Its responsibilities are:
 
-  hold accounts, payees, categories, memos, trail
+  hold accounts, payees, categories, memos
   search
   maintain net worth
   back up and restore
-  move transactions between accounts and record in audit trail
+  move transactions between accounts
 
 With apologies to those who do legerdemain.
 
@@ -212,13 +212,11 @@ The auto completion menu for Ledgerdemain.!
 !EntryField commentStamp: '<historical>' prior: 0!
 A data entry and display morph with the ability to encapsulate a symbol of the method to load the Trie for a completer.!
 
-!LedgerWindow commentStamp: 'dhn 8/15/2015 12:29' prior: 0!
-Window for Ledger d'Main. Provides pop-up menu for options.
+!LedgerWindow commentStamp: 'dhn 2/13/2016 11:58' prior: 0!
+A view for Ledger d'Main. Provides pop-up menu for options.
 
-The window is a LedgerWindow.
+The window is a LedgerWindow (a view).
 The window's model is a LedgerDeMain.
-
-To bring up Ledger d'Main, do:
 
 	LedgerWindow open.
 !
@@ -1493,14 +1491,14 @@ of account ledgers'.
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 10/24/2015 21:04'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 2/13/2016 14:11'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
 	super update: aSymbol.
 	
 	aSymbol == #fillEntries
-		ifTrue: [windowEntries submorphs do: [:ea | ea model refetch]].
+		ifTrue: [windowEntries submorphs do: [:ea | ea submorphs first model refetch]].
 		
 	aSymbol == #xactList
 		ifTrue: [
@@ -1705,7 +1703,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 1/30/2016 19:53'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 13:42'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -1964,7 +1962,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 1/30/2016 19:53'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/13/2016 13:42'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
