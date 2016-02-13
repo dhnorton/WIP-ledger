@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 13 February 2016 at 10:20:41.164527 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 13 February 2016 at 10:39:52.108527 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 125!
+!provides: 'Ledgerdemain' 1 126!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1245,35 +1245,16 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 1/30/2016 19:51'!
-buildEntries
-	"Answer the layout for transaction entry fields"
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:48'!
+buildCategoryEntry
+	"Answer the label and entry field for Category"
+	| m |
 	
-	^ (LayoutMorph newRow separation: 5)
-		name: #'Entry Fields';
-		color: Color lightGreen;
-		addMorph: ((EntryField 
-			textProvider: model
-			getter: #getDate 
-			setter: #putDate:
-			name: #Date)
-				layoutSpec: (LayoutSpec fixedWidth: 85));		
-		addMorph: ((EntryField 
-			textProvider: model
-			getter: #getCheck
-			setter: #putCheck:
-			name: #Check)
-				layoutSpec: (LayoutSpec fixedWidth: 50));
-		addMorph: ((EntryField 
-			textProvider: model
-			getter: #getPayee
-			setter: #putPayee:
-			name: #Payee)
-				when: #atEntry send: #entryTable: to: model with: #payees;
-				textModel: model;
-				hideScrollBarsIndefinitely;
-				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
-		addMorph: ((EntryField 
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
+	m addMorph: ((StringMorph contents: 'Category')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
 			textProvider: model
 			getter: #getCategory
 			setter: #putCategory: 
@@ -1281,31 +1262,81 @@ buildEntries
 				when: #atEntry send: #entryTable: to: model with: #categories;
 				textModel: model;
 				hideScrollBarsIndefinitely;
-				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
-		addMorph: ((EntryField 
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:40'!
+buildCheckEntry
+	"Answer the label and entry field for Check number"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec fixedWidth: 60).
+	m addMorph: ((StringMorph contents: 'Check')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
 			textProvider: model
-			getter: #getMemo
-			setter: #putMemo: 
-			name: #Memo)
-				when: #atEntry send: #entryTable: to: model with: #memos;
-				textModel: model;
-				hideScrollBarsIndefinitely;
-				layoutSpec: (LayoutSpec proportionalWidth: 0.8));
-		addMorph: ((EntryField 
+			getter: #getCheck
+			setter: #putCheck:
+			name: #Check)
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:37'!
+buildDateEntry
+	"Answer the label and entry field for Date"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec fixedWidth: 85).
+	m addMorph: ((StringMorph contents: 'Date')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
 			textProvider: model
-			getter: #getR
-			setter: #putR: 
-			name: #R)
-				layoutSpec: (LayoutSpec fixedWidth: 12));
-		addMorph: ((EntryField 
+			getter: #getDate 
+			setter: #putDate:
+			name: #Date)
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 10:38'!
+buildDebitEntry
+	"Answer the label and entry field for the Debit amount"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec fixedWidth: 65).
+	m addMorph: ((StringMorph contents: 'Debit')
+		color: Color red;
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
 			textProvider: model
 			getter: #getAmount
 			setter: #putAmount: 
 			name: #Amount)
-				layoutSpec: (LayoutSpec fixedWidth: 65)).
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 10:32'!
+buildEntries
+	"Answer the layout for transaction entry fields"
+	
+	^ (LayoutMorph newRow separation: 5)
+		name: #'Entry Fields';
+		addMorph: self buildDateEntry;		
+		addMorph: self buildCheckEntry;		
+		addMorph: self buildPayeeEntry;		
+		addMorph: self buildCategoryEntry;		
+		addMorph: self buildMemoEntry;		
+		addMorph: self buildREntry;		
+		addMorph: self buildDebitEntry
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/17/2015 11:59'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:26'!
 buildLedgerList
 	"Answer the specifications for the ledger list in the window"
 	
@@ -1322,7 +1353,7 @@ buildLedgerList
 	windowLedgerList  layoutSpec: (LayoutSpec useAll).
 				
 	windowEntries _ self buildEntries
-		layoutSpec: (LayoutSpec fixedHeight: 40).
+		layoutSpec: (LayoutSpec fixedHeight: 50).
 
 	
 	^ (LayoutMorph newColumn name: 'Ledger Column')
@@ -1330,6 +1361,27 @@ buildLedgerList
 		addMorph: windowEntries
 		
 ! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:53'!
+buildMemoEntry
+	"Answer the label and entry field for Memo"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
+	m addMorph: ((StringMorph contents: 'Memo')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
+			textProvider: model
+			getter: #getMemo
+			setter: #putMemo: 
+			name: #Memo)
+				when: #atEntry send: #entryTable: to: model with: #memos;
+				textModel: model;
+				hideScrollBarsIndefinitely;
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/9/2015 12:10'!
 buildMorphicWindow
@@ -1339,6 +1391,45 @@ buildMorphicWindow
 		addMorph: self buildAccountList fixedWidth: 200;
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll)! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:45'!
+buildPayeeEntry
+	"Answer the label and entry field for Payee"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
+	m addMorph: ((StringMorph contents: 'Payee')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
+			textProvider: model
+			getter: #getPayee
+			setter: #putPayee:
+			name: #Payee)
+				when: #atEntry send: #entryTable: to: model with: #payees;
+				textModel: model;
+				hideScrollBarsIndefinitely;
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:57'!
+buildREntry
+	"Answer the label and entry field for the Reconciled indicator"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec fixedWidth: 12).
+	m addMorph: ((StringMorph contents: 'R')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m addMorph: ((EntryField 
+			textProvider: model
+			getter: #getR
+			setter: #putR: 
+			name: #R)
+				layoutSpec: (LayoutSpec useAll)).
+	^ m
+		! !
 
 !LedgerWindow methodsFor: 'open/close' stamp: 'dhn 10/16/2015 20:39'!
 delete
