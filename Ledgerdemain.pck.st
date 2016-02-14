@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 14 February 2016 at 2:35:24.98205 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 14 February 2016 at 3:36:12.60705 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 131!
+!provides: 'Ledgerdemain' 1 132!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -300,23 +300,30 @@ asLdmDate
 	dt _ Date newDay: (y at: 2) month: (y at: 1) year: (y at: 3).
 	^ dt julianDayNumber - Time squeakEpoch! !
 
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 1/28/2016 21:25'!
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 2/14/2016 15:27'!
 dollarsToCents
 	"Convert the receiver to a number of cents"
-	| w x y |
+	| w x y z n |
 
 	w _ self withBlanksCondensed.
 	(w  allSatisfy: [:c | c isDigit or: (' -.' includes: c)])	"a modest test"
 		ifTrue: [
 			x _ w findDelimiters: '.' startingAt: 1. 
 			x > w size 
-				ifTrue: [y _ w, '00'] "no decimal point specified"
+				ifTrue: [ "no decimal point specified"
+					y _ w, '00'.
+					z _ y]
 				ifFalse: [	"a decimal point exists"
 					y _ w select: [:a | a isDigit or: ('-' includes: a)].	"rm the decimal point"
 					y size - x >= 1
 						ifFalse: [y _ y, '00'].	"fewer than 2 decimal places gets zeros appended"
-					y _ y copyFrom: 1 to: x + 1]. 	"fractions of cents are dropped"
-			^ y asNumber]
+					z _ y copyFrom: 1 to: x + 1.
+					(x + 2) <= y size 
+						ifTrue: [
+							n _ (y at: x + 2) asString asNumber.
+							n >= 5
+								ifTrue: [^ z asNumber + z asNumber sign]]].
+			^ z asNumber]
 		ifFalse: [^ nil 	"unfriendly, but effective, result of garbage in self"]
 ! !
 
