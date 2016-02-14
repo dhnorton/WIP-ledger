@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 13 February 2016 at 4:19:42.572412 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 14 February 2016 at 2:35:24.98205 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 130!
+!provides: 'Ledgerdemain' 1 131!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -41,6 +41,16 @@ OrderedCollection subclass: #Ledger
 	category: 'Ledgerdemain'!
 !classDefinition: 'Ledger class' category: #Ledgerdemain!
 Ledger class
+	instanceVariableNames: ''!
+
+!classDefinition: #LedgerCalculator category: #Ledgerdemain!
+Object subclass: #LedgerCalculator
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'LedgerCalculator class' category: #Ledgerdemain!
+LedgerCalculator class
 	instanceVariableNames: ''!
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
@@ -198,6 +208,13 @@ The AutoCompleter for LedgerDeMain.!
 
 !Ledger commentStamp: 'dhn 6/24/2015 21:11' prior: 0!
 Ledger is an ordered collection of transactions.!
+
+!LedgerCalculator commentStamp: 'dhn 2/13/2016 21:13' prior: 0!
+A rudimentary calculator for arithmetic expressions containing '+-*/' and decimal numbers.
+
+The result is formatted for ledger credits or debits.
+
+One or more digits must occur before the decimal point.!
 
 !Reconciliation commentStamp: 'dhn 6/12/2015 19:10' prior: 0!
 Reconciliation responsibilities:
@@ -1152,6 +1169,31 @@ openCompletionMenu
 initialize
 
 	contents _ OrderedCollection new! !
+
+!LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 2/14/2016 14:31'!
+initialize
+	"Answer an evaluated expression in ledger format"
+	| w x y ok err |
+	
+	x _ ''.
+	ok _ false.
+	err _ false.
+	
+	[ok and: err not] whileFalse: [
+		x _ FillInTheBlankMorph request: 'Calculator' initialAnswer: x.
+		y _ x copyWithout: $ .		"remove blanks"
+		err _ false.
+		y ~= '' 
+			ifTrue: [
+				[w _ Compiler evaluate: y] on: Error do: [
+					err _ true.
+					nil inform: 'Error in the arithmetic expression'].
+				err ifFalse: [
+					ok _ true.
+					y _ w asString dollarsToCents ledgerFormatted]]
+			ifFalse: [ok _ true]].
+		
+	^ y! !
 
 !LedgerCompleterMorph class methodsFor: 'instance creation' stamp: 'dhn 11/9/2015 17:08'!
 initializedInstance
