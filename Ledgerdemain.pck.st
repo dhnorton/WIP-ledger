@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 14 February 2016 at 5:39:31.26005 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 14 February 2016 at 9:42:37.272035 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 133!
-!requires: 'Calendar' 1 23 nil!
+!provides: 'Ledgerdemain' 1 134!
 !requires: 'Records' 1 10 nil!
+!requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -1315,7 +1315,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:48'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:34'!
 buildCategoryEntry
 	"Answer the label and entry field for Category"
 	| m |
@@ -1325,7 +1325,7 @@ buildCategoryEntry
 	m addMorph: ((StringMorph contents: 'Category')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getCategory
 			setter: #putCategory: 
 			name: #Category)
@@ -1336,7 +1336,7 @@ buildCategoryEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:40'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:33'!
 buildCheckEntry
 	"Answer the label and entry field for Check number"
 	| m |
@@ -1346,7 +1346,7 @@ buildCheckEntry
 	m addMorph: ((StringMorph contents: 'Check')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getCheck
 			setter: #putCheck:
 			name: #Check)
@@ -1354,7 +1354,7 @@ buildCheckEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 14:33'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
 buildCreditEntry
 	"Answer the label and entry field for the Credit amount"
 	| m |
@@ -1364,7 +1364,7 @@ buildCreditEntry
 	m addMorph: ((StringMorph contents: 'Credit')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getCredit
 			setter: #putCredit: 
 			name: #Credit)
@@ -1372,7 +1372,7 @@ buildCreditEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:37'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:33'!
 buildDateEntry
 	"Answer the label and entry field for Date"
 	| m |
@@ -1382,7 +1382,7 @@ buildDateEntry
 	m addMorph: ((StringMorph contents: 'Date')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getDate 
 			setter: #putDate:
 			name: #Date)
@@ -1390,7 +1390,7 @@ buildDateEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 15:41'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
 buildDebitEntry
 	"Answer the label and entry field for the Debit amount"
 	| m |
@@ -1401,7 +1401,7 @@ buildDebitEntry
 		color: Color red;
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getDebit
 			setter: #putDebit: 
 			name: #Debit)
@@ -1452,7 +1452,7 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:53'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
 buildMemoEntry
 	"Answer the label and entry field for Memo"
 	| m |
@@ -1462,7 +1462,7 @@ buildMemoEntry
 	m addMorph: ((StringMorph contents: 'Memo')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getMemo
 			setter: #putMemo: 
 			name: #Memo)
@@ -1482,7 +1482,7 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll)! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:45'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:34'!
 buildPayeeEntry
 	"Answer the label and entry field for Payee"
 	| m |
@@ -1492,7 +1492,7 @@ buildPayeeEntry
 	m addMorph: ((StringMorph contents: 'Payee')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getPayee
 			setter: #putPayee:
 			name: #Payee)
@@ -1503,7 +1503,7 @@ buildPayeeEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:57'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
 buildREntry
 	"Answer the label and entry field for the Reconciled indicator"
 	| m |
@@ -1513,7 +1513,7 @@ buildREntry
 	m addMorph: ((StringMorph contents: 'R')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getR
 			setter: #putR: 
 			name: #R)
@@ -1532,6 +1532,54 @@ delete
 			self model saveFile]].
 	cancel ifFalse: [super delete]		"terminate"
 	"otherwise, cancel this"! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:26'!
+getCategory
+	"Answer the category"
+	
+	^ model getCategory! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:25'!
+getCheck
+	"Answer the check number"
+	
+	^ model getCheck! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:29'!
+getCredit
+	"Answer the amount if positive; '' otherwise"
+	
+	^ model getCredit! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:24'!
+getDate
+	"Answer the date"
+	
+	^ model getDate! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:29'!
+getDebit
+	"Answer the amount if negative; '' otherwise"
+	
+	^ model getDebit! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:27'!
+getMemo
+	"Answer the memo"
+	
+	^ model getMemo! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:25'!
+getPayee
+	"Answer the payee"
+	
+	^ model getPayee! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:28'!
+getR
+	"Answer the reconciled indicator"
+	
+	^ model getR! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/24/2015 16:04'!
 initialize
@@ -1616,7 +1664,7 @@ windowAccountList
 
 	^ windowAccountList! !
 
-!LedgerWindow methodsFor: 'access' stamp: 'dhn 10/17/2015 12:01'!
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 10/17/2015 12:01'!
 windowEntries
 	
 	^ windowEntries! !
@@ -1794,7 +1842,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/14/2016 17:38'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/14/2016 21:40'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2053,7 +2101,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/14/2016 17:38'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/14/2016 21:40'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
