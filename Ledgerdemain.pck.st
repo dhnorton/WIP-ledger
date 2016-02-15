@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 14 February 2016 at 9:42:37.272035 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 15 February 2016 at 8:58:08.942311 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 134!
+!provides: 'Ledgerdemain' 1 135!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1315,7 +1315,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:34'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:51'!
 buildCategoryEntry
 	"Answer the label and entry field for Category"
 	| m |
@@ -1331,12 +1331,13 @@ buildCategoryEntry
 			name: #Category)
 				when: #atEntry send: #entryTable: to: model with: #categories;
 				textModel: model;
+				setBalloonText: 'What transaction was for';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:33'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:46'!
 buildCheckEntry
 	"Answer the label and entry field for Check number"
 	| m |
@@ -1350,11 +1351,12 @@ buildCheckEntry
 			getter: #getCheck
 			setter: #putCheck:
 			name: #Check)
+				setBalloonText: 'Check number or transaction type';
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:54'!
 buildCreditEntry
 	"Answer the label and entry field for the Credit amount"
 	| m |
@@ -1368,11 +1370,12 @@ buildCreditEntry
 			getter: #getCredit
 			setter: #putCredit: 
 			name: #Credit)
+				setBalloonText: 'Amount, if positive';
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:33'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:55'!
 buildDateEntry
 	"Answer the label and entry field for Date"
 	| m |
@@ -1386,11 +1389,12 @@ buildDateEntry
 			getter: #getDate 
 			setter: #putDate:
 			name: #Date)
+				setBalloonText: 'When transaction occurred';
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:54'!
 buildDebitEntry
 	"Answer the label and entry field for the Debit amount"
 	| m |
@@ -1405,6 +1409,7 @@ buildDebitEntry
 			getter: #getDebit
 			setter: #putDebit: 
 			name: #Debit)
+				setBalloonText: 'Amount, if negative';
 				color: Color lightRed muchLighter;
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
@@ -1452,7 +1457,7 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:52'!
 buildMemoEntry
 	"Answer the label and entry field for Memo"
 	| m |
@@ -1468,6 +1473,7 @@ buildMemoEntry
 			name: #Memo)
 				when: #atEntry send: #entryTable: to: model with: #memos;
 				textModel: model;
+				setBalloonText: 'Additional transaction details';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
@@ -1482,7 +1488,7 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll)! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:34'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:50'!
 buildPayeeEntry
 	"Answer the label and entry field for Payee"
 	| m |
@@ -1498,12 +1504,13 @@ buildPayeeEntry
 			name: #Payee)
 				when: #atEntry send: #entryTable: to: model with: #payees;
 				textModel: model;
+				setBalloonText: 'Transaction destination or source';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/14/2016 21:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:53'!
 buildREntry
 	"Answer the label and entry field for the Reconciled indicator"
 	| m |
@@ -1517,6 +1524,7 @@ buildREntry
 			getter: #getR
 			setter: #putR: 
 			name: #R)
+				setBalloonText: 'Reconciled?';
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
