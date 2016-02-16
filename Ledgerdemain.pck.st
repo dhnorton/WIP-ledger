@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 15 February 2016 at 8:58:08.942311 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 15 February 2016 at 9:55:08.416381 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 135!
+!provides: 'Ledgerdemain' 1 136!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -15,7 +15,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net trail modified transactionList transactionListIndex selectedTransaction entryTable netEditor'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction entryTable netEditor'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -85,7 +85,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryTable'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -604,11 +604,6 @@ addCategory: aString
 		ifFalse: [self categories at: aString put: 2]. "sub-category"
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/9/2015 19:30'!
-autoCompleterClassFor: textGetter
-
-	^ LedgerCompleter! !
-
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/25/2015 11:29'!
 categories
 	"Answer the value of Categories"
@@ -765,16 +760,6 @@ getR
 	transactionListIndex = 0
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction reconciled]! !
-
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 1/30/2016 20:48'!
-getTrieFor: aSymbol
-	"Answer the contents Trie for the field named aSymbol"
-	| method |
-	
-	method _ self class completerTable at: aSymbol.
-	^ self perform: method
-	
-	! !
 
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/13/2015 15:04'!
 initialize
@@ -1037,19 +1022,6 @@ selectedTransaction: anObject
 	self changed: #xactList
 	! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/14/2015 13:35'!
-trail
-	"Answer the value of trail"
-
-	^ trail! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/23/2015 21:31'!
-trail: anObject
-	"Set the value of trail"
-
-	trail _ anObject.
-	self modified: true! !
-
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 20:19'!
 transactionList
 	"Answer a list of transactions"
@@ -1142,7 +1114,7 @@ addEntriesTo: aStream
 		forPrefix: pref
 		keysAndValuesDo: [:key :val | aStream nextPut: key]! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 2/13/2016 11:01'!
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 2/15/2016 21:50'!
 computeEntries
 	"Set the list for the completer"
 	| signal trie char col |
@@ -1286,6 +1258,11 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 21:31'!
+autoCompleterClassFor: textGetter
+
+	^ LedgerCompleter! !
+
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 1/28/2016 19:41'!
 buildAccountList
 	"Answer the specifications for the list of accounts in the window"
@@ -1315,7 +1292,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:51'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 21:47'!
 buildCategoryEntry
 	"Answer the label and entry field for Category"
 	| m |
@@ -1329,8 +1306,8 @@ buildCategoryEntry
 			getter: #getCategory
 			setter: #putCategory: 
 			name: #Category)
-				when: #atEntry send: #entryTable: to: model with: #categories;
-				textModel: model;
+				when: #atEntry send: #entryTable: to: self with: #categories;
+				textModel: self;
 				setBalloonText: 'What transaction was for';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
@@ -1457,7 +1434,7 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:52'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 21:49'!
 buildMemoEntry
 	"Answer the label and entry field for Memo"
 	| m |
@@ -1471,8 +1448,8 @@ buildMemoEntry
 			getter: #getMemo
 			setter: #putMemo: 
 			name: #Memo)
-				when: #atEntry send: #entryTable: to: model with: #memos;
-				textModel: model;
+				when: #atEntry send: #entryTable: to: self with: #memos;
+				textModel: self;
 				setBalloonText: 'Additional transaction details';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
@@ -1488,7 +1465,7 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll)! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:50'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 18:53'!
 buildPayeeEntry
 	"Answer the label and entry field for Payee"
 	| m |
@@ -1502,8 +1479,8 @@ buildPayeeEntry
 			getter: #getPayee
 			setter: #putPayee:
 			name: #Payee)
-				when: #atEntry send: #entryTable: to: model with: #payees;
-				textModel: model;
+				when: #atEntry send: #entryTable: to: self with: #payees;
+				textModel: self;
 				setBalloonText: 'Transaction destination or source';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
@@ -1540,6 +1517,12 @@ delete
 			self model saveFile]].
 	cancel ifFalse: [super delete]		"terminate"
 	"otherwise, cancel this"! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/15/2016 10:29'!
+entryTable: aSymbol
+	"Set the value of entryTable"
+
+	entryTable _ model entryTable: aSymbol! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:26'!
 getCategory
@@ -1588,6 +1571,14 @@ getR
 	"Answer the reconciled indicator"
 	
 	^ model getR! !
+
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 2/15/2016 21:44'!
+getTrieFor: aSymbol
+	"Answer the contents Trie for the field named aSymbol"
+	| method |
+	
+	method _ model class completerTable at: aSymbol.
+	^ model perform: method! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/24/2015 16:04'!
 initialize
@@ -1850,7 +1841,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/14/2016 21:40'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/15/2016 21:52'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2109,7 +2100,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/14/2016 21:40'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/15/2016 21:52'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
