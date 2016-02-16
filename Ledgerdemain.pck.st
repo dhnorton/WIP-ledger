@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 15 February 2016 at 9:55:08.416381 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 15 February 2016 at 10:21:10.930381 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 136!
+!provides: 'Ledgerdemain' 1 137!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1258,8 +1258,9 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 21:31'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 22:19'!
 autoCompleterClassFor: textGetter
+	"Essential method. Necessary in order to have a completer available for the containing class"
 
 	^ LedgerCompleter! !
 
