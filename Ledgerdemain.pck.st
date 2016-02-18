@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 15 February 2016 at 10:21:10.930381 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 18 February 2016 at 2:56:37.45103 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 137!
+!provides: 'Ledgerdemain' 1 138!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1206,13 +1206,12 @@ textModel: anObject
 
 	textModel _ anObject! !
 
-!EntryField class methodsFor: 'class initialization' stamp: 'dhn 10/21/2015 12:15'!
-textProvider: aTextProvider getter: symb1 setter: symb2 name: aName
+!EntryField class methodsFor: 'class initialization' stamp: 'dhn 2/18/2016 14:30'!
+textProvider: aTextProvider getter: symb1 name: aName
 	"Establish an entry field morph"
 	^ (self
 		textProvider: aTextProvider
-		textGetter: symb1
-		textSetter: symb2)
+		textGetter: symb1)
 	name: aName! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
@@ -1293,7 +1292,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 21:47'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
 buildCategoryEntry
 	"Answer the label and entry field for Category"
 	| m |
@@ -1305,7 +1304,6 @@ buildCategoryEntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getCategory
-			setter: #putCategory: 
 			name: #Category)
 				when: #atEntry send: #entryTable: to: self with: #categories;
 				textModel: self;
@@ -1315,7 +1313,7 @@ buildCategoryEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:46'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:31'!
 buildCheckEntry
 	"Answer the label and entry field for Check number"
 	| m |
@@ -1327,14 +1325,13 @@ buildCheckEntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getCheck
-			setter: #putCheck:
 			name: #Check)
 				setBalloonText: 'Check number or transaction type';
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:54'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:33'!
 buildCreditEntry
 	"Answer the label and entry field for the Credit amount"
 	| m |
@@ -1346,14 +1343,13 @@ buildCreditEntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getCredit
-			setter: #putCredit: 
 			name: #Credit)
 				setBalloonText: 'Amount, if positive';
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:55'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:31'!
 buildDateEntry
 	"Answer the label and entry field for Date"
 	| m |
@@ -1365,14 +1361,13 @@ buildDateEntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getDate 
-			setter: #putDate:
 			name: #Date)
 				setBalloonText: 'When transaction occurred';
 				layoutSpec: (LayoutSpec useAll)).
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:54'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
 buildDebitEntry
 	"Answer the label and entry field for the Debit amount"
 	| m |
@@ -1385,7 +1380,6 @@ buildDebitEntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getDebit
-			setter: #putDebit: 
 			name: #Debit)
 				setBalloonText: 'Amount, if negative';
 				color: Color lightRed muchLighter;
@@ -1435,7 +1429,7 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 21:49'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
 buildMemoEntry
 	"Answer the label and entry field for Memo"
 	| m |
@@ -1447,7 +1441,6 @@ buildMemoEntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getMemo
-			setter: #putMemo: 
 			name: #Memo)
 				when: #atEntry send: #entryTable: to: self with: #memos;
 				textModel: self;
@@ -1466,7 +1459,7 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll)! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 18:53'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:31'!
 buildPayeeEntry
 	"Answer the label and entry field for Payee"
 	| m |
@@ -1478,7 +1471,6 @@ buildPayeeEntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getPayee
-			setter: #putPayee:
 			name: #Payee)
 				when: #atEntry send: #entryTable: to: self with: #payees;
 				textModel: self;
@@ -1488,7 +1480,7 @@ buildPayeeEntry
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 08:53'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
 buildREntry
 	"Answer the label and entry field for the Reconciled indicator"
 	| m |
@@ -1500,7 +1492,6 @@ buildREntry
 	m addMorph: ((EntryField 
 			textProvider: self
 			getter: #getR
-			setter: #putR: 
 			name: #R)
 				setBalloonText: 'Reconciled?';
 				layoutSpec: (LayoutSpec useAll)).
@@ -1842,7 +1833,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/15/2016 21:52'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 14:34'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2101,7 +2092,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/15/2016 21:52'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 14:34'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
