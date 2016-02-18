@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 18 February 2016 at 2:56:37.45103 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 18 February 2016 at 3:59:35.98203 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 138!
+!provides: 'Ledgerdemain' 1 139!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1292,16 +1292,17 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:51'!
 buildCategoryEntry
 	"Answer the label and entry field for Category"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
 	m addMorph: ((StringMorph contents: 'Category')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+		
+	m addMorph: ((fld _ EntryField 
 			textProvider: self
 			getter: #getCategory
 			name: #Category)
@@ -1310,80 +1311,94 @@ buildCategoryEntry
 				setBalloonText: 'What transaction was for';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:31'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:43'!
 buildCheckEntry
 	"Answer the label and entry field for Check number"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec fixedWidth: 60).
 	m addMorph: ((StringMorph contents: 'Check')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+		
+	m addMorph: ((fld _ EntryField 
 			textProvider: self
 			getter: #getCheck
 			name: #Check)
 				setBalloonText: 'Check number or transaction type';
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:33'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:55'!
 buildCreditEntry
 	"Answer the label and entry field for the Credit amount"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec fixedWidth: 65).
 	m addMorph: ((StringMorph contents: 'Credit')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+		
+	m addMorph: ((fld _ EntryField 
 			textProvider: self
 			getter: #getCredit
 			name: #Credit)
 				setBalloonText: 'Amount, if positive';
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:31'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:53'!
 buildDateEntry
 	"Answer the label and entry field for Date"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec fixedWidth: 85).
 	m addMorph: ((StringMorph contents: 'Date')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+		
+	m addMorph: ((fld _ EntryField
 			textProvider: self
 			getter: #getDate 
 			name: #Date)
 				setBalloonText: 'When transaction occurred';
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:54'!
 buildDebitEntry
 	"Answer the label and entry field for the Debit amount"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec fixedWidth: 65).
 	m addMorph: ((StringMorph contents: 'Debit')
 		color: Color red;
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+		
+	m addMorph: ((fld _ EntryField 
 			textProvider: self
 			getter: #getDebit
 			name: #Debit)
 				setBalloonText: 'Amount, if negative';
 				color: Color lightRed muchLighter;
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
@@ -1403,9 +1418,10 @@ buildEntries
 		addMorph: self buildCreditEntry
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/10/2016 18:26'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:48'!
 buildLedgerList
 	"Answer the specifications for the ledger list in the window"
+	| entries |
 	
 	windowLedgerList _ (PluggableListMorph
 			model: model
@@ -1419,26 +1435,28 @@ buildLedgerList
 				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9).
 	windowLedgerList  layoutSpec: (LayoutSpec useAll).
 				
-	windowEntries _ self buildEntries
+	entries _ self buildEntries
 		layoutSpec: (LayoutSpec fixedHeight: 50).
 
 	
 	^ (LayoutMorph newColumn name: 'Ledger Column')
 		addMorph: windowLedgerList;
-		addMorph: windowEntries
+		addMorph: entries
+		
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:52'!
 buildMemoEntry
 	"Answer the label and entry field for Memo"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
 	m addMorph: ((StringMorph contents: 'Memo')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+		
+	m addMorph: ((fld _ EntryField 
 			textProvider: self
 			getter: #getMemo
 			name: #Memo)
@@ -1447,6 +1465,8 @@ buildMemoEntry
 				setBalloonText: 'Additional transaction details';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
@@ -1459,16 +1479,16 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll)! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:31'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:50'!
 buildPayeeEntry
 	"Answer the label and entry field for Payee"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
 	m addMorph: ((StringMorph contents: 'Payee')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+	m addMorph: ((fld _ EntryField 
 			textProvider: self
 			getter: #getPayee
 			name: #Payee)
@@ -1477,24 +1497,29 @@ buildPayeeEntry
 				setBalloonText: 'Transaction destination or source';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 14:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:53'!
 buildREntry
 	"Answer the label and entry field for the Reconciled indicator"
-	| m |
+	| m fld |
 	
 	m _ LayoutMorph newColumn
 				layoutSpec: (LayoutSpec fixedWidth: 12).
 	m addMorph: ((StringMorph contents: 'R')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m addMorph: ((EntryField 
+		
+	m addMorph: ((fld _ EntryField  
 			textProvider: self
 			getter: #getR
 			name: #R)
 				setBalloonText: 'Reconciled?';
 				layoutSpec: (LayoutSpec useAll)).
+	windowEntries add: fld.
+	
 	^ m
 		! !
 
@@ -1572,10 +1597,11 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 10/24/2015 16:04'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:39'!
 initialize
 
-	super initialize! !
+	super initialize.
+	windowEntries _ OrderedCollection new! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:49'!
 menuLedger
@@ -1621,14 +1647,14 @@ of account ledgers'.
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 2/13/2016 14:11'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 2/18/2016 15:21'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
 	super update: aSymbol.
 	
 	aSymbol == #fillEntries
-		ifTrue: [windowEntries submorphs do: [:ea | ea submorphs first model refetch]].
+		ifTrue: [windowEntries do: [:ea | ea model refetch]].
 		
 	aSymbol == #xactList
 		ifTrue: [
@@ -1833,7 +1859,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 14:34'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 15:59'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2092,7 +2118,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 14:34'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 15:59'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
