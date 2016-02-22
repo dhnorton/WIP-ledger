@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 18 February 2016 at 3:59:35.98203 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 22 February 2016 at 1:34:55.666547 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 139!
-!requires: 'Records' 1 10 nil!
+!provides: 'Ledgerdemain' 1 140!
 !requires: 'Calendar' 1 23 nil!
+!requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -380,6 +380,22 @@ centsToDollars
 		ifTrue: [sd _ (all copyFrom: 1 to: all size - 2) withCommas]
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
+
+!Morph methodsFor: '*Ledgerdemain' stamp: 'dhn 2/22/2016 13:34'!
+processKeystroke: aKeyboardEvent localPosition: localEventPosition
+	"System level event handling."
+		"localEventPosition?????"
+	
+	"get control of the tab keys - use for navigation in the future"
+	aKeyboardEvent keyValue = 9
+		ifTrue: [
+			{aKeyboardEvent keyValue. aKeyboardEvent shiftPressed} print.
+			self halt].
+	
+	aKeyboardEvent wasHandled ifTrue: [^self].
+	self handlesKeyboard ifFalse: [^self].
+	aKeyboardEvent wasHandled: true.
+	^self keyStroke: aKeyboardEvent! !
 
 !InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'len 11/15/2015 06:45'!
 keyStroke: aKeyboardEvent
@@ -1596,6 +1612,12 @@ getTrieFor: aSymbol
 	
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 2/22/2016 12:23'!
+handlesKeyboard
+	"Yes, this morph handles keyboard events"
+	
+	^ true! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:39'!
 initialize
