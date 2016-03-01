@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 29 February 2016 at 9:03:07.967123 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 29 February 2016 at 9:13:22.591123 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 141!
+!provides: 'Ledgerdemain' 1 142!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -380,6 +380,22 @@ centsToDollars
 		ifTrue: [sd _ (all copyFrom: 1 to: all size - 2) withCommas]
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 2/29/2016 20:31'!
+processKeystroke: aKeyboardEvent localPosition: localEventPosition
+	"System level event handling."
+		"localEventPosition?????"
+	
+	(aKeyboardEvent keyValue between: 28 and: 31)
+		ifTrue: [
+			aKeyboardEvent shiftPressed
+				ifFalse: [
+					{owner. owner name. aKeyboardEvent keyValue. } print]].
+	
+	aKeyboardEvent wasHandled ifTrue: [^self].
+	self handlesKeyboard ifFalse: [^self].
+	aKeyboardEvent wasHandled: true.
+	^self keyStroke: aKeyboardEvent! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
