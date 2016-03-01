@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 29 February 2016 at 9:13:22.591123 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 1 March 2016 at 11:07:58.331341 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 142!
+!provides: 'Ledgerdemain' 1 143!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -381,16 +381,14 @@ centsToDollars
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 2/29/2016 20:31'!
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/1/2016 11:05'!
 processKeystroke: aKeyboardEvent localPosition: localEventPosition
 	"System level event handling."
 		"localEventPosition?????"
 	
-	(aKeyboardEvent keyValue between: 28 and: 31)
+	((aKeyboardEvent keyValue between: 28 and: 31) and: aKeyboardEvent buttons = 0)
 		ifTrue: [
-			aKeyboardEvent shiftPressed
-				ifFalse: [
-					{owner. owner name. aKeyboardEvent keyValue. } print]].
+			owner textModel navigateWith: aKeyboardEvent for: owner].
 	
 	aKeyboardEvent wasHandled ifTrue: [^self].
 	self handlesKeyboard ifFalse: [^self].
@@ -1641,6 +1639,12 @@ of account ledgers'.
 	aMenu add: 'List transaction types'			target: self model 	action:	#listType.
 	aMenu popUpInWorld: self world.
 ! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 11:02'!
+navigateWith: aKeyboardEvent for: anEntryField
+	"Respond to certain keys"
+	
+	{anEntryField. aKeyboardEvent keyValue. aKeyboardEvent buttons} print! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
 popUpInWorld: aWorld
