@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2676] on 22 February 2016 at 1:34:55.666547 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 29 February 2016 at 9:03:07.967123 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 140!
-!requires: 'Calendar' 1 23 nil!
+!provides: 'Ledgerdemain' 1 141!
 !requires: 'Records' 1 10 nil!
+!requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -380,45 +380,6 @@ centsToDollars
 		ifTrue: [sd _ (all copyFrom: 1 to: all size - 2) withCommas]
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
-
-!Morph methodsFor: '*Ledgerdemain' stamp: 'dhn 2/22/2016 13:34'!
-processKeystroke: aKeyboardEvent localPosition: localEventPosition
-	"System level event handling."
-		"localEventPosition?????"
-	
-	"get control of the tab keys - use for navigation in the future"
-	aKeyboardEvent keyValue = 9
-		ifTrue: [
-			{aKeyboardEvent keyValue. aKeyboardEvent shiftPressed} print.
-			self halt].
-	
-	aKeyboardEvent wasHandled ifTrue: [^self].
-	self handlesKeyboard ifFalse: [^self].
-	aKeyboardEvent wasHandled: true.
-	^self keyStroke: aKeyboardEvent! !
-
-!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'len 11/15/2015 06:45'!
-keyStroke: aKeyboardEvent
-
-	(Theme current keyStroke: aKeyboardEvent morph: self)
-		ifTrue: [^ self].
-	(self focusKeyboardFor: aKeyboardEvent)
-		ifTrue: [ ^ self ].
-		
-	"Maybe disable? Precludes the use of up and down arrows with control,
-	that are standard keystrokes in Windows to control the cursor.
-	Problem: At least Mac and Win VM generate ctrl-up and ctrl-down for
-	mouse wheel events.
-	I guess most people would prefer the mouse wheel to work properly..."
-	(owner scrollByKeyboard: aKeyboardEvent)
-		ifTrue: [ ^self ].
-
-	autoCompleter 
-		ifNil: [ self processKeyStroke: aKeyboardEvent ]
-		ifNotNil: [
-			autoCompleter
-				autoCompletionAround: [ self processKeyStroke: aKeyboardEvent ]
-				keyStroke: aKeyboardEvent ]! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
