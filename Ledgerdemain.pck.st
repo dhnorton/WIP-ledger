@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 1 March 2016 at 5:25:49.529201 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2696] on 1 March 2016 at 6:51:53.839844 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 146!
-!requires: 'Records' 1 10 nil!
+!provides: 'Ledgerdemain' 1 147!
 !requires: 'Calendar' 1 23 nil!
+!requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -1640,17 +1640,23 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:02'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 18:45'!
 goAheadFrom: anEntryField
 	"Go to the next EntryField to the right"
+	| ixs next |
 	
-	{'right'} print! !
+	ixs _ (1 to: windowEntries size) asArray.
+	next _ windowEntries at: (ixs atWrap: anEntryField position + 1).
+	{'right from ', anEntryField name, ' to ', next name} print! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:03'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 18:48'!
 goBackFrom: anEntryField
 	"Go to the next EntryField to the left"
+	| ixs next |
 	
-	{'left'} print! !
+	ixs _ (1 to: windowEntries size) asArray.
+	next _ windowEntries at: (ixs atWrap: anEntryField position - 1).
+	{'left from ', anEntryField name, ' to ', next name} print! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 2/22/2016 12:23'!
 handlesKeyboard
