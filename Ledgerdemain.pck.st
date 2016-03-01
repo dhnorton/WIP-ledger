@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 1 March 2016 at 3:14:46.231201 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 1 March 2016 at 12:16:33.656341 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 145!
+!provides: 'Ledgerdemain' 1 144!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -381,15 +381,14 @@ centsToDollars
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/1/2016 13:01'!
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/1/2016 11:05'!
 processKeystroke: aKeyboardEvent localPosition: localEventPosition
 	"System level event handling."
 		"localEventPosition?????"
 	
-	(owner class == EntryField and:
-		[(owner textModel class keys includes: aKeyboardEvent keyValue) and: aKeyboardEvent buttons = 0])
-			ifTrue: [
-				owner textModel navigateWith: aKeyboardEvent for: owner].
+	((aKeyboardEvent keyValue between: 28 and: 31) and: aKeyboardEvent buttons = 0)
+		ifTrue: [
+			owner textModel navigateWith: aKeyboardEvent for: owner].
 	
 	aKeyboardEvent wasHandled ifTrue: [^self].
 	self handlesKeyboard ifFalse: [^self].
@@ -1321,7 +1320,7 @@ buildCategoryEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:50'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:46'!
 buildCheckEntry: aNumber
 	"Answer the label and entry field for Check number"
 	| m fld |
@@ -1335,7 +1334,6 @@ buildCheckEntry: aNumber
 			textProvider: self
 			getter: #getCheck
 			name: #Check)
-				textModel: self;
 				setBalloonText: 'Check number or transaction type';
 				layoutSpec: (LayoutSpec useAll)).
 	fld position: aNumber.
@@ -1344,7 +1342,7 @@ buildCheckEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:51'!
 buildCreditEntry: aNumber
 	"Answer the label and entry field for the Credit amount"
 	| m fld |
@@ -1358,7 +1356,6 @@ buildCreditEntry: aNumber
 			textProvider: self
 			getter: #getCredit
 			name: #Credit)
-				textModel: self;
 				setBalloonText: 'Amount, if positive';
 				layoutSpec: (LayoutSpec useAll)).
 	fld position: aNumber.
@@ -1367,7 +1364,7 @@ buildCreditEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:50'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:45'!
 buildDateEntry: aNumber
 	"Answer the label and entry field for Date"
 	| m fld |
@@ -1381,7 +1378,6 @@ buildDateEntry: aNumber
 			textProvider: self
 			getter: #getDate 
 			name: #Date)
-				textModel: self;
 				setBalloonText: 'When transaction occurred';
 				layoutSpec: (LayoutSpec useAll)).
 	fld position: aNumber.
@@ -1390,7 +1386,7 @@ buildDateEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:51'!
 buildDebitEntry: aNumber
 	"Answer the label and entry field for the Debit amount"
 	| m fld |
@@ -1405,7 +1401,6 @@ buildDebitEntry: aNumber
 			textProvider: self
 			getter: #getDebit
 			name: #Debit)
-				textModel: self;
 				setBalloonText: 'Amount, if negative';
 				color: Color lightRed muchLighter;
 				layoutSpec: (LayoutSpec useAll)).
@@ -1519,7 +1514,7 @@ buildPayeeEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:50'!
 buildREntry: aNumber
 	"Answer the label and entry field for the Reconciled indicator"
 	| m fld |
@@ -1533,7 +1528,6 @@ buildREntry: aNumber
 			textProvider: self
 			getter: #getR
 			name: #R)
-				textModel: self;
 				setBalloonText: 'Reconciled?';
 				layoutSpec: (LayoutSpec useAll)).
 	fld position: aNumber.
@@ -1541,24 +1535,6 @@ buildREntry: aNumber
 	
 	^ m
 		! !
-
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:05'!
-changeHigher: anEntryField
-	"Increase the EntryField"
-	
-	{'increase'} print! !
-
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:05'!
-changeLower: anEntryField
-	"Decrease the EntryField"
-	
-	{'decrease'} print! !
-
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:08'!
-changeTransaction: anEntryField
-	"Form a transaction from all the EntryFields"
-	
-	{'new or updated transaction'} print! !
 
 !LedgerWindow methodsFor: 'open/close' stamp: 'dhn 10/16/2015 20:39'!
 delete
@@ -1640,18 +1616,6 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:02'!
-goAheadFrom: anEntryField
-	"Go to the next EntryField to the right"
-	
-	{'right'} print! !
-
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:03'!
-goBackFrom: anEntryField
-	"Go to the next EntryField to the left"
-	
-	{'left'} print! !
-
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 2/22/2016 12:23'!
 handlesKeyboard
 	"Yes, this morph handles keyboard events"
@@ -1704,21 +1668,11 @@ of account ledgers'.
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:11'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 11:02'!
 navigateWith: aKeyboardEvent for: anEntryField
 	"Respond to certain keys"
 	
-	aKeyboardEvent keyValue = 28
-		ifTrue: [self goBackFrom: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 29
-		ifTrue: [self goAheadFrom: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 30
-		ifTrue: [self changeHigher: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 31
-		ifTrue: [self changeLower: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 13
-		ifTrue: [self changeTransaction: anEntryField]
-		! !
+	{anEntryField. aKeyboardEvent keyValue. aKeyboardEvent buttons} print! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
 popUpInWorld: aWorld
@@ -1797,18 +1751,6 @@ how
 includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
-
-!LedgerWindow class methodsFor: 'key selection' stamp: 'dhn 3/1/2016 14:45'!
-keys
-	"Answer the event keyValue for keys which receive special processing in #navigateWith:for:"
-	
-	^ #(
-		13 		"enter"
-		28 		"left arrow"
-		29 		"right arrow"
-		30 		"up arrow"
-		31 		"down arrow"
-	)! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 10/23/2015 20:05'!
 open
