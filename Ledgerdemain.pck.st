@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 1 March 2016 at 11:07:58.331341 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2690] on 1 March 2016 at 12:16:33.656341 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 143!
+!provides: 'Ledgerdemain' 1 144!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -75,7 +75,7 @@ LedgerCompleterMorph class
 
 !classDefinition: #EntryField category: #Ledgerdemain!
 TextModelMorph subclass: #EntryField
-	instanceVariableNames: 'textModel'
+	instanceVariableNames: 'textModel position'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -226,8 +226,8 @@ Reconciliation responsibilities:
 !LedgerCompleterMorph commentStamp: 'dhn 11/9/2015 17:10' prior: 0!
 The auto completion menu for Ledgerdemain.!
 
-!EntryField commentStamp: '<historical>' prior: 0!
-A data entry and display morph with the ability to encapsulate a symbol of the method to load the Trie for a completer.!
+!EntryField commentStamp: 'dhn 3/1/2016 11:43' prior: 0!
+A data entry and display morph with the ability to encapsulate a symbol of the method which loads the Trie for a completer.!
 
 !LedgerWindow commentStamp: 'dhn 2/13/2016 11:58' prior: 0!
 A view for Ledger d'Main. Provides pop-up menu for options.
@@ -1185,6 +1185,18 @@ initialize
 		color: Color white
 ! !
 
+!EntryField methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:43'!
+position
+	"Answer the value of position"
+
+	^ position! !
+
+!EntryField methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:43'!
+position: anObject
+	"Set the value of position"
+
+	position _ anObject! !
+
 !EntryField methodsFor: 'accessing' stamp: 'dhn 1/29/2016 21:01'!
 textModel
 	"Answer the value of textModel"
@@ -1283,8 +1295,8 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:51'!
-buildCategoryEntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:49'!
+buildCategoryEntry: aNumber
 	"Answer the label and entry field for Category"
 	| m fld |
 	
@@ -1302,13 +1314,14 @@ buildCategoryEntry
 				setBalloonText: 'What transaction was for';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:43'!
-buildCheckEntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:46'!
+buildCheckEntry: aNumber
 	"Answer the label and entry field for Check number"
 	| m fld |
 	
@@ -1323,13 +1336,14 @@ buildCheckEntry
 			name: #Check)
 				setBalloonText: 'Check number or transaction type';
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:55'!
-buildCreditEntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:51'!
+buildCreditEntry: aNumber
 	"Answer the label and entry field for the Credit amount"
 	| m fld |
 	
@@ -1344,13 +1358,14 @@ buildCreditEntry
 			name: #Credit)
 				setBalloonText: 'Amount, if positive';
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:53'!
-buildDateEntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:45'!
+buildDateEntry: aNumber
 	"Answer the label and entry field for Date"
 	| m fld |
 	
@@ -1365,13 +1380,14 @@ buildDateEntry
 			name: #Date)
 				setBalloonText: 'When transaction occurred';
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:54'!
-buildDebitEntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:51'!
+buildDebitEntry: aNumber
 	"Answer the label and entry field for the Debit amount"
 	| m fld |
 	
@@ -1388,25 +1404,28 @@ buildDebitEntry
 				setBalloonText: 'Amount, if negative';
 				color: Color lightRed muchLighter;
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/13/2016 14:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:58'!
 buildEntries
 	"Answer the layout for transaction entry fields"
+	| n |
 	
+	n _ 0.
 	^ (LayoutMorph newRow separation: 5)
 		name: #'Entry Fields';
-		addMorph: self buildDateEntry;		
-		addMorph: self buildCheckEntry;		
-		addMorph: self buildPayeeEntry;		
-		addMorph: self buildCategoryEntry;		
-		addMorph: self buildMemoEntry;		
-		addMorph: self buildREntry;		
-		addMorph: self buildDebitEntry;
-		addMorph: self buildCreditEntry
+		addMorph: (self buildDateEntry: (n _ n + 1));		
+		addMorph: (self buildCheckEntry: (n _ n + 1));		
+		addMorph: (self buildPayeeEntry: (n _ n + 1));		
+		addMorph: (self buildCategoryEntry: (n _ n + 1));		
+		addMorph: (self buildMemoEntry: (n _ n + 1));		
+		addMorph: (self buildREntry: (n _ n + 1));		
+		addMorph: (self buildDebitEntry: (n _ n + 1));		
+		addMorph: (self buildCreditEntry: (n _ n + 1))
 ! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:48'!
@@ -1437,8 +1456,8 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:52'!
-buildMemoEntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:49'!
+buildMemoEntry: aNumber
 	"Answer the label and entry field for Memo"
 	| m fld |
 	
@@ -1456,6 +1475,7 @@ buildMemoEntry
 				setBalloonText: 'Additional transaction details';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
@@ -1470,8 +1490,8 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll)! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:50'!
-buildPayeeEntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:47'!
+buildPayeeEntry: aNumber
 	"Answer the label and entry field for Payee"
 	| m fld |
 	
@@ -1488,13 +1508,14 @@ buildPayeeEntry
 				setBalloonText: 'Transaction destination or source';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:53'!
-buildREntry
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:50'!
+buildREntry: aNumber
 	"Answer the label and entry field for the Reconciled indicator"
 	| m fld |
 	
@@ -1509,6 +1530,7 @@ buildREntry
 			name: #R)
 				setBalloonText: 'Reconciled?';
 				layoutSpec: (LayoutSpec useAll)).
+	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
@@ -1525,6 +1547,12 @@ delete
 			self model saveFile]].
 	cancel ifFalse: [super delete]		"terminate"
 	"otherwise, cancel this"! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:36'!
+entryTable
+	"Answer the value of entryTable"
+
+	^ entryTable! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/15/2016 10:29'!
 entryTable: aSymbol
@@ -1594,7 +1622,7 @@ handlesKeyboard
 	
 	^ true! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:39'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:13'!
 initialize
 
 	super initialize.
@@ -1684,16 +1712,34 @@ windowAccountList
 
 	^ windowAccountList! !
 
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:36'!
+windowAccountList: anObject
+	"Set the value of windowAccountList"
+
+	windowAccountList _ anObject! !
+
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 10/17/2015 12:01'!
 windowEntries
 	
 	^ windowEntries! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:36'!
+windowEntries: anObject
+	"Set the value of windowEntries"
+
+	windowEntries _ anObject! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 10/17/2015 13:52'!
 windowLedgerList
 	"Answer the value of windowLedgerList"
 
 	^ windowLedgerList! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:36'!
+windowLedgerList: anObject
+	"Set the value of windowLedgerList"
+
+	windowLedgerList _ anObject! !
 
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
