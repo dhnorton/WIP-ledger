@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2696] on 1 March 2016 at 6:51:53.839844 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2696] on 3 March 2016 at 4:07:11.554854 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 147!
-!requires: 'Calendar' 1 23 nil!
+!provides: 'Ledgerdemain' 1 148!
 !requires: 'Records' 1 10 nil!
+!requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -85,7 +85,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryTable'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -381,20 +381,77 @@ centsToDollars
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/1/2016 17:22'!
+!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/3/2016 15:52'!
+generateKeyboardEvent: evtBuf 
+	"Generate the appropriate mouse event for the given raw event buffer"
+
+	| buttons modifiers type keyValue pressType stamp |
+	stamp _ evtBuf second.
+	stamp = 0 ifTrue: [stamp _ Time localMillisecondClock].
+	(evtBuf sixth <= 0 or: [
+		(keyValue _ (Character iso8859s15CodeForUnicodeCodePoint: evtBuf sixth)) isNil ])
+			ifTrue: [ keyValue _ Character macRomanToLatin1: evtBuf third ].
+
+	"start: Combining diacritical marks (i.e. accents in the Linux VM)"
+	(Sensor peekEvent) ifNotNil: [ :nxt |
+		(nxt fourth = EventSensor eventKeyDown and:[ nxt third >255 ])
+			ifTrue: [
+				keyValue _ ((Character value: keyValue) withDiacriticalMark: nxt third) iso8859s15Code.
+				Sensor nextEvent; nextEvent; nextEvent
+				]].
+	"end: Combining diacritical marks (i.e. accents in the Linux VM)"
+
+	modifiers _ evtBuf fifth.
+	pressType _ evtBuf fourth.
+	pressType = EventSensor eventKeyDown ifTrue: [
+		type _ #keyDown.
+		lastKeyDownValue _ keyValue].
+	pressType = EventSensor eventKeyUp ifTrue: [type _ #keyUp].
+	pressType = EventSensor eventKeyChar ifTrue: [
+		type _ #keystroke.
+		"If Control key pressed, and the VM answers a code below 27,
+		 it means it did the translation, convert it back to regular character:
+		We want to handle the meaning of ctrl ourselves."
+		(modifiers anyMask: 2) ifTrue: [		"Control key pressed"
+			keyValue < 27 ifTrue: [
+				
+				"But we don't want to do it for Home/End/PgUp/PgDn, just for alphabetic keys"
+				lastKeyDownValue = keyValue ifFalse: [		"If equal, real Home/End/PgUp/PgDn in Windows => don't translate"
+					(keyValue + 64 = lastKeyDownValue or: [ 	"If Equal, Ctrl-alphabetic in Windows => do translate"
+							lastKeyDownValue < 47 ]) ifTrue: [		"Not on windows. If less (not sure about the bound, but do not translate 48: tab on Mac), alphabetic on Mac => do translate"
+						keyValue _ (modifiers anyMask: 1)
+							ifFalse: [ keyValue + 96 ]	"shift not pressed: conver to lowercase letter"
+							ifTrue: [ keyValue + 64 ]].	"shift pressed: conver to uppercase letter"
+					]
+				].
+			"Act as if command/alt was pressed for some usual Windows ctrl-key combinations"
+			(self shouldControlEmulateAltFor: keyValue) ifTrue: [
+				modifiers _ modifiers bitOr: 8 ]
+			]].
+	buttons _ modifiers bitShift: 3.
+	(keyValue = 9) ifTrue: [  "get control of tab keys"
+		type = #keyUp  ifTrue: [ | lw |
+			lw _ owner findDeepSubmorphThat: [:m | m class = LedgerWindow] ifAbsent: [nil].
+			buttons = 0 ifTrue: [lw triggerEvent: #toTheRight].
+			buttons = 8 ifTrue: [lw triggerEvent: #toTheLeft]].	
+		^ nil]. 
+	^KeyboardEvent new 
+		setType: type
+		buttons: buttons
+		position: self morphPosition
+		keyValue: keyValue
+		hand: self
+		stamp: stamp! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'jmv 2/5/2015 00:31'!
 processKeystroke: aKeyboardEvent localPosition: localEventPosition
 	"System level event handling."
-		"localEventPosition?????" 
-	
-	(owner class == EntryField and:
-		[(owner textModel class keys includes: aKeyboardEvent keyValue) and: aKeyboardEvent buttons = 0])
-			ifTrue: [
-				owner textModel navigateWith: aKeyboardEvent for: owner].
-	
-	aKeyboardEvent wasHandled ifTrue: [^self].
-	self handlesKeyboard ifFalse: [^self].
+		"localEventPosition?????"
+
+	aKeyboardEvent wasHandled ifTrue:[^self].
+	self handlesKeyboard ifFalse: [^ self].
 	aKeyboardEvent wasHandled: true.
-	^self keyStroke: aKeyboardEvent! !
+	self keyStroke: aKeyboardEvent! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
@@ -1486,14 +1543,17 @@ buildMemoEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 11/9/2015 12:10'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/3/2016 14:39'!
 buildMorphicWindow
 	"Lay out a window for Ledger d'Main"
 
 	(self layoutMorph beRow name: #Row)
 		addMorph: self buildAccountList fixedWidth: 200;
 		addMorph: self buildLedgerList
-			layoutSpec: (LayoutSpec useAll)! !
+			layoutSpec: (LayoutSpec useAll).
+	
+	self sayWhen
+! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:47'!
 buildPayeeEntry: aNumber
@@ -1572,6 +1632,19 @@ delete
 	cancel ifFalse: [super delete]		"terminate"
 	"otherwise, cancel this"! !
 
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/3/2016 16:00'!
+entryIndex
+	"Answer the value of entryIndex"
+
+	entryIndex ifNil: [entryIndex _ 1].
+	^ entryIndex! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/3/2016 12:41'!
+entryIndex: anObject
+	"Set the value of entryIndex"
+
+	entryIndex _ anObject! !
+
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:36'!
 entryTable
 	"Answer the value of entryTable"
@@ -1640,23 +1713,25 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 18:45'!
-goAheadFrom: anEntryField
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 15:57'!
+goAhead
 	"Go to the next EntryField to the right"
-	| ixs next |
+	| from |
 	
-	ixs _ (1 to: windowEntries size) asArray.
-	next _ windowEntries at: (ixs atWrap: anEntryField position + 1).
-	{'right from ', anEntryField name, ' to ', next name} print! !
+	from _ self entryIndex.
+	entryIndex _ from + 1.
+	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
+	{'right ahead from ', (windowEntries at: from) name, ' to ', (windowEntries at: entryIndex) name} print! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 18:48'!
-goBackFrom: anEntryField
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 13:02'!
+goBack
 	"Go to the next EntryField to the left"
-	| ixs next |
+	| from |
 	
-	ixs _ (1 to: windowEntries size) asArray.
-	next _ windowEntries at: (ixs atWrap: anEntryField position - 1).
-	{'left from ', anEntryField name, ' to ', next name} print! !
+	from _ entryIndex.
+	entryIndex _ from - 1.
+	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
+	{'left back from ', (windowEntries at: from) name, ' to ', (windowEntries at: entryIndex) name} print! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 2/22/2016 12:23'!
 handlesKeyboard
@@ -1710,25 +1785,17 @@ of account ledgers'.
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:11'!
-navigateWith: aKeyboardEvent for: anEntryField
-	"Respond to certain keys"
-	
-	aKeyboardEvent keyValue = 28
-		ifTrue: [self goBackFrom: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 29
-		ifTrue: [self goAheadFrom: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 30
-		ifTrue: [self changeHigher: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 31
-		ifTrue: [self changeLower: anEntryField. ^ self].
-	aKeyboardEvent keyValue = 13
-		ifTrue: [self changeTransaction: anEntryField]
-		! !
-
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/3/2016 15:53'!
+sayWhen
+	"Establish the receiving half of the Observer Pattern"
+	
+	self when: #toTheRight send: #goAhead to: self.
+	self when: #toTheLeft send: #goBack to: self.
+! !
 
 !LedgerWindow methodsFor: 'updating' stamp: 'dhn 2/18/2016 15:21'!
 update: aSymbol
