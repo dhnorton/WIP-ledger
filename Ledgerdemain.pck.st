@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2696] on 3 March 2016 at 4:07:11.554854 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 3 March 2016 at 8:47:14.428189 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 148!
-!requires: 'Records' 1 10 nil!
+!provides: 'Ledgerdemain' 1 149!
 !requires: 'Calendar' 1 23 nil!
+!requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
@@ -1713,7 +1713,7 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 15:57'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 20:45'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from |
@@ -1721,9 +1721,11 @@ goAhead
 	from _ self entryIndex.
 	entryIndex _ from + 1.
 	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
-	{'right ahead from ', (windowEntries at: from) name, ' to ', (windowEntries at: entryIndex) name} print! !
+	(windowEntries at: from) scroller keyboardFocusChange: false.
+	(windowEntries at: entryIndex) scroller keyboardFocusChange: true.
+	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 13:02'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 20:45'!
 goBack
 	"Go to the next EntryField to the left"
 	| from |
@@ -1731,7 +1733,9 @@ goBack
 	from _ entryIndex.
 	entryIndex _ from - 1.
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
-	{'left back from ', (windowEntries at: from) name, ' to ', (windowEntries at: entryIndex) name} print! !
+	(windowEntries at: from) scroller keyboardFocusChange: false.
+	(windowEntries at: entryIndex) scroller keyboardFocusChange: true.
+! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 2/22/2016 12:23'!
 handlesKeyboard
