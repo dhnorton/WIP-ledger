@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 3 March 2016 at 8:47:14.428189 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 10 March 2016 at 10:17:07.026049 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 149!
+!provides: 'Ledgerdemain' 1 151!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -85,7 +85,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable keyboardFocus'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -443,15 +443,46 @@ generateKeyboardEvent: evtBuf
 		hand: self
 		stamp: stamp! !
 
-!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'jmv 2/5/2015 00:31'!
-processKeystroke: aKeyboardEvent localPosition: localEventPosition
-	"System level event handling."
-		"localEventPosition?????"
+!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/9/2016 16:53'!
+key: aKey of: aType with: aModifier
+	"Create events based on selected keys"
+	| mrph |
+	
+	aKey = 9 ifTrue: [	"tabs"
+		aType = #keyUp  ifTrue: [ 
+			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
+			{owner. mrph. aKey. aModifier} print.
+			thisContext printStack: 30.
+			aModifier = 0 ifTrue: [mrph triggerEvent: #toTheRight].
+			aModifier = 8 ifTrue: [mrph triggerEvent: #toTheLeft]]].
+	
+	aKey = 13 ifTrue: [	"enter"
+		aType = #keyUp  ifTrue: [ 
+			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
+			mrph triggerEvent: #modifyAdd]].
+	
+	aKey = 43 ifTrue: [	"plus"
+		aType = #keystroke  ifTrue: [ 
+			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
+			mrph name = #Date ifTrue: [mrph triggerEvent: #laterDate].
+			mrph name = #Check ifTrue: [mrph triggerEvent: #laterCheck]]].
+	
+	aKey = 45 ifTrue: [	"minus"
+		aType = #keystroke  ifTrue: [ 
+			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
+			mrph name = #Date ifTrue: [mrph triggerEvent: #earlierDate].
+			mrph name = #Check ifTrue: [mrph triggerEvent: #earlierCheck]]]! !
 
-	aKeyboardEvent wasHandled ifTrue:[^self].
-	self handlesKeyboard ifFalse: [^ self].
-	aKeyboardEvent wasHandled: true.
-	self keyStroke: aKeyboardEvent! !
+!HandMorph class methodsFor: '*Ledgerdemain' stamp: 'dhn 3/9/2016 16:35'!
+specialKeys
+	"Answer the event keyValue for keys which receive special processing"
+	
+	^ #(
+		  9 		"tab (right unshifted, left shifted)"
+		13 		"enter"
+		43 		"+ (plus)"
+		45 		"- (minus)"
+	)! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
@@ -1255,6 +1286,14 @@ position: anObject
 
 	position _ anObject! !
 
+!EntryField methodsFor: 'accessing' stamp: 'dhn 3/10/2016 22:12'!
+redrawNeededX
+	"Notify the view as to our identity"
+	| win |
+	
+	super redrawNeeded.
+	(win _ self owningWindow) ifNotNil: [win entryIndex: position]! !
+
 !EntryField methodsFor: 'accessing' stamp: 'dhn 1/29/2016 21:01'!
 textModel
 	"Answer the value of textModel"
@@ -1713,7 +1752,7 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 20:45'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:09'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from |
@@ -1721,11 +1760,11 @@ goAhead
 	from _ self entryIndex.
 	entryIndex _ from + 1.
 	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
-	(windowEntries at: from) scroller keyboardFocusChange: false.
-	(windowEntries at: entryIndex) scroller keyboardFocusChange: true.
+	self releaseKeyboardFocus: (windowEntries at: from) scroller.
+	self newKeyboardFocus: (windowEntries at: entryIndex) scroller
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/3/2016 20:45'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:14'!
 goBack
 	"Go to the next EntryField to the left"
 	| from |
@@ -1733,15 +1772,14 @@ goBack
 	from _ entryIndex.
 	entryIndex _ from - 1.
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
-	(windowEntries at: from) scroller keyboardFocusChange: false.
-	(windowEntries at: entryIndex) scroller keyboardFocusChange: true.
+	self releaseKeyboardFocus: (windowEntries at: from) scroller.
+	self newKeyboardFocus: (windowEntries at: entryIndex) scroller
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 2/22/2016 12:23'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/9/2016 21:01'!
 handlesKeyboard
-	"Yes, this morph handles keyboard events"
-	
-	^ true! !
+
+	^self visible! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:13'!
 initialize
@@ -1789,9 +1827,30 @@ of account ledgers'.
 	aMenu popUpInWorld: self world.
 ! !
 
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:01'!
+newKeyboardFocus: aMorphOrNil
+	"Make the given morph the new keyboard focus, canceling the previous keyboard focus if any. If the argument is nil, the current keyboard focus is cancelled."
+	| oldFocus |
+	oldFocus _ keyboardFocus.
+	keyboardFocus _ aMorphOrNil.
+	oldFocus ifNotNil: [oldFocus == aMorphOrNil ifFalse: [oldFocus keyboardFocusChange: false]].
+	aMorphOrNil ifNotNil: [aMorphOrNil keyboardFocusChange: true].
+! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:07'!
+releaseKeyboardFocus
+	"Release the current keyboard focus unconditionally"
+	self newKeyboardFocus: nil.
+! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:06'!
+releaseKeyboardFocus: aMorph
+	"If the given morph had the keyboard focus before, release it"
+	keyboardFocus == aMorph ifTrue:[self releaseKeyboardFocus].! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/3/2016 15:53'!
 sayWhen
@@ -2043,7 +2102,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 15:59'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/3/2016 20:57'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2302,7 +2361,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 2/18/2016 15:59'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/3/2016 20:57'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
