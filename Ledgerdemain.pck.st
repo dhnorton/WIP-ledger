@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 10 March 2016 at 10:17:07.026049 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 11 March 2016 at 6:41:09.075867 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 151!
+!provides: 'Ledgerdemain' 1 152!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -381,7 +381,7 @@ centsToDollars
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/3/2016 15:52'!
+!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/11/2016 18:11'!
 generateKeyboardEvent: evtBuf 
 	"Generate the appropriate mouse event for the given raw event buffer"
 
@@ -429,11 +429,12 @@ generateKeyboardEvent: evtBuf
 				modifiers _ modifiers bitOr: 8 ]
 			]].
 	buttons _ modifiers bitShift: 3.
-	(keyValue = 9) ifTrue: [  "get control of tab keys"
-		type = #keyUp  ifTrue: [ | lw |
-			lw _ owner findDeepSubmorphThat: [:m | m class = LedgerWindow] ifAbsent: [nil].
+	(keyValue = 9) ifTrue: [ | lw |  "get control of tab keys"
+		type = #keyUp  ifTrue: [
+			lw _ owner findDeepSubmorphThat: [:m | m class = LedgerWindow] ifAbsent: [nil]].
+		lw ifNotNil: [
 			buttons = 0 ifTrue: [lw triggerEvent: #toTheRight].
-			buttons = 8 ifTrue: [lw triggerEvent: #toTheLeft]].	
+			buttons = 8 ifTrue: [lw triggerEvent: #toTheLeft]].
 		^ nil]. 
 	^KeyboardEvent new 
 		setType: type
@@ -1463,7 +1464,7 @@ buildCreditEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:50'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/11/2016 18:08'!
 buildDateEntry: aNumber
 	"Answer the label and entry field for Date"
 	| m fld |
@@ -1480,7 +1481,8 @@ buildDateEntry: aNumber
 				textModel: self;
 				setBalloonText: 'When transaction occurred';
 				layoutSpec: (LayoutSpec useAll)).
-	fld position: aNumber.
+	fld position: aNumber;
+		hideScrollBarsIndefinitely.
 	windowEntries add: fld.
 	
 	^ m
@@ -1582,7 +1584,7 @@ buildMemoEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/3/2016 14:39'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/11/2016 17:57'!
 buildMorphicWindow
 	"Lay out a window for Ledger d'Main"
 
@@ -1591,6 +1593,7 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll).
 	
+	self newKeyboardFocus: (windowEntries at: self entryIndex) scroller.
 	self sayWhen
 ! !
 
@@ -1752,7 +1755,7 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:09'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 18:38'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from |
@@ -1761,10 +1764,12 @@ goAhead
 	entryIndex _ from + 1.
 	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
 	self releaseKeyboardFocus: (windowEntries at: from) scroller.
-	self newKeyboardFocus: (windowEntries at: entryIndex) scroller
+	(windowEntries at: from) scroller releaseCachedState.
+	self newKeyboardFocus: (windowEntries at: entryIndex) scroller.
+	(windowEntries at: entryIndex) scroller selectAll.
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:14'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 18:38'!
 goBack
 	"Go to the next EntryField to the left"
 	| from |
@@ -1773,7 +1778,9 @@ goBack
 	entryIndex _ from - 1.
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
 	self releaseKeyboardFocus: (windowEntries at: from) scroller.
-	self newKeyboardFocus: (windowEntries at: entryIndex) scroller
+	(windowEntries at: from) scroller releaseCachedState.
+	self newKeyboardFocus: (windowEntries at: entryIndex) scroller.
+	(windowEntries at: entryIndex) scroller selectAll.
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/9/2016 21:01'!
@@ -2102,7 +2109,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/3/2016 20:57'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 18:16'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2361,7 +2368,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/3/2016 20:57'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 18:16'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
