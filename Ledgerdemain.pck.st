@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 11 March 2016 at 9:06:14.068653 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 11 March 2016 at 9:54:41.362653 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 153!
+!provides: 'Ledgerdemain' 1 154!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -31,16 +31,6 @@ AutoCompleter subclass: #LedgerCompleter
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerCompleter class' category: #Ledgerdemain!
 LedgerCompleter class
-	instanceVariableNames: ''!
-
-!classDefinition: #Ledger category: #Ledgerdemain!
-OrderedCollection subclass: #Ledger
-	instanceVariableNames: 'contents'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Ledger class' category: #Ledgerdemain!
-Ledger class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerCalculator category: #Ledgerdemain!
@@ -205,9 +195,6 @@ reported amount _ dollars (examples: 29.95 5.00)!
 
 !LedgerCompleter commentStamp: 'dhn 11/9/2015 15:31' prior: 0!
 The AutoCompleter for LedgerDeMain.!
-
-!Ledger commentStamp: 'dhn 6/24/2015 21:11' prior: 0!
-Ledger is an ordered collection of transactions.!
 
 !LedgerCalculator commentStamp: 'dhn 2/13/2016 21:13' prior: 0!
 A rudimentary calculator for arithmetic expressions containing '+-*/' and decimal numbers.
@@ -1222,11 +1209,6 @@ openCompletionMenu
 				completer: self
 				position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld ]! !
 
-!Ledger methodsFor: 'initialization' stamp: 'dhn 6/24/2015 21:05'!
-initialize
-
-	contents _ OrderedCollection new! !
-
 !LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 2/14/2016 14:31'!
 initialize
 	"Answer an evaluated expression in ledger format"
@@ -1286,14 +1268,6 @@ position: anObject
 	"Set the value of position"
 
 	position _ anObject! !
-
-!EntryField methodsFor: 'accessing' stamp: 'dhn 3/10/2016 22:12'!
-redrawNeededX
-	"Notify the view as to our identity"
-	| win |
-	
-	super redrawNeeded.
-	(win _ self owningWindow) ifNotNil: [win entryIndex: position]! !
 
 !EntryField methodsFor: 'accessing' stamp: 'dhn 1/29/2016 21:01'!
 textModel
@@ -1584,7 +1558,7 @@ buildMemoEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/11/2016 17:57'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/11/2016 21:30'!
 buildMorphicWindow
 	"Lay out a window for Ledger d'Main"
 
@@ -1594,6 +1568,7 @@ buildMorphicWindow
 			layoutSpec: (LayoutSpec useAll).
 	
 	self newKeyboardFocus: (windowEntries at: self entryIndex) scroller.
+	(windowEntries at: self entryIndex) scroller selectAll.
 	self sayWhen
 ! !
 
@@ -1755,7 +1730,7 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 18:38'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 21:49'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from |
@@ -1764,12 +1739,13 @@ goAhead
 	entryIndex _ from + 1.
 	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
 	self releaseKeyboardFocus: (windowEntries at: from) scroller.
+	windowEntries first scroller releaseCachedState.
 	(windowEntries at: from) scroller releaseCachedState.
 	self newKeyboardFocus: (windowEntries at: entryIndex) scroller.
 	(windowEntries at: entryIndex) scroller selectAll.
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 18:38'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 21:49'!
 goBack
 	"Go to the next EntryField to the left"
 	| from |
@@ -1778,6 +1754,7 @@ goBack
 	entryIndex _ from - 1.
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
 	self releaseKeyboardFocus: (windowEntries at: from) scroller.
+	windowEntries first scroller releaseCachedState.
 	(windowEntries at: from) scroller releaseCachedState.
 	self newKeyboardFocus: (windowEntries at: entryIndex) scroller.
 	(windowEntries at: entryIndex) scroller selectAll.
@@ -1867,14 +1844,19 @@ sayWhen
 	self when: #toTheLeft send: #goBack to: self.
 ! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 2/18/2016 15:21'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/11/2016 21:51'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
 	super update: aSymbol.
 	
 	aSymbol == #fillEntries
-		ifTrue: [windowEntries do: [:ea | ea model refetch]].
+		ifTrue: [
+			windowEntries do: [:ea | ea model refetch].
+			entryIndex _ 1.
+			self newKeyboardFocus: windowEntries first scroller.
+			windowEntries first scroller selectAll.
+			].
 		
 	aSymbol == #xactList
 		ifTrue: [
@@ -2109,7 +2091,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 18:16'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 21:32'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2368,7 +2350,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 18:16'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 21:32'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
