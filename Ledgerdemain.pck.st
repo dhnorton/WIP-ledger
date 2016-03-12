@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 11 March 2016 at 6:41:09.075867 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 11 March 2016 at 9:06:14.068653 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 152!
+!provides: 'Ledgerdemain' 1 153!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -755,21 +755,21 @@ entryTable: aSymbol
 
 	entryTable _ self perform: aSymbol! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 11/10/2015 15:40'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:01'!
 getCategory
 	"Answer the category"
 	
 	transactionListIndex = 0
 		ifTrue: [^ self actualContents asString]
-		ifFalse: [^ selectedTransaction category]! !
+		ifFalse: [^ selectedTransaction category withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:18'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:02'!
 getCheck
 	"Answer the check number"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ selectedTransaction check]! !
+		ifFalse: [^ selectedTransaction check withoutTrailingBlanks]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:45'!
 getCredit
@@ -796,13 +796,13 @@ getDataFor: anEntry
 	
 	! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/20/2015 21:13'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:02'!
 getDate
 	"Answer the date"
 	
 	transactionListIndex = 0
 		ifTrue: [^ Date today mmddyyyy]
-		ifFalse: [^ selectedTransaction date]! !
+		ifFalse: [^ selectedTransaction date withoutTrailingBlanks]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:57'!
 getDebit
@@ -818,21 +818,21 @@ getDebit
 		
 	^ y! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:28'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:00'!
 getMemo
 	"Answer the memo"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ selectedTransaction memo]! !
+		ifFalse: [^ selectedTransaction memo withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:26'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 20:58'!
 getPayee
 	"Answer the payee"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ selectedTransaction payee]! !
+		ifFalse: [^ selectedTransaction payee withoutTrailingBlanks]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:30'!
 getR
