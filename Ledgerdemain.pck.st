@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 11 March 2016 at 9:54:41.362653 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 13 March 2016 at 3:51:05.874507 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 154!
+!provides: 'Ledgerdemain' 1 155!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -143,16 +143,6 @@ Suggestion subclass: #Payee
 Payee class
 	instanceVariableNames: ''!
 
-!classDefinition: #TransactionDate category: #Ledgerdemain!
-Suggestion subclass: #TransactionDate
-	instanceVariableNames: 'last'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'TransactionDate class' category: #Ledgerdemain!
-TransactionDate class
-	instanceVariableNames: ''!
-
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
 	instanceVariableNames: 'account date type payee amount category memo reconciled transfer check balance'
@@ -256,12 +246,6 @@ Payee responsibilities:
   hold last transaction, by category
 !
 
-!TransactionDate commentStamp: 'dhn 6/12/2015 19:02' prior: 0!
-TransactionDate responsibilities:
-
-  maintain last used (current if nil)
-  adjust!
-
 !Transaction commentStamp: 'dhn 6/24/2015 10:51' prior: 0!
 Transaction responsibilities:
 
@@ -272,20 +256,21 @@ Transaction responsibilities:
   record actions in audit trail
 !
 
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 11/29/2015 16:17'!
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 3/13/2016 12:54'!
 asLdmDate
-	"Convert receiver in the form of dd/mm/yyyy to a Ledgerdemain date number"
-	"Covers dates from 1/1/1901 to 2/27/2935093 (quite a long time)"
-	| w x y dt |
+	"Convert receiver in the form of mm/dd/yyyy to a Ledgerdemain date number"
+	"Covers dates from 1/1/1901 to 2/27/2935093 (quite a long time!!)"
+	| w x |
 	w _ self select: [:a | a isDigit or: a = $/].
 	x _ w findTokens: '/'.
 	x size ~= 3 
 		ifTrue: [nil error: 'not a date'].
-	y _ OrderedCollection new.
-	x do: [:ea | y add: ea asNumber].
 
-	dt _ Date newDay: (y at: 2) month: (y at: 1) year: (y at: 3).
-	^ dt julianDayNumber - Time squeakEpoch! !
+	^ (Date 
+		newDay: x second asNumber 
+		month: x first asNumber 
+		year: x third asNumber)
+			 julianDayNumber - Time squeakEpoch! !
 
 !String methodsFor: '*Ledgerdemain' stamp: 'dhn 2/14/2016 17:36'!
 dollarsToCents
@@ -586,7 +571,7 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 11/11/2015 19:59'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/13/2016 14:38'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
@@ -600,7 +585,7 @@ accountFromFile
 				ifTrue: [
 					rec _ Transaction new account: acct.
 					rec type: (rec acquire: #type from: line).
-					rec date: (rec acquire: #date from: line).
+					rec date: (rec acquire: #date from: line) asLdmDate asString.
 					rec check: (rec acquire: #check from: line).
 					rec payee: (rec acquire: #payee from: line).
 					rec memo: (rec acquire: #memo from: line).
@@ -783,13 +768,13 @@ getDataFor: anEntry
 	
 	! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:02'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/13/2016 15:49'!
 getDate
 	"Answer the date"
 	
 	transactionListIndex = 0
 		ifTrue: [^ Date today mmddyyyy]
-		ifFalse: [^ selectedTransaction date withoutTrailingBlanks]! !
+		ifFalse: [^ (Date fromDays: selectedTransaction date asNumber) mmddyyyy]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:57'!
 getDebit
@@ -922,7 +907,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/23/2015 20:17'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/13/2016 15:01'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -938,10 +923,10 @@ newAccount
 					ifTrue: [
 						balDate _ FillInTheBlankMorph 
 							request: 'Date of opening balance'
-							initialAnswer: Date today mmddyyyy]
+							initialAnswer: Date today mmddyyyy asLdmDate asString]
 					ifFalse: [
 						bal _ '0'.
-						balDate _ Date today mmddyyyy].
+						balDate _ Date today mmddyyyy asLdmDate asString].
 				amt _ bal dollarsToCents.
 				acct
 					openDate: balDate;
@@ -950,7 +935,7 @@ newAccount
 					balRcon: amt.
 				rec _ Transaction new account: acct.
 				rec
-					date: (rec mmddyyyy: acct openDate);
+					date: acct openDate;
 					payee: '**Opening Balance';
 					reconciled: 'R';
 					type: '';
@@ -2091,7 +2076,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 21:32'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 15:47'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2232,12 +2217,12 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/9/2015 17:30'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 3/13/2016 15:32'!
 formatted
 	"Answer the receiver as a formatted string"
 	| str |
 	str _ LedgerLine new.
-	str data at: #date put: self date withoutTrailingBlanks.
+	str data at: #date put: (Date fromDays: self date asNumber) mmddyyyy.
 	str data at: #check put: self check withoutTrailingBlanks.
 	str data at: #payee put: self payee withoutTrailingBlanks.
 	str data at: #category put: self category withoutTrailingBlanks.
@@ -2282,22 +2267,6 @@ memo: anObject
 	"Set the value of memo"
 
 	memo _ anObject! !
-
-!Transaction methodsFor: 'displaying' stamp: 'dhn 8/8/2015 15:14'!
-mmddyyyy: anObject
-	"Answer anObject as a date in the form mm/dd/yyyy because Date does not do it right"
-	| str dd mm yyyy ios |
-	str _ anObject asDate yyyymmdd.		"ISO format"
-	dd _  str copyFrom: 9 to: 10.
-	mm _ str copyFrom: 6 to: 7.
-	yyyy _ str copyFrom: 1 to: 4.
-	ios _ String new writeStream
-		nextPutAll: mm;
-		nextPut: $/;
-		nextPutAll: dd;
-		nextPut: $/;
-		nextPutAll: yyyy.
-	^ ios contents! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:26'!
 payee
@@ -2350,7 +2319,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/11/2016 21:32'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 15:47'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
