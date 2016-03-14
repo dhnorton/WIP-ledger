@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 12:19:44.331319 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 5:37:23.742319 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 158!
+!provides: 'Ledgerdemain' 1 159!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -366,7 +366,7 @@ centsToDollars
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/14/2016 10:13'!
+!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/14/2016 17:35'!
 generateKeyboardEvent: evtBuf 
 	"Generate the appropriate mouse event for the given raw event buffer"
 
@@ -418,8 +418,9 @@ generateKeyboardEvent: evtBuf
 		ifTrue: [ | win |
 			win _ owner findDeepSubmorphThat: [:m | m class = LedgerWindow] ifAbsent: [nil].
 			win ifNotNil: [
-				win triggerEvent: #specialKey withArguments: {keyValue. type. buttons}].
-			^ nil]. 
+				win isTopWindow ifTrue: [
+					win triggerEvent: #specialKey withArguments: {keyValue. type. buttons}.
+					^ nil]]]. 
 	^KeyboardEvent new 
 		setType: type
 		buttons: buttons
