@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 5:37:23.742319 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 6:38:29.739319 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 159!
+!provides: 'Ledgerdemain' 1 160!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -85,7 +85,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable keyboardFocus'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable keyboardFocus typeIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1610,6 +1610,35 @@ changeTransaction: anEntryField
 	
 	{'new or updated transaction'} print! !
 
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:28'!
+checkMinus: anEntry
+	"Subtract 1 from check number"
+	| w x |
+	
+	(w _ anEntry model actualContents)
+		ifNotEmpty: [
+			w first isDigit
+				ifTrue: [
+					x _ anEntry model actualContents asNumber.
+					(x _ x - 1) > 0 ifTrue: [anEntry model actualContents: x asString]]]
+! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:30'!
+checkPlus: anEntry
+	"Add 1 to check number or answer transaction types"
+	| w x |
+	
+	(w _ anEntry model actualContents)
+		ifNotEmpty: [
+			w first isDigit
+				ifTrue: [
+					x _ anEntry model actualContents asNumber.
+					x _ x + 1.
+					anEntry model actualContents: x asString]
+				ifFalse: [
+					typeIndex _ typeIndex + 1.
+					anEntry model actualContents: (self class transactionTypes atWrap: typeIndex)]]! !
+
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 12:16'!
 dateEarlier: anEntry
 	"Subtract 1 from Ledgerdemain date"
@@ -1756,11 +1785,12 @@ handlesKeyboard
 
 	^self visible! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:13'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/14/2016 18:09'!
 initialize
 
 	super initialize.
-	windowEntries _ OrderedCollection new! !
+	windowEntries _ OrderedCollection new.
+	typeIndex _ 0! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:49'!
 menuLedger
@@ -1827,17 +1857,43 @@ releaseKeyboardFocus: aMorph
 	"If the given morph had the keyboard focus before, release it"
 	keyboardFocus == aMorph ifTrue:[self releaseKeyboardFocus].! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/14/2016 11:10'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/14/2016 17:47'!
 sayWhen
 	"Establish the receiving half of the Observer Pattern"
 	
 	self when: #toTheRight send: #goAhead to: self.
 	self when: #toTheLeft send: #goBack to: self.
-	self when: #specialKey send: #'someKey:at:with:' to: self withArguments: #(#a #b #c).
+	self when: #specialKey send: #'someKey:of:with:' to: self withArguments: #(#a #b #c).
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 11:54'!
 someKey: aKey at: aType with: aModifier
+	"Process special key strokes"
+	| entr |
+	
+	entr _ windowEntries at: entryIndex.
+	
+	aKey = 9 ifTrue: [	"tabs"
+		aType = #keyUp  ifTrue: [ 
+			aModifier = 0 ifTrue: [self goAhead].
+			aModifier = 8 ifTrue: [self goBack]]].
+	
+	aKey = 13 ifTrue: [	"enter"
+		aType = #keyUp  ifTrue: [self changeTransaction: entr]].
+	
+	aKey = 43 ifTrue: [	"plus"
+		aType = #keystroke  ifTrue: [ 
+			entr name = #Date ifTrue: [self dateLater: entr].
+			entr name = #Check ifTrue: [self checkPlus: entr]]].
+	
+	aKey = 45 ifTrue: [	"minus"
+		aType = #keystroke  ifTrue: [ 
+			entr name = #Date ifTrue: [self dateEarlier: entr].
+			entr name = #Check ifTrue: [self checkMinus: entr]]].
+! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 17:47'!
+someKey: aKey of: aType with: aModifier
 	"Process special key strokes"
 	| entr |
 	
@@ -1962,6 +2018,17 @@ open
 	(LedgerWindow open: (LedgerDeMain new) label: 'Ledger d''Main')
 		morphExtent: 1250@500;
 		setWindowColor:  Theme current workspace! !
+
+!LedgerWindow class methodsFor: 'key selection' stamp: 'dhn 3/14/2016 18:15'!
+transactionTypes
+	"Answer an array of transaction types"
+	
+	^ #(
+		'DEP' 		"deposit"
+		'EFT' 		"electronic funds transfer"
+		'TXFR' 		"transfer between accounts"
+		'TOUT' 	"remove from account"
+	)! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
 named: aName
