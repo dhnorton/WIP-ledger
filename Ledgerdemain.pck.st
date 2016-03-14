@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 6:38:29.739319 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 6:54:02.724319 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 160!
+!provides: 'Ledgerdemain' 1 161!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1610,7 +1610,7 @@ changeTransaction: anEntryField
 	
 	{'new or updated transaction'} print! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:28'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:47'!
 checkMinus: anEntry
 	"Subtract 1 from check number"
 	| w x |
@@ -1620,10 +1620,12 @@ checkMinus: anEntry
 			w first isDigit
 				ifTrue: [
 					x _ anEntry model actualContents asNumber.
-					(x _ x - 1) > 0 ifTrue: [anEntry model actualContents: x asString]]]
+					(x _ x - 1) > 0 ifTrue: [anEntry model actualContents: x asString]]].
+	anEntry scroller selectAll.
+
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:30'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:47'!
 checkPlus: anEntry
 	"Add 1 to check number or answer transaction types"
 	| w x |
@@ -1637,25 +1639,31 @@ checkPlus: anEntry
 					anEntry model actualContents: x asString]
 				ifFalse: [
 					typeIndex _ typeIndex + 1.
-					anEntry model actualContents: (self class transactionTypes atWrap: typeIndex)]]! !
+					anEntry model actualContents: (self class transactionTypes atWrap: typeIndex)]].
+	anEntry scroller selectAll.
+! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 12:16'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:45'!
 dateEarlier: anEntry
 	"Subtract 1 from Ledgerdemain date"
 	| x |
 	
 	x _ anEntry model actualContents asString asLdmDate.
 	x _ x - 1.
-	anEntry model actualContents: (Date fromDays: x) mmddyyyy! !
+	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
+	anEntry scroller selectAll.
+! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 12:13'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:45'!
 dateLater: anEntry
 	"Add 1 to Ledgerdemain date"
 	| x |
 	
 	x _ anEntry model actualContents asString asLdmDate.
 	x _ x + 1.
-	anEntry model actualContents: (Date fromDays: x) mmddyyyy! !
+	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
+	anEntry scroller selectAll.
+! !
 
 !LedgerWindow methodsFor: 'open/close' stamp: 'dhn 10/16/2015 20:39'!
 delete
@@ -1864,32 +1872,6 @@ sayWhen
 	self when: #toTheRight send: #goAhead to: self.
 	self when: #toTheLeft send: #goBack to: self.
 	self when: #specialKey send: #'someKey:of:with:' to: self withArguments: #(#a #b #c).
-! !
-
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 11:54'!
-someKey: aKey at: aType with: aModifier
-	"Process special key strokes"
-	| entr |
-	
-	entr _ windowEntries at: entryIndex.
-	
-	aKey = 9 ifTrue: [	"tabs"
-		aType = #keyUp  ifTrue: [ 
-			aModifier = 0 ifTrue: [self goAhead].
-			aModifier = 8 ifTrue: [self goBack]]].
-	
-	aKey = 13 ifTrue: [	"enter"
-		aType = #keyUp  ifTrue: [self changeTransaction: entr]].
-	
-	aKey = 43 ifTrue: [	"plus"
-		aType = #keystroke  ifTrue: [ 
-			entr name = #Date ifTrue: [self dateLater: entr].
-			entr name = #Check ifTrue: [self checkPlus: entr]]].
-	
-	aKey = 45 ifTrue: [	"minus"
-		aType = #keystroke  ifTrue: [ 
-			entr name = #Date ifTrue: [self dateEarlier: entr].
-			entr name = #Check ifTrue: [self checkMinus: entr]]].
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 17:47'!
@@ -2176,7 +2158,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 17:05'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/14/2016 18:52'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2419,7 +2401,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 17:05'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/14/2016 18:52'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
