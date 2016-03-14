@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 13 March 2016 at 3:51:05.874507 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 12:19:44.331319 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 155!
+!provides: 'Ledgerdemain' 1 158!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -31,6 +31,16 @@ AutoCompleter subclass: #LedgerCompleter
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerCompleter class' category: #Ledgerdemain!
 LedgerCompleter class
+	instanceVariableNames: ''!
+
+!classDefinition: #Ledger category: #Ledgerdemain!
+OrderedCollection subclass: #Ledger
+	instanceVariableNames: 'contents'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Ledger class' category: #Ledgerdemain!
+Ledger class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerCalculator category: #Ledgerdemain!
@@ -185,6 +195,9 @@ reported amount _ dollars (examples: 29.95 5.00)!
 
 !LedgerCompleter commentStamp: 'dhn 11/9/2015 15:31' prior: 0!
 The AutoCompleter for LedgerDeMain.!
+
+!Ledger commentStamp: 'dhn 3/13/2016 21:51' prior: 0!
+Ledger is an ordered collection of transactions.!
 
 !LedgerCalculator commentStamp: 'dhn 2/13/2016 21:13' prior: 0!
 A rudimentary calculator for arithmetic expressions containing '+-*/' and decimal numbers.
@@ -353,7 +366,7 @@ centsToDollars
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/11/2016 18:11'!
+!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/14/2016 10:13'!
 generateKeyboardEvent: evtBuf 
 	"Generate the appropriate mouse event for the given raw event buffer"
 
@@ -401,13 +414,12 @@ generateKeyboardEvent: evtBuf
 				modifiers _ modifiers bitOr: 8 ]
 			]].
 	buttons _ modifiers bitShift: 3.
-	(keyValue = 9) ifTrue: [ | lw |  "get control of tab keys"
-		type = #keyUp  ifTrue: [
-			lw _ owner findDeepSubmorphThat: [:m | m class = LedgerWindow] ifAbsent: [nil]].
-		lw ifNotNil: [
-			buttons = 0 ifTrue: [lw triggerEvent: #toTheRight].
-			buttons = 8 ifTrue: [lw triggerEvent: #toTheLeft]].
-		^ nil]. 
+	(self class specialKeys includes: keyValue)
+		ifTrue: [ | win |
+			win _ owner findDeepSubmorphThat: [:m | m class = LedgerWindow] ifAbsent: [nil].
+			win ifNotNil: [
+				win triggerEvent: #specialKey withArguments: {keyValue. type. buttons}].
+			^ nil]. 
 	^KeyboardEvent new 
 		setType: type
 		buttons: buttons
@@ -415,36 +427,6 @@ generateKeyboardEvent: evtBuf
 		keyValue: keyValue
 		hand: self
 		stamp: stamp! !
-
-!HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/9/2016 16:53'!
-key: aKey of: aType with: aModifier
-	"Create events based on selected keys"
-	| mrph |
-	
-	aKey = 9 ifTrue: [	"tabs"
-		aType = #keyUp  ifTrue: [ 
-			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
-			{owner. mrph. aKey. aModifier} print.
-			thisContext printStack: 30.
-			aModifier = 0 ifTrue: [mrph triggerEvent: #toTheRight].
-			aModifier = 8 ifTrue: [mrph triggerEvent: #toTheLeft]]].
-	
-	aKey = 13 ifTrue: [	"enter"
-		aType = #keyUp  ifTrue: [ 
-			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
-			mrph triggerEvent: #modifyAdd]].
-	
-	aKey = 43 ifTrue: [	"plus"
-		aType = #keystroke  ifTrue: [ 
-			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
-			mrph name = #Date ifTrue: [mrph triggerEvent: #laterDate].
-			mrph name = #Check ifTrue: [mrph triggerEvent: #laterCheck]]].
-	
-	aKey = 45 ifTrue: [	"minus"
-		aType = #keystroke  ifTrue: [ 
-			mrph _ owner findDeepSubmorphThat: [:m | m class = EntryField] ifAbsent: [nil].
-			mrph name = #Date ifTrue: [mrph triggerEvent: #earlierDate].
-			mrph name = #Check ifTrue: [mrph triggerEvent: #earlierCheck]]]! !
 
 !HandMorph class methodsFor: '*Ledgerdemain' stamp: 'dhn 3/9/2016 16:35'!
 specialKeys
@@ -907,7 +889,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/13/2016 15:01'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/13/2016 17:03'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -923,13 +905,13 @@ newAccount
 					ifTrue: [
 						balDate _ FillInTheBlankMorph 
 							request: 'Date of opening balance'
-							initialAnswer: Date today mmddyyyy asLdmDate asString]
+							initialAnswer: Date today mmddyyyy]
 					ifFalse: [
 						bal _ '0'.
-						balDate _ Date today mmddyyyy asLdmDate asString].
+						balDate _ Date today mmddyyyy].
 				amt _ bal dollarsToCents.
 				acct
-					openDate: balDate;
+					openDate: balDate asLdmDate asString;
 					balOpen: amt;
 					balCur: amt;
 					balRcon: amt.
@@ -1194,6 +1176,11 @@ openCompletionMenu
 				completer: self
 				position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld ]! !
 
+!Ledger methodsFor: 'initialization' stamp: 'dhn 3/13/2016 21:54'!
+initialize
+
+	contents _ OrderedCollection new! !
+
 !LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 2/14/2016 14:31'!
 initialize
 	"Answer an evaluated expression in ledger format"
@@ -1423,7 +1410,7 @@ buildCreditEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/11/2016 18:08'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/13/2016 22:14'!
 buildDateEntry: aNumber
 	"Answer the label and entry field for Date"
 	| m fld |
@@ -1621,6 +1608,24 @@ changeTransaction: anEntryField
 	"Form a transaction from all the EntryFields"
 	
 	{'new or updated transaction'} print! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 12:16'!
+dateEarlier: anEntry
+	"Subtract 1 from Ledgerdemain date"
+	| x |
+	
+	x _ anEntry model actualContents asString asLdmDate.
+	x _ x - 1.
+	anEntry model actualContents: (Date fromDays: x) mmddyyyy! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 12:13'!
+dateLater: anEntry
+	"Add 1 to Ledgerdemain date"
+	| x |
+	
+	x _ anEntry model actualContents asString asLdmDate.
+	x _ x + 1.
+	anEntry model actualContents: (Date fromDays: x) mmddyyyy! !
 
 !LedgerWindow methodsFor: 'open/close' stamp: 'dhn 10/16/2015 20:39'!
 delete
@@ -1821,12 +1826,39 @@ releaseKeyboardFocus: aMorph
 	"If the given morph had the keyboard focus before, release it"
 	keyboardFocus == aMorph ifTrue:[self releaseKeyboardFocus].! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/3/2016 15:53'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/14/2016 11:10'!
 sayWhen
 	"Establish the receiving half of the Observer Pattern"
 	
 	self when: #toTheRight send: #goAhead to: self.
 	self when: #toTheLeft send: #goBack to: self.
+	self when: #specialKey send: #'someKey:at:with:' to: self withArguments: #(#a #b #c).
+! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 11:54'!
+someKey: aKey at: aType with: aModifier
+	"Process special key strokes"
+	| entr |
+	
+	entr _ windowEntries at: entryIndex.
+	
+	aKey = 9 ifTrue: [	"tabs"
+		aType = #keyUp  ifTrue: [ 
+			aModifier = 0 ifTrue: [self goAhead].
+			aModifier = 8 ifTrue: [self goBack]]].
+	
+	aKey = 13 ifTrue: [	"enter"
+		aType = #keyUp  ifTrue: [self changeTransaction: entr]].
+	
+	aKey = 43 ifTrue: [	"plus"
+		aType = #keystroke  ifTrue: [ 
+			entr name = #Date ifTrue: [self dateLater: entr].
+			entr name = #Check ifTrue: [self checkPlus: entr]]].
+	
+	aKey = 45 ifTrue: [	"minus"
+		aType = #keystroke  ifTrue: [ 
+			entr name = #Date ifTrue: [self dateEarlier: entr].
+			entr name = #Check ifTrue: [self checkMinus: entr]]].
 ! !
 
 !LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/11/2016 21:51'!
@@ -2076,7 +2108,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 15:47'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 17:05'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2319,7 +2351,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 15:47'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/13/2016 17:05'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
