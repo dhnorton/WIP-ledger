@@ -1,11 +1,11 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 14 March 2016 at 6:54:02.724319 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 15 March 2016 at 9:42:48.126819 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 161!
+!provides: 'Ledgerdemain' 1 162!
 !requires: 'Calendar' 1 23 nil!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
-	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur'
+	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur lastCheck'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -31,16 +31,6 @@ AutoCompleter subclass: #LedgerCompleter
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerCompleter class' category: #Ledgerdemain!
 LedgerCompleter class
-	instanceVariableNames: ''!
-
-!classDefinition: #Ledger category: #Ledgerdemain!
-OrderedCollection subclass: #Ledger
-	instanceVariableNames: 'contents'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Ledger class' category: #Ledgerdemain!
-Ledger class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerCalculator category: #Ledgerdemain!
@@ -155,7 +145,7 @@ Payee class
 
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
-	instanceVariableNames: 'account date type payee amount category memo reconciled transfer check balance'
+	instanceVariableNames: 'key account date type payee amount category memo reconciled transfer check balance'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -195,9 +185,6 @@ reported amount _ dollars (examples: 29.95 5.00)!
 
 !LedgerCompleter commentStamp: 'dhn 11/9/2015 15:31' prior: 0!
 The AutoCompleter for LedgerDeMain.!
-
-!Ledger commentStamp: 'dhn 3/13/2016 21:51' prior: 0!
-Ledger is an ordered collection of transactions.!
 
 !LedgerCalculator commentStamp: 'dhn 2/13/2016 21:13' prior: 0!
 A rudimentary calculator for arithmetic expressions containing '+-*/' and decimal numbers.
@@ -317,6 +304,18 @@ withCommas
 		ifTrue: [
 			^ (self copyFrom: 1 to: self size - 3) withCommas, 
 				',', (self copyFrom: self size - 2 to: self size)]! !
+
+!TextEditor methodsFor: '*Ledgerdemain' stamp: 'dhn 3/15/2016 12:59'!
+getMenu
+	
+	| menu |
+	self morph owner name = #Date ifTrue: [ | c |
+		c _ CalendarPage open: CalendarModel new. 
+		c morphPosition: 40.0@220.0.
+		{self morph. self morph owner. self morph owner owner} print.
+		^ nil].
+	menu _ MenuMorph new defaultTarget: self.
+	^self class paneMenu: menu! !
 
 !Integer methodsFor: '*Ledgerdemain' stamp: 'cmm 6/8/2012 15:43'!
 asStringWithCommasSigned: aBoolean
@@ -452,14 +451,6 @@ accountName: anObject
 
 	accountName _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:54'!
-addTransaction: anObject
-	"Add anObject to the ledger and to the ledger list as formatted"
-	| str |
-	self ledger addLast: anObject.
-	str _ anObject formatted.
-	self ledgerLines addLast: str! !
-
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 balCur
 	"Answer the value of balCur"
@@ -496,14 +487,27 @@ balRcon: anObject
 
 	balRcon _ anObject! !
 
-!Account methodsFor: 'initialization' stamp: 'dhn 7/1/2015 22:06'!
+!Account methodsFor: 'initialization' stamp: 'dhn 3/15/2016 20:47'!
 initialize
 
 	balOpen _ 0.
 	balRcon _ 0.
 	balCur _ 0.
+	lastCheck _ 0.
 	ledgerLines _ OrderedCollection new.
-	ledger _ Ledger new! !
+	ledger _ SortedCollection sortBlock: [:a :c | a key < c key]! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 3/15/2016 15:16'!
+lastCheck
+	"Answer the value of lastCheck"
+
+	^ lastCheck! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 3/15/2016 15:16'!
+lastCheck: anObject
+	"Set the value of lastCheck"
+
+	lastCheck _ anObject! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 6/13/2015 20:10'!
 ledger
@@ -529,18 +533,19 @@ ledgerLines: anObject
 
 	ledgerLines _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 8/8/2015 19:32'!
+!Account methodsFor: 'accessing' stamp: 'dhn 3/15/2016 21:40'!
 loadTransaction: anObject
 	"Update balances and add anObject to the ledger"
-	| amt tr |
+	| amt ck |
 	
 	amt _ anObject amount dollarsToCents.
-	self balCur: self balCur + amt.
-	anObject reconciled = 'R' 
-		ifTrue: [self balRcon: self balRcon + amt].
-	tr _ anObject copy.
-	tr balance: self balCur ledgerFormatted.
-	self addTransaction: tr! !
+	
+	anObject reconciled = 'R' ifTrue: [self balRcon: self balRcon + amt].
+	
+	((ck _ anObject check) allSatisfy: [:ea | ea isDigit])
+		ifTrue: [lastCheck _ lastCheck max: ck asNumber].
+		
+	self ledger add: anObject copy! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:49'!
 openDate
@@ -554,7 +559,7 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/13/2016 14:38'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/15/2016 21:36'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
@@ -575,11 +580,18 @@ accountFromFile
 					rec category: (rec acquire: #category from: line).
 					rec reconciled: (rec acquire: #reconciled from: line).
 					rec amount: (rec acquire: #amount from: line).
+					rec key: rec date, rec check, rec payee.
 					self categories: rec category withoutTrailingBlanks.
 					self payees: rec payee withoutTrailingBlanks.
 					self memos: rec memo withoutTrailingBlanks.
 					self type: rec type withoutTrailingBlanks.
 					acct loadTransaction: rec]].
+			
+		acct balCur: acct balOpen.
+		acct ledger do: [:ea | 
+			acct balCur: acct balCur + ea amount dollarsToCents.
+			acct ledgerLines addLast: ea formatted].
+		
 		self computeNet.
 		self changed: #acctList.
 		self changed: #xactList.
@@ -890,7 +902,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/13/2016 17:03'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/15/2016 21:00'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -928,7 +940,7 @@ newAccount
 					transfer: '';
 					check: '';
 					balance: acct balOpen ledgerFormatted.
-				acct addTransaction: rec.
+				acct ledger add: rec.
 				self accounts: acct.
 				self changed: #acctList.
 				self changed: #xactList]
@@ -1176,11 +1188,6 @@ openCompletionMenu
 			menuMorph _  LedgerCompleterMorph 
 				completer: self
 				position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld ]! !
-
-!Ledger methodsFor: 'initialization' stamp: 'dhn 3/13/2016 21:54'!
-initialize
-
-	contents _ OrderedCollection new! !
 
 !LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 2/14/2016 14:31'!
 initialize
@@ -2001,7 +2008,7 @@ open
 		morphExtent: 1250@500;
 		setWindowColor:  Theme current workspace! !
 
-!LedgerWindow class methodsFor: 'key selection' stamp: 'dhn 3/14/2016 18:15'!
+!LedgerWindow class methodsFor: 'key selection' stamp: 'dhn 3/14/2016 20:09'!
 transactionTypes
 	"Answer an array of transaction types"
 	
@@ -2009,7 +2016,7 @@ transactionTypes
 		'DEP' 		"deposit"
 		'EFT' 		"electronic funds transfer"
 		'TXFR' 		"transfer between accounts"
-		'TOUT' 	"remove from account"
+		'WD' 		"withdraw from account (i.e. cashier's check)"
 	)! !
 
 !NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
@@ -2088,8 +2095,9 @@ date: anObject
 
 	date _ anObject! !
 
-!LedgerLine methodsFor: 'initialization' stamp: 'dhn 8/10/2015 20:56'!
+!LedgerLine methodsFor: 'initialization' stamp: 'dhn 3/15/2016 21:26'!
 initialize
+	"Define the content of a line in the list of ledger transactions"
 
 	CompileFields from: #(
 		#(#date 			11)		"mm/dd/yyyy"
@@ -2158,7 +2166,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/14/2016 18:52'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/15/2016 21:37'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2337,6 +2345,19 @@ initializeS50
 		#(#amount       13)
 	) for: self class! !
 
+!Transaction methodsFor: 'accessing' stamp: 'dhn 3/15/2016 20:25'!
+key
+	"Answer the value of key"
+
+	key ifNil: [key _ ''].
+	^ key! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 3/15/2016 15:42'!
+key: anObject
+	"Set the value of key"
+
+	key _ anObject! !
+
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:26'!
 memo
 	"Answer the value of memo"
@@ -2401,7 +2422,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/14/2016 18:52'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/15/2016 21:37'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
