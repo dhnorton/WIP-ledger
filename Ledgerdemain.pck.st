@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 17 March 2016 at 10:21:57.732894 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 18 March 2016 at 2:30:38.147956 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 165!
+!provides: 'Ledgerdemain' 1 166!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -81,16 +81,6 @@ SystemWindow subclass: #LedgerWindow
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerWindow class' category: #Ledgerdemain!
 LedgerWindow class
-	instanceVariableNames: ''!
-
-!classDefinition: #LedgerLine category: #Ledgerdemain!
-RecordLayout subclass: #LedgerLine
-	instanceVariableNames: 'date check payee category memo reconciled amount type balance'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'LedgerLine class' category: #Ledgerdemain!
-LedgerLine class
 	instanceVariableNames: ''!
 
 !classDefinition: #Repository category: #Ledgerdemain!
@@ -194,9 +184,6 @@ The window's model is a LedgerDeMain.
 
 	LedgerWindow open.
 !
-
-!LedgerLine commentStamp: 'dhn 8/7/2015 18:45' prior: 0!
-Format a transaction as an item in the ledger list pane.!
 
 !Repository commentStamp: 'dhn 6/12/2015 19:12' prior: 0!
 Repository responsibilities:
@@ -888,7 +875,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/15/2016 21:00'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/18/2016 14:24'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -927,7 +914,9 @@ newAccount
 					check: '';
 					balance: acct balOpen ledgerFormatted.
 				acct ledger add: rec.
-				self accounts: acct.
+				self 
+					accounts: acct;
+					computeNet.
 				self changed: #acctList.
 				self changed: #xactList]
 			ifFalse: [nil inform: temp,' is already an account']]
@@ -2040,159 +2029,6 @@ transactionTypes
 		'WD' 		"withdraw from account (i.e. cashier's check)"
 	)! !
 
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:02'!
-amount
-	"Answer the value of amount"
-
-	amount ifNil: [amount _ String new].
-	^ amount! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-amount: anObject
-	"Set the value of amount"
-
-	amount _ anObject! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:04'!
-balance
-	"Answer the value of balance"
-
-	balance ifNil: [balance _ String new].
-	^ balance! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-balance: anObject
-	"Set the value of balance"
-
-	balance _ anObject! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:04'!
-category
-	"Answer the value of category"
-
-	category ifNil: [category _ String new].
-	^ category! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-category: anObject
-	"Set the value of category"
-
-	category _ anObject! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:05'!
-check
-	"Answer the value of check"
-
-	check ifNil: [check _ String new].
-	^ check! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-check: anObject
-	"Set the value of check"
-
-	check _ anObject! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:05'!
-date
-	"Answer the value of date"
-
-	date ifNil: [date _ String new].
-	^ date! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-date: anObject
-	"Set the value of date"
-
-	date _ anObject! !
-
-!LedgerLine methodsFor: 'initialization' stamp: 'dhn 3/15/2016 21:26'!
-initialize
-	"Define the content of a line in the list of ledger transactions"
-
-	CompileFields from: #(
-		#(#date 			11)		"mm/dd/yyyy"
-		#(#check 			  5)		"check number"
-		#(#payee 			31)
-		#(#category 		36)
-		#(#memo 			30)
-		#(#reconciled		  2)		"reconciled: R, blank"
-		#(#amount 		13  false)	"right justify"
-		#(#Blank07 		  1)
-		#(#type 				  5)		"EFT, DEB, TOUT"
-		#(#balance 		12  false)	"right justify"
-	) for: self class.
-	super initialize
-! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:06'!
-memo
-	"Answer the value of memo"
-
-	memo ifNil: [memo _ String new].
-	^ memo! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-memo: anObject
-	"Set the value of memo"
-
-	memo _ anObject! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:06'!
-payee
-	"Answer the value of payee"
-
-	payee ifNil: [payee _ String new].
-	^ payee! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-payee: anObject
-	"Set the value of payee"
-
-	payee _ anObject! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:07'!
-reconciled
-	"Answer the value of reconciled"
-
-	reconciled ifNil: [reconciled _ String new].
-	^ reconciled! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-reconciled: anObject
-	"Set the value of reconciled"
-
-	reconciled _ anObject! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:07'!
-type
-	"Answer the value of type"
-
-	type ifNil: [type _ String new].
-	^ type! !
-
-!LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:01'!
-type: anObject
-	"Set the value of type"
-
-	type _ anObject! !
-
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/17/2016 22:21'!
-fields
-	"Answer the record definition consisting of field names and positions"
-	^ Dictionary new
-		at: #date put: (Field at: 1@11);
-		at: #check put: (Field at: 12@16);
-		at: #payee put: (Field at: 17@47);
-		at: #category put: (Field at: 48@83);
-		at: #memo put: (Field at: 84@113);
-		at: #reconciled put: (Field at: 114@115);
-		at: #amount put: (Field at: 116@128 left: false);
-		at: #Blank07 put: (Field at: 129);
-		at: #type put: (Field at: 130@134);
-		at: #balance put: (Field at: 135@146 left: false);
-		yourself
-! !
-
 !Suggestion class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:37'!
 try
 	"see if this shows up in unsaved changes"
@@ -2338,28 +2174,6 @@ format: aLedgerLine
 					with: self account balCur ledgerFormatted)
 	]! !
 
-!Transaction methodsFor: 'initialization' stamp: 'dhn 8/11/2015 11:27'!
-initialize
-
-	"There should be a FillInTheBlank dialog here for the various input record formats"
-	self initializeS50! !
-
-!Transaction methodsFor: 'initialization' stamp: 'dhn 8/11/2015 11:23'!
-initializeS50
-	CompileFields from: #(
-		#(#type               5)	"EFT, DEB, TOUT"
-		#(#Blank1         15)
-		#(#date             10)	"mm/dd/yyyy"
-		#(#Blank2           5)
-		#(#check             4)	"check number"
-		#(#Blank3           1)
-		#(#payee          30)
-		#(#memo           17)
-		#(#category     35)
-		#(#reconciled    1)	"R, blank"
-		#(#amount       13)
-	) for: self class! !
-
 !Transaction methodsFor: 'accessing' stamp: 'dhn 3/15/2016 20:25'!
 key
 	"Answer the value of key"
@@ -2478,24 +2292,6 @@ type: anObject
 	"Set the value of type"
 
 	type _ anObject! !
-
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/17/2016 20:41'!
-fields
-	"Answer the record definition consisting of field names and positions"
-	^ Dictionary new
-		at: #type put: (Field at: 1@5);
-		at: #Blank1 put: (Field at: 6@20);
-		at: #date put: (Field at: 21@30);
-		at: #Blank2 put: (Field at: 31@35);
-		at: #check put: (Field at: 36@39);
-		at: #Blank3 put: (Field at: 40);
-		at: #payee put: (Field at: 41@70);
-		at: #memo put: (Field at: 71@87);
-		at: #category put: (Field at: 88@122);
-		at: #reconciled put: (Field at: 123);
-		at: #amount put: (Field at: 124@136);
-		yourself
-! !
 
 !Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 15:39'!
 fileFields
