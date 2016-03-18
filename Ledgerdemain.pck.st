@@ -1,8 +1,8 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 15 March 2016 at 9:42:48.126819 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 17 March 2016 at 10:21:57.732894 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 162!
-!requires: 'Calendar' 1 23 nil!
+!provides: 'Ledgerdemain' 1 165!
 !requires: 'Records' 1 10 nil!
+!requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur lastCheck'
@@ -15,7 +15,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction entryTable netEditor'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex transactionListTime selectedTransaction entryTable netEditor'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -83,16 +83,6 @@ SystemWindow subclass: #LedgerWindow
 LedgerWindow class
 	instanceVariableNames: ''!
 
-!classDefinition: #NamedEntity category: #Ledgerdemain!
-Object subclass: #NamedEntity
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'NamedEntity class' category: #Ledgerdemain!
-NamedEntity class
-	instanceVariableNames: ''!
-
 !classDefinition: #LedgerLine category: #Ledgerdemain!
 RecordLayout subclass: #LedgerLine
 	instanceVariableNames: 'date check payee category memo reconciled amount type balance'
@@ -121,16 +111,6 @@ Object subclass: #Suggestion
 	category: 'Ledgerdemain'!
 !classDefinition: 'Suggestion class' category: #Ledgerdemain!
 Suggestion class
-	instanceVariableNames: ''!
-
-!classDefinition: #CheckNumber category: #Ledgerdemain!
-Suggestion subclass: #CheckNumber
-	instanceVariableNames: 'last'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'CheckNumber class' category: #Ledgerdemain!
-CheckNumber class
 	instanceVariableNames: ''!
 
 !classDefinition: #Payee category: #Ledgerdemain!
@@ -215,9 +195,6 @@ The window's model is a LedgerDeMain.
 	LedgerWindow open.
 !
 
-!NamedEntity commentStamp: 'dhn 6/14/2015 13:43' prior: 0!
-Abstract class for entities which have a specified name.!
-
 !LedgerLine commentStamp: 'dhn 8/7/2015 18:45' prior: 0!
 Format a transaction as an item in the ledger list pane.!
 
@@ -233,12 +210,6 @@ Suggestion (an abstract class) reponsibilities:
 
   autotype
 !
-
-!CheckNumber commentStamp: 'dhn 6/12/2015 19:05' prior: 0!
-CheckNumber responsibilities:
-
-  maintain last used
-  adjust!
 
 !Payee commentStamp: '<historical>' prior: 0!
 Payee responsibilities:
@@ -487,14 +458,13 @@ balRcon: anObject
 
 	balRcon _ anObject! !
 
-!Account methodsFor: 'initialization' stamp: 'dhn 3/15/2016 20:47'!
+!Account methodsFor: 'initialization' stamp: 'dhn 3/17/2016 16:12'!
 initialize
 
 	balOpen _ 0.
 	balRcon _ 0.
 	balCur _ 0.
 	lastCheck _ 0.
-	ledgerLines _ OrderedCollection new.
 	ledger _ SortedCollection sortBlock: [:a :c | a key < c key]! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 3/15/2016 15:16'!
@@ -521,17 +491,30 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 22:03'!
+!Account methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:27'!
 ledgerLines
 	"Answer the value of ledgerLines"
 
 	^ ledgerLines! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 22:03'!
+!Account methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:27'!
 ledgerLines: anObject
 	"Set the value of ledgerLines"
 
 	ledgerLines _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 3/17/2016 20:49'!
+listLedgerLines
+	"Answer the transaction content in a form suitable for the ledger list"
+	| col str |
+
+	col _ OrderedCollection new.			
+	str _ LedgerLine new.
+	balCur _ balOpen.
+	ledger do: [:ea | 
+		balCur _ balCur + ea amount dollarsToCents.
+		col addLast: (ea format: str)].
+	^ col! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 3/15/2016 21:40'!
 loadTransaction: anObject
@@ -559,10 +542,11 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/15/2016 21:36'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/17/2016 14:41'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
+	
 	selectedAccount ifNil: [self newAccount].
 	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.txt'.
 	file ~= '' ifTrue: [
@@ -586,11 +570,6 @@ accountFromFile
 					self memos: rec memo withoutTrailingBlanks.
 					self type: rec type withoutTrailingBlanks.
 					acct loadTransaction: rec]].
-			
-		acct balCur: acct balOpen.
-		acct ledger do: [:ea | 
-			acct balCur: acct balCur + ea amount dollarsToCents.
-			acct ledgerLines addLast: ea formatted].
 		
 		self computeNet.
 		self changed: #acctList.
@@ -704,6 +683,12 @@ computeNet
 	netEditor contents: str contents.
 ! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
+directory
+	"Answer the value of directory"
+
+	^ directory! !
+
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 10/13/2015 21:11'!
 directory: dir
 	"Set the path of the directory containing the accounts."
@@ -809,12 +794,13 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction reconciled]! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 11/13/2015 15:04'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 3/17/2016 20:34'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
 	self transactionListIndex: 0.
+	transactionListTime _ Time localMillisecondClock.
 	modified _ false.
 	self changed: #acctList.
 	self changed: #xactList! !
@@ -1054,6 +1040,12 @@ searchAllAccounts! !
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 6/26/2015 14:47'!
 searchOneAccount! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
+selectedAccount
+	"Answer the value of selectedAccount"
+
+	^ selectedAccount! !
+
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/24/2015 16:16'!
 selectedAccount: anObject
 	"Set the value of selectedAccount "
@@ -1061,6 +1053,12 @@ selectedAccount: anObject
 	selectedAccount _ anObject.
 	self changed: #acctList.
 	self changed: #xactList! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
+selectedTransaction
+	"Answer the value of selectedTransaction"
+
+	^ selectedTransaction! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/23/2015 20:08'!
 selectedTransaction: anObject
@@ -1070,15 +1068,25 @@ selectedTransaction: anObject
 	self changed: #xactList
 	! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 20:19'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 20:50'!
 transactionList
 	"Answer a list of transactions"
 
 	self accounts isEmpty ifFalse: [ 
 		self accountListIndex > 0 ifTrue: [ 
-			^ transactionList _ selectedAccount ledgerLines]]. 
+			(Time localMillisecondClock) - transactionListTime > 20
+				ifTrue: [	"to avoid doing this 4 times per up or down arrow!!"
+					transactionListTime _ Time localMillisecondClock.
+					^ transactionList _ selectedAccount listLedgerLines]
+				ifFalse: [^ transactionList]]].
 	^ transactionList _ OrderedCollection new 
 ! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
+transactionList: anObject
+	"Set the value of transactionList"
+
+	transactionList _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 18:33'!
 transactionListIndex
@@ -1098,6 +1106,18 @@ transactionListIndex: index
 	self changed: #fillEntries
 
 ! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
+transactionListTime
+	"Answer the value of transactionListTime"
+
+	^ transactionListTime! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
+transactionListTime: anObject
+	"Set the value of transactionListTime"
+
+	transactionListTime _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
 trie: aTrie withPrefix: aString
@@ -1907,7 +1927,7 @@ someKey: aKey of: aType with: aModifier
 			entr name = #Check ifTrue: [self checkMinus: entr]]].
 ! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/11/2016 21:51'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/17/2016 22:20'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1937,7 +1957,8 @@ update: aSymbol
 		ifTrue: [
 			windowAccountList 
 				getList; 
-				updateList]
+				updateList.
+			model computeNet]
 ! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 10/17/2015 13:52'!
@@ -2019,10 +2040,6 @@ transactionTypes
 		'WD' 		"withdraw from account (i.e. cashier's check)"
 	)! !
 
-!NamedEntity class methodsFor: 'initialization' stamp: 'dhn 6/14/2015 21:43'!
-named: aName
-	^ self basicNew identity: aName! !
-
 !LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:02'!
 amount
 	"Answer the value of amount"
@@ -2035,13 +2052,6 @@ amount: anObject
 	"Set the value of amount"
 
 	amount _ anObject! !
-
-!LedgerLine methodsFor: 'finalizing' stamp: 'dhn 8/7/2015 18:03'!
-assemble: anObject 
-	"Answer the record formed by populating the fields with data from
-	anObject "
-	^ self assemble: anObject endingWith: ''
-! !
 
 !LedgerLine methodsFor: 'accessing' stamp: 'dhn 8/7/2015 14:04'!
 balance
@@ -2166,25 +2176,8 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/15/2016 21:37'!
+!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 3/17/2016 22:21'!
 fields
-	"Answer the record definition consisting of field names and positions"
-	^ Dictionary new
-		at: #date put: (Field at: 1@11);
-		at: #check put: (Field at: 12@16);
-		at: #payee put: (Field at: 17@47);
-		at: #category put: (Field at: 48@83);
-		at: #memo put: (Field at: 84@113);
-		at: #reconciled put: (Field at: 114@115);
-		at: #amount put: (Field at: 116@128 left: false);
-		at: #Blank07 put: (Field at: 129);
-		at: #type put: (Field at: 130@134);
-		at: #balance put: (Field at: 135@146 left: false);
-		yourself
-! !
-
-!LedgerLine class methodsFor: 'as yet unclassified' stamp: 'dhn 10/24/2015 15:48'!
-lineFields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
 		at: #date put: (Field at: 1@11);
@@ -2307,21 +2300,43 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 3/13/2016 15:32'!
-formatted
-	"Answer the receiver as a formatted string"
-	| str |
-	str _ LedgerLine new.
-	str data at: #date put: (Date fromDays: self date asNumber) mmddyyyy.
-	str data at: #check put: self check withoutTrailingBlanks.
-	str data at: #payee put: self payee withoutTrailingBlanks.
-	str data at: #category put: self category withoutTrailingBlanks.
-	str data at: #memo put: self memo withoutTrailingBlanks.
-	str data at: #reconciled put: self reconciled asString.
-	str data at: #amount put: self amount dollarsToCents ledgerFormatted.
-	str data at: #balance put: self account balCur ledgerFormatted.
-	str data at: #type put: self type withoutTrailingBlanks.
-	^ str assemble: str data! !
+!Transaction methodsFor: 'displaying' stamp: 'dhn 3/17/2016 14:37'!
+format: aLedgerLine
+	"Answer the receiver as a formatted ledger line"
+
+	^ String streamContents: [:str |
+		str 
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #date) 
+					with: (Date fromDays: self date asNumber) mmddyyyy);
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #check) 
+					with: self check withoutTrailingBlanks);
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #payee) 
+					with: self payee withoutTrailingBlanks);
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #category) 
+					with: self category withoutTrailingBlanks);
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #memo) 
+					with: self memo withoutTrailingBlanks);
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #reconciled) 
+					with: self reconciled withoutTrailingBlanks);
+			nextPutAll: 
+				(self rightJustify: (self class listFields at: #amount) 
+					with: self amount);
+			nextPutAll: 
+				(self rightJustify: (self class listFields at: #Blank07) 
+					with: ' ');
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #type) 
+					with: self type withoutTrailingBlanks);
+			nextPutAll: 
+				(self rightJustify: (self class listFields at: #balance) 
+					with: self account balCur ledgerFormatted)
+	]! !
 
 !Transaction methodsFor: 'initialization' stamp: 'dhn 8/11/2015 11:27'!
 initialize
@@ -2357,6 +2372,27 @@ key: anObject
 	"Set the value of key"
 
 	key _ anObject! !
+
+!Transaction methodsFor: 'displaying' stamp: 'dhn 3/17/2016 20:25'!
+leftJustify: aByteCount with: aString
+	"Answer the contents of  of a field named  aSymbol, left-justifying it and padding it with padChar, if required."
+	| padding rest padChar |
+	
+	rest _ aByteCount - aString size.
+	padChar _ $ .
+		
+	rest < 0 
+		ifTrue: [Error new signal: aString, ' for ', aByteCount asString, ' bytes in ', self class asString, ' is too long'].
+	
+	rest > 0 ifTrue: [
+		padding _ String new: rest.
+		1 to: rest do: [:n | padding at: n put: padChar]].
+	
+	rest = 0 ifTrue: [padding _ ''].
+			
+	^ String streamContents: [:str |
+		str nextPutAll: aString.
+		str nextPutAll: padding]! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:26'!
 memo
@@ -2397,6 +2433,27 @@ reconciled: anObject
 
 	reconciled _ anObject! !
 
+!Transaction methodsFor: 'displaying' stamp: 'dhn 3/17/2016 20:26'!
+rightJustify: aByteCount with: aString
+	"Answer the contents of  of a field named  aSymbol, right-justifying it and padding it with padChar, if required."
+	| padding rest padChar |
+	
+	rest _ aByteCount - aString size.
+	padChar _ $ .
+		
+	rest < 0 
+		ifTrue: [Error new signal: aString, ' for ', aByteCount asString, ' bytes in ', self class asString, ' is too long'].
+	
+	rest > 0 ifTrue: [
+		padding _ String new: rest.
+		1 to: rest do: [:n | padding at: n put: padChar]].
+	
+	rest = 0 ifTrue: [padding _ ''].
+			
+	^ String streamContents: [:str |
+		str nextPutAll: padding.
+		str nextPutAll: aString]! !
+
 !Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
 transfer
 	"Answer the value of transfer"
@@ -2422,7 +2479,7 @@ type: anObject
 
 	type _ anObject! !
 
-!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/15/2016 21:37'!
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/17/2016 20:41'!
 fields
 	"Answer the record definition consisting of field names and positions"
 	^ Dictionary new
@@ -2455,5 +2512,23 @@ fileFields
 		at: #category put: (Field at: 88@122);
 		at: #reconciled put: (Field at: 123);
 		at: #amount put: (Field at: 124@136);
+		yourself
+! !
+
+!Transaction class methodsFor: 'as yet unclassified' stamp: 'dhn 3/17/2016 14:10'!
+listFields
+	"Answer the field names and their lengths for the ledger line"
+	
+	^ Dictionary new
+		at: #date put: 11;
+		at: #check put: 5;
+		at: #payee put: 31;
+		at: #category put: 36;
+		at: #memo put: 30;
+		at: #reconciled put: 2;
+		at: #amount put: 13;
+		at: #Blank07 put: 1;
+		at: #type put: 5;
+		at: #balance put: 12;
 		yourself
 ! !
