@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 18 March 2016 at 2:30:38.147956 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 18 March 2016 at 6:33:25.751956 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 166!
+!provides: 'Ledgerdemain' 1 167!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1626,7 +1626,7 @@ changeTransaction: anEntryField
 	
 	{'new or updated transaction'} print! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:47'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/18/2016 18:31'!
 checkMinus: anEntry
 	"Subtract 1 from check number"
 	| w x |
@@ -1636,7 +1636,10 @@ checkMinus: anEntry
 			w first isDigit
 				ifTrue: [
 					x _ anEntry model actualContents asNumber.
-					(x _ x - 1) > 0 ifTrue: [anEntry model actualContents: x asString]]].
+					(x _ x - 1) > 0 ifTrue: [anEntry model actualContents: x asString]]
+				ifFalse: [
+					typeIndex _ typeIndex + 1.
+					anEntry model actualContents: (self class transactionTypes atWrap: typeIndex)]].
 	anEntry scroller selectAll.
 
 ! !
@@ -1916,7 +1919,7 @@ someKey: aKey of: aType with: aModifier
 			entr name = #Check ifTrue: [self checkMinus: entr]]].
 ! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/17/2016 22:20'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/18/2016 18:26'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1940,7 +1943,8 @@ update: aSymbol
 		ifTrue: [
 			model 
 				transactionListIndex: windowLedgerList getListSize;
-				transactionListIndex: 0 	"prepare to add a transaction" ].
+				transactionListIndex: 0. 	"prepare to add a transaction" 
+				(windowEntries at: 2) model actualContents: (model selectedAccount lastCheck + 1) asString].
 		
 	aSymbol == #acctList
 		ifTrue: [
