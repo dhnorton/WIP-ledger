@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 18 March 2016 at 6:33:25.751956 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 18 March 2016 at 6:55:24.719956 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 167!
+!provides: 'Ledgerdemain' 1 168!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1919,7 +1919,7 @@ someKey: aKey of: aType with: aModifier
 			entr name = #Check ifTrue: [self checkMinus: entr]]].
 ! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/18/2016 18:26'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/18/2016 18:53'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1943,8 +1943,10 @@ update: aSymbol
 		ifTrue: [
 			model 
 				transactionListIndex: windowLedgerList getListSize;
-				transactionListIndex: 0. 	"prepare to add a transaction" 
-				(windowEntries at: 2) model actualContents: (model selectedAccount lastCheck + 1) asString].
+				transactionListIndex: 0	"prepare to add a transaction"].
+			model selectedAccount ifNotNil: [
+				(windowEntries at: 2) model 
+					actualContents: (model selectedAccount lastCheck + 1) asString].
 		
 	aSymbol == #acctList
 		ifTrue: [
