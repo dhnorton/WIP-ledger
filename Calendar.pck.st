@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2679] on 10 February 2016 at 2:26:53.34532 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 19 March 2016 at 6:16:31.551037 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 23!
+!provides: 'Calendar' 1 24!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -65,12 +65,12 @@ days: anObject
 
 	days _ anObject! !
 
-!CalendarModel methodsFor: 'initialization' stamp: 'dhn 2/1/2016 17:54'!
+!CalendarModel methodsFor: 'initialization' stamp: 'dhn 3/19/2016 16:41'!
 formDays: aDate
 	"Answer a collection of day numbers based on aDate. Can be used for a one-month calendar page."
 	| frst day col prec |
 	
-	frst _ Date newDay: 1 month: aDate monthName year: aDate yearNumber.	"first day of month"
+	frst _ Date newDay: 1 month: aDate monthIndex year: aDate yearNumber.	"first day of month"
 	day _ frst weekdayIndex.	"day in the week"
 	col _ OrderedCollection new.
 	prec _ (frst previous: frst weekday) daysInMonth. 	"number of last day of preceding month"

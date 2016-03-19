@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 19 March 2016 at 2:34:49.539037 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 19 March 2016 at 6:18:44.960037 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 169!
+!provides: 'Ledgerdemain' 1 170!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -75,7 +75,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable keyboardFocus typeIndex'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable keyboardFocus typeIndex calendar'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -263,14 +263,13 @@ withCommas
 			^ (self copyFrom: 1 to: self size - 3) withCommas, 
 				',', (self copyFrom: self size - 2 to: self size)]! !
 
-!TextEditor methodsFor: '*Ledgerdemain' stamp: 'dhn 3/15/2016 12:59'!
+!TextEditor methodsFor: '*Ledgerdemain' stamp: 'dhn 3/19/2016 17:35'!
 getMenu
 	
 	| menu |
 	self morph owner name = #Date ifTrue: [ | c |
-		c _ CalendarPage open: CalendarModel new. 
+		c _ CalendarPage open: self morph owningWindow calendar.
 		c morphPosition: 40.0@220.0.
-		{self morph. self morph owner. self morph owner owner} print.
 		^ nil].
 	menu _ MenuMorph new defaultTarget: self.
 	^self class paneMenu: menu! !
@@ -701,13 +700,14 @@ getCategory
 		ifTrue: [^ self actualContents asString]
 		ifFalse: [^ selectedTransaction category withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/19/2016 14:15'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/19/2016 18:11'!
 getCheck
 	"Answer the check number"
 	
 	transactionListIndex = 0
 		ifTrue: [
-			selectedAccount ifNotNil: [^ (selectedAccount lastCheck + 1) asString]]
+			selectedAccount ifNotNil: [^ (selectedAccount lastCheck + 1) asString].
+			selectedAccount ifNil: [^'']]
 		ifFalse: [^ selectedTransaction check withoutTrailingBlanks]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:45'!
@@ -722,18 +722,6 @@ getCredit
 			x dollarsToCents < 0 ifTrue: [^ '']].
 		
 	^ x! !
-
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 10/15/2015 20:39'!
-getDataFor: anEntry
-	"Set the contents of entry field anEntry"
-	| method x |
-	
-	method _ anEntry valueOfProperty: #input.
-	x _ self perform: method.
-	{method. x. } print.
-	^ x
-	
-	! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/13/2016 15:49'!
 getDate
@@ -1608,17 +1596,17 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:05'!
-changeHigher: anEntryField
-	"Increase the EntryField"
-	
-	{'increase'} print! !
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
+calendar
+	"Answer the value of calendar"
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:05'!
-changeLower: anEntryField
-	"Decrease the EntryField"
-	
-	{'decrease'} print! !
+	^ calendar! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
+calendar: anObject
+	"Set the value of calendar"
+
+	calendar _ anObject! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:08'!
 changeTransaction: anEntryField
@@ -1812,12 +1800,25 @@ handlesKeyboard
 
 	^self visible! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/14/2016 18:09'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/19/2016 17:33'!
 initialize
 
 	super initialize.
 	windowEntries _ OrderedCollection new.
+	calendar _ CalendarModel new.
 	typeIndex _ 0! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
+keyboardFocus
+	"Answer the value of keyboardFocus"
+
+	^ keyboardFocus! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
+keyboardFocus: anObject
+	"Set the value of keyboardFocus"
+
+	keyboardFocus _ anObject! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:49'!
 menuLedger
@@ -1918,6 +1919,18 @@ someKey: aKey of: aType with: aModifier
 			entr name = #Date ifTrue: [self dateEarlier: entr].
 			entr name = #Check ifTrue: [self checkMinus: entr]]].
 ! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
+typeIndex
+	"Answer the value of typeIndex"
+
+	^ typeIndex! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
+typeIndex: anObject
+	"Set the value of typeIndex"
+
+	typeIndex _ anObject! !
 
 !LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/19/2016 14:27'!
 update: aSymbol
