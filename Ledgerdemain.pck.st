@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 18 March 2016 at 6:55:24.719956 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 19 March 2016 at 2:34:49.539037 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 168!
+!provides: 'Ledgerdemain' 1 169!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -490,17 +490,16 @@ ledgerLines: anObject
 
 	ledgerLines _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 3/17/2016 20:49'!
+!Account methodsFor: 'accessing' stamp: 'dhn 3/19/2016 14:30'!
 listLedgerLines
 	"Answer the transaction content in a form suitable for the ledger list"
-	| col str |
+	| col |
 
 	col _ OrderedCollection new.			
-	str _ LedgerLine new.
 	balCur _ balOpen.
 	ledger do: [:ea | 
 		balCur _ balCur + ea amount dollarsToCents.
-		col addLast: (ea format: str)].
+		col addLast: ea formatTransaction].
 	^ col! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 3/15/2016 21:40'!
@@ -702,12 +701,13 @@ getCategory
 		ifTrue: [^ self actualContents asString]
 		ifFalse: [^ selectedTransaction category withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:02'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/19/2016 14:15'!
 getCheck
 	"Answer the check number"
 	
 	transactionListIndex = 0
-		ifTrue: [^ '']
+		ifTrue: [
+			selectedAccount ifNotNil: [^ (selectedAccount lastCheck + 1) asString]]
 		ifFalse: [^ selectedTransaction check withoutTrailingBlanks]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:45'!
@@ -1919,7 +1919,7 @@ someKey: aKey of: aType with: aModifier
 			entr name = #Check ifTrue: [self checkMinus: entr]]].
 ! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/18/2016 18:53'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/19/2016 14:27'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1927,7 +1927,9 @@ update: aSymbol
 	
 	aSymbol == #fillEntries
 		ifTrue: [
-			windowEntries do: [:ea | ea model refetch].
+			model selectedAccount isNil
+				ifTrue: [windowEntries do: [:ea | ea model actualContents: '']]
+				ifFalse: [windowEntries do: [:ea | ea model refetch]].
 			entryIndex _ 1.
 			self newKeyboardFocus: windowEntries first scroller.
 			windowEntries first scroller selectAll.
@@ -1944,9 +1946,6 @@ update: aSymbol
 			model 
 				transactionListIndex: windowLedgerList getListSize;
 				transactionListIndex: 0	"prepare to add a transaction"].
-			model selectedAccount ifNotNil: [
-				(windowEntries at: 2) model 
-					actualContents: (model selectedAccount lastCheck + 1) asString].
 		
 	aSymbol == #acctList
 		ifTrue: [
@@ -2142,8 +2141,8 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 3/17/2016 14:37'!
-format: aLedgerLine
+!Transaction methodsFor: 'displaying' stamp: 'dhn 3/19/2016 14:30'!
+formatTransaction
 	"Answer the receiver as a formatted ledger line"
 
 	^ String streamContents: [:str |
