@@ -1,8 +1,7 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 3:07:29.905928 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 4:23:28.260354 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 173!
+!provides: 'Ledgerdemain' 1 175!
 !requires: 'Records' 1 10 nil!
-!requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
 	instanceVariableNames: 'accountName ledger balOpen openDate balRcon balCur lastCheck'
@@ -75,7 +74,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable keyboardFocus typeIndex calendar'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryIndex entryTable keyboardFocus typeIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -702,12 +701,14 @@ getCredit
 		
 	^ x! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/20/2016 10:23'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/20/2016 15:26'!
 getDate
 	"Answer the date"
 	
 	transactionListIndex = 0
-		ifTrue: [^ (Date fromDays: selectedAccount ledger last date asNumber) mmddyyyy]
+		ifTrue: [
+			selectedAccount ifNotNil: [^ (Date fromDays: selectedAccount ledger last date asNumber) mmddyyyy].
+			selectedAccount ifNil: [^'']]
 		ifFalse: [^ (Date fromDays: selectedTransaction date asNumber) mmddyyyy]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:57'!
@@ -1659,23 +1660,27 @@ checkPlus: anEntry
 	anEntry scroller selectAll.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:45'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 16:18'!
 dateEarlier: anEntry
 	"Subtract 1 from Ledgerdemain date"
 	| x |
 	
-	x _ anEntry model actualContents asString asLdmDate.
+	(x _ anEntry model actualContents) asString size = 0
+		ifTrue: [x _ Date today julianDayNumber - Time squeakEpoch]
+		ifFalse: [x _ x asString asLdmDate].
 	x _ x - 1.
 	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
 	anEntry scroller selectAll.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:45'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 16:15'!
 dateLater: anEntry
 	"Add 1 to Ledgerdemain date"
 	| x |
 	
-	x _ anEntry model actualContents asString asLdmDate.
+	(x _ anEntry model actualContents) asString size = 0
+		ifTrue: [x _ Date today julianDayNumber - Time squeakEpoch]
+		ifFalse: [x _ x asString asLdmDate].
 	x _ x + 1.
 	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
 	anEntry scroller selectAll.
@@ -1815,12 +1820,11 @@ handlesKeyboard
 
 	^self visible! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/19/2016 17:33'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/20/2016 15:20'!
 initialize
 
 	super initialize.
 	windowEntries _ OrderedCollection new.
-	calendar _ CalendarModel new.
 	typeIndex _ 0! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
