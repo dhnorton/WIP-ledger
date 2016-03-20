@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 10:25:08.303928 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 1:01:08.719928 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 171!
+!provides: 'Ledgerdemain' 1 172!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -115,7 +115,7 @@ Payee class
 
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
-	instanceVariableNames: 'key account date type payee amount category memo reconciled transfer check balance'
+	instanceVariableNames: 'key account date check payee category memo reconciled amount type balance transfer'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -230,12 +230,14 @@ asLdmDate
 		year: x third asNumber)
 			 julianDayNumber - Time squeakEpoch! !
 
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 2/14/2016 17:36'!
+!String methodsFor: '*Ledgerdemain' stamp: 'dhn 3/20/2016 12:54'!
 dollarsToCents
 	"Convert the receiver to a number of cents"
 	| x y z neg fracC |
 	
-	x _ self withBlanksCondensed.
+	self first = $. 
+		ifTrue: [x _ '0', self withBlanksCondensed]
+		ifFalse: [x _ self withBlanksCondensed].
 	[x asNumber] on: Error do: [^nil].
 	
 	y _ x findTokens: '-.' keep: '-.'.
@@ -1286,6 +1288,14 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 12:14'!
+amount: debit or: credit
+	"Answer an amount string with an appropriate sign"
+	
+	(debit allSatisfy: [:a | a = $ ])
+		ifTrue: [^ credit]
+		ifFalse: [^ '-', debit]! !
+
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 22:19'!
 autoCompleterClassFor: textGetter
 	"Essential method. Necessary in order to have a completer available for the containing class"
@@ -1585,11 +1595,36 @@ calendar: anObject
 
 	calendar _ anObject! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/1/2016 15:08'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 12:39'!
 changeTransaction: anEntryField
-	"Form a transaction from all the EntryFields"
+	"Form a transaction from the EntryFields"
+	| tx dt ck py db cr |
 	
-	{'new or updated transaction'} print! !
+	tx _ Transaction new.
+	dt _ (self entryContents: #Date) asLdmDate asString.
+	ck _ self entryContents: #Check.
+	py _ self entryContents: #Payee.
+	
+	tx 
+		key: dt, ck, py;
+		account: model selectedAccount;
+		date: dt;
+		check: ck;
+		payee: py;
+		category: (self entryContents: #Category);
+		memo: (self entryContents: #Memo);
+		reconciled: (self entryContents: #R).
+		
+	db _ self entryContents: #Debit.
+	cr _ self entryContents: #Credit.	
+	tx amount: (self amount: db or: cr).
+	
+	(tx check allSatisfy: [:a | a isDigit])
+		ifTrue: [tx type: 'DEB']
+		ifFalse: [tx type: tx check].
+	
+	tx explore.
+! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/18/2016 18:31'!
 checkMinus: anEntry
@@ -1660,6 +1695,12 @@ delete
 			self model saveFile]].
 	cancel ifFalse: [super delete]		"terminate"
 	"otherwise, cancel this"! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/20/2016 11:25'!
+entryContents: aSymbol
+	"Answer the contents of the entry field named aSymbol"
+	
+	^ (windowEntries detect: [:a | a name = aSymbol] ifNone: [nil]) model actualContents asString! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/3/2016 16:00'!
 entryIndex
