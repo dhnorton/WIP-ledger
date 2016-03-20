@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 1:01:08.719928 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 3:07:29.905928 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 172!
+!provides: 'Ledgerdemain' 1 173!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
@@ -1288,13 +1288,13 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 12:14'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 15:02'!
 amount: debit or: credit
 	"Answer an amount string with an appropriate sign"
 	
-	(debit allSatisfy: [:a | a = $ ])
-		ifTrue: [^ credit]
-		ifFalse: [^ '-', debit]! !
+	((self entryContents: debit) allSatisfy: [:a | a = $ ])
+		ifTrue: [^ self entryContents: credit]
+		ifFalse: [^ '-', (self entryContents: debit)]! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 22:19'!
 autoCompleterClassFor: textGetter
@@ -1595,10 +1595,10 @@ calendar: anObject
 
 	calendar _ anObject! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 12:39'!
-changeTransaction: anEntryField
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 15:03'!
+changeTransaction
 	"Form a transaction from the EntryFields"
-	| tx dt ck py db cr |
+	| tx dt ck py |
 	
 	tx _ Transaction new.
 	dt _ (self entryContents: #Date) asLdmDate asString.
@@ -1615,16 +1615,13 @@ changeTransaction: anEntryField
 		memo: (self entryContents: #Memo);
 		reconciled: (self entryContents: #R).
 		
-	db _ self entryContents: #Debit.
-	cr _ self entryContents: #Credit.	
-	tx amount: (self amount: db or: cr).
+	tx amount: (self amount: #Debit or: #Credit).
 	
 	(tx check allSatisfy: [:a | a isDigit])
 		ifTrue: [tx type: 'DEB']
 		ifFalse: [tx type: tx check].
-	
-	tx explore.
-! !
+
+	model selectedAccount ledger add: tx! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/18/2016 18:31'!
 checkMinus: anEntry
@@ -1912,7 +1909,7 @@ sayWhen
 	self when: #specialKey send: #'someKey:of:with:' to: self withArguments: #(#a #b #c).
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 17:47'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 14:11'!
 someKey: aKey of: aType with: aModifier
 	"Process special key strokes"
 	| entr |
@@ -1925,7 +1922,7 @@ someKey: aKey of: aType with: aModifier
 			aModifier = 8 ifTrue: [self goBack]]].
 	
 	aKey = 13 ifTrue: [	"enter"
-		aType = #keyUp  ifTrue: [self changeTransaction: entr]].
+		aType = #keyUp  ifTrue: [self changeTransaction]].
 	
 	aKey = 43 ifTrue: [	"plus"
 		aType = #keystroke  ifTrue: [ 
