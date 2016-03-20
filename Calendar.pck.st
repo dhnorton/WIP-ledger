@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 19 March 2016 at 6:16:31.551037 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 19 March 2016 at 9:10:44.135097 pm'!
 'Description Please enter a description for this package'!
-!provides: 'Calendar' 1 24!
+!provides: 'Calendar' 1 25!
 !classDefinition: #CalendarModel category: #Calendar!
 TextModel subclass: #CalendarModel
 	instanceVariableNames: 'days selectedDate date theDay month year'
@@ -153,6 +153,18 @@ selectedDate: anObject
 	"Set the value of selectedDate"
 
 	selectedDate _ anObject! !
+
+!CalendarModel methodsFor: 'accessing' stamp: 'dhn 3/19/2016 21:08'!
+setDate: ldmDate
+	"Set selectedDate from ldmDate"
+	| dt |
+	
+	dt _ Date fromDays: ldmDate.
+	self 
+		formDays: dt;
+		date: dt; 
+		reset;
+		triggerEvent: #dateChange! !
 
 !CalendarModel methodsFor: 'accessing' stamp: 'dhn 2/5/2016 15:11'!
 theDay
@@ -419,10 +431,10 @@ openInWorld
 	super openInWorld.
 	self morphExtent: 220@200! !
 
-!CalendarPage methodsFor: 'updating' stamp: 'dhn 2/10/2016 13:15'!
+!CalendarPage methodsFor: 'updating' stamp: 'dhn 3/19/2016 19:51'!
 pickDate
 	"Set the date selected from the calendar"
-	| mx mo da yr dt |
+	| mx da yr dt |
 	
 	mx _ Date indexOfMonth: model month.
 	yr _ model year.
@@ -440,8 +452,7 @@ pickDate
 	mx _ mx mod: 12.
 	mx = 0 ifTrue: [mx _ 12].
 
-	mo _ Date nameOfMonth: mx.
-	dt _ Date newDay: da month: mo year: yr.
+	dt _ Date newDay: da month: mx year: yr.
 	
 	model selectedDate: dt mmddyyyy.
 	
@@ -461,7 +472,7 @@ row: index
 	buttons addAll: col reversed.
 	^ col ! !
 
-!CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/4/2016 15:53'!
+!CalendarPage methodsFor: 'initialization' stamp: 'dhn 3/19/2016 20:57'!
 sayWhen
 	"Establish the receiving half of the Observer Pattern"
 	
@@ -470,6 +481,7 @@ sayWhen
 	self when: #minus send: #monthBefore to: model.
 	self when: #minus send: #fillPage to: self.
 	self when: #dateChange send: #newDate to: self.
+	self model when: #dateChange send: #newDate to: self.
 ! !
 
 !CalendarPage methodsFor: 'initialization' stamp: 'dhn 2/3/2016 17:00'!
