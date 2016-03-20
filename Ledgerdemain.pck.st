@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 4:23:28.260354 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 6:06:32.591044 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 175!
+!provides: 'Ledgerdemain' 1 176!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1584,19 +1584,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
-calendar
-	"Answer the value of calendar"
-
-	^ calendar! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
-calendar: anObject
-	"Set the value of calendar"
-
-	calendar _ anObject! !
-
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 15:03'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 18:04'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1622,7 +1610,11 @@ changeTransaction
 		ifTrue: [tx type: 'DEB']
 		ifFalse: [tx type: tx check].
 
-	model selectedAccount ledger add: tx! !
+	model selectedTransaction 
+		ifNotNil: [model selectedAccount ledger remove: model selectedTransaction].
+	model selectedAccount ledger add: tx.
+	self resetUnacceptedEdits.
+	windowLedgerList updateList! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/18/2016 18:31'!
 checkMinus: anEntry
@@ -1903,6 +1895,14 @@ releaseKeyboardFocus
 releaseKeyboardFocus: aMorph
 	"If the given morph had the keyboard focus before, release it"
 	keyboardFocus == aMorph ifTrue:[self releaseKeyboardFocus].! !
+
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/20/2016 16:49'!
+resetUnacceptedEdits
+	"Send false to any entry field with unaccepted edits"
+	
+	windowEntries do: [:ea |
+		ea scroller hasUnacceptedEdits 
+			ifTrue: [ea scroller hasUnacceptedEdits: false]]! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/14/2016 17:47'!
 sayWhen
