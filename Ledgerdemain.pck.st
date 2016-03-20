@@ -1,11 +1,11 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 19 March 2016 at 6:18:44.960037 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 10:25:08.303928 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 170!
+!provides: 'Ledgerdemain' 1 171!
 !requires: 'Records' 1 10 nil!
 !requires: 'Calendar' 1 23 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
-	instanceVariableNames: 'accountName ledger ledgerLines balOpen openDate balRcon balCur lastCheck'
+	instanceVariableNames: 'accountName ledger balOpen openDate balRcon balCur lastCheck'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -263,17 +263,6 @@ withCommas
 			^ (self copyFrom: 1 to: self size - 3) withCommas, 
 				',', (self copyFrom: self size - 2 to: self size)]! !
 
-!TextEditor methodsFor: '*Ledgerdemain' stamp: 'dhn 3/19/2016 17:35'!
-getMenu
-	
-	| menu |
-	self morph owner name = #Date ifTrue: [ | c |
-		c _ CalendarPage open: self morph owningWindow calendar.
-		c morphPosition: 40.0@220.0.
-		^ nil].
-	menu _ MenuMorph new defaultTarget: self.
-	^self class paneMenu: menu! !
-
 !Integer methodsFor: '*Ledgerdemain' stamp: 'cmm 6/8/2012 15:43'!
 asStringWithCommasSigned: aBoolean
 	"123456789 asStringWithCommasSigned: true"
@@ -476,18 +465,6 @@ ledger: anObject
 	"Set the value of ledger"
 
 	ledger _ anObject! !
-
-!Account methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:27'!
-ledgerLines
-	"Answer the value of ledgerLines"
-
-	^ ledgerLines! !
-
-!Account methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:27'!
-ledgerLines: anObject
-	"Set the value of ledgerLines"
-
-	ledgerLines _ anObject! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 3/19/2016 14:30'!
 listLedgerLines
@@ -723,12 +700,12 @@ getCredit
 		
 	^ x! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/13/2016 15:49'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/20/2016 10:23'!
 getDate
 	"Answer the date"
 	
 	transactionListIndex = 0
-		ifTrue: [^ Date today mmddyyyy]
+		ifTrue: [^ (Date fromDays: selectedAccount ledger last date asNumber) mmddyyyy]
 		ifFalse: [^ (Date fromDays: selectedTransaction date asNumber) mmddyyyy]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:57'!
