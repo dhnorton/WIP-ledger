@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 6:06:32.591044 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 9:04:05.593044 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 176!
+!provides: 'Ledgerdemain' 1 177!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1289,13 +1289,15 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 15:02'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 20:05'!
 amount: debit or: credit
 	"Answer an amount string with an appropriate sign"
+	| x |
 	
 	((self entryContents: debit) allSatisfy: [:a | a = $ ])
-		ifTrue: [^ self entryContents: credit]
-		ifFalse: [^ '-', (self entryContents: debit)]! !
+		ifTrue: [x _ self entryContents: credit]
+		ifFalse: [x _ '-', (self entryContents: debit)].
+	^ x dollarsToCents ledgerFormatted! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 22:19'!
 autoCompleterClassFor: textGetter
@@ -1584,7 +1586,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 18:04'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 20:53'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1607,12 +1609,21 @@ changeTransaction
 	tx amount: (self amount: #Debit or: #Credit).
 	
 	(tx check allSatisfy: [:a | a isDigit])
-		ifTrue: [tx type: 'DEB']
+		ifTrue: [
+			tx type: 'DEB'.
+			model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
 		ifFalse: [tx type: tx check].
 
 	model selectedTransaction 
-		ifNotNil: [model selectedAccount ledger remove: model selectedTransaction].
+		ifNotNil: [ | b |
+			b _ PopUpMenu 
+				confirm: 'Regarding your entered data...'
+				trueChoice: 'replace the selected transaction'
+				falseChoice: 'insert a new transaction'.
+			b ifTrue: [
+				model selectedAccount ledger remove: model selectedTransaction ifAbsent: [nil]]].
 	model selectedAccount ledger add: tx.
+
 	self resetUnacceptedEdits.
 	windowLedgerList updateList! !
 
