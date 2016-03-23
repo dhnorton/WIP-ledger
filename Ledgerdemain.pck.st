@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 20 March 2016 at 9:04:05.593044 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 23 March 2016 at 10:41:55.476359 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 177!
+!provides: 'Ledgerdemain' 1 179!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -213,57 +213,6 @@ Transaction responsibilities:
   record actions in audit trail
 !
 
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 3/13/2016 12:54'!
-asLdmDate
-	"Convert receiver in the form of mm/dd/yyyy to a Ledgerdemain date number"
-	"Covers dates from 1/1/1901 to 2/27/2935093 (quite a long time!!)"
-	| w x |
-	w _ self select: [:a | a isDigit or: a = $/].
-	x _ w findTokens: '/'.
-	x size ~= 3 
-		ifTrue: [nil error: 'not a date'].
-
-	^ (Date 
-		newDay: x second asNumber 
-		month: x first asNumber 
-		year: x third asNumber)
-			 julianDayNumber - Time squeakEpoch! !
-
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 3/20/2016 12:54'!
-dollarsToCents
-	"Convert the receiver to a number of cents"
-	| x y z neg fracC |
-	
-	self first = $. 
-		ifTrue: [x _ '0', self withBlanksCondensed]
-		ifFalse: [x _ self withBlanksCondensed].
-	[x asNumber] on: Error do: [^nil].
-	
-	y _ x findTokens: '-.' keep: '-.'.
-	(neg _ y first = '-') ifTrue: [y _ y removeFirst;	yourself].
-	y size = 1 ifTrue: [y _ y addAll: #('.' '00'); yourself].
-	y size = 2 ifTrue: [y _ y addAll: #('00'); yourself].
-	fracC _ 0.
-	y third size = 1 ifTrue: [y at: 3 put: (y third, '0')].
-	y third size > 2 
-		ifTrue: [
-			fracC _ (y third at: 3) asString asNumber.
-			y at: 3 put: (y third copyFrom: 1 to: 2); yourself].
-		
-	z _ ((y first), y third) asNumber.
-	fracC >= 5 ifTrue: [z _ z + 1].	"fraction of a cent"
-	neg ifTrue: [z _ z negated].
-	^ z! !
-
-!String methodsFor: '*Ledgerdemain' stamp: 'dhn 11/11/2015 19:01'!
-withCommas
-	"Answer the receiver with commas at the thousands, millions, etc positions"
-
-	self size > 3
-		ifTrue: [
-			^ (self copyFrom: 1 to: self size - 3) withCommas, 
-				',', (self copyFrom: self size - 2 to: self size)]! !
-
 !Integer methodsFor: '*Ledgerdemain' stamp: 'cmm 6/8/2012 15:43'!
 asStringWithCommasSigned: aBoolean
 	"123456789 asStringWithCommasSigned: true"
@@ -293,24 +242,6 @@ ledgerFormatted
 	str size - pos < 2 ifTrue: [str _ str, '0'].
 	ios nextPutAll: (str copyFrom: pos count: 3).
 	^ ios contents! !
-
-!SmallInteger methodsFor: '*Ledgerdemain' stamp: 'dhn 6/29/2015 13:34'!
-asMmDdYyyy
-	"Convert the receiver from Ledgerdemain date number to dd/mm/yyyy"
-	^ (Date fromDays: self) mmddyyyy! !
-
-!SmallInteger methodsFor: '*Ledgerdemain' stamp: 'dhn 11/11/2015 18:18'!
-centsToDollars
-	"Answer the receiver as an array of strings in the form {'d,ddd'. 'cc'} "
-	| all sd sc |
-	
-	all _ self asString.
-	all size < 2 ifTrue: [all _ ('0', all, '0') copyFrom: 1 to: 2].
-	sc _ all copyFrom: all size - 1 to: all size.
-	all size > 2
-		ifTrue: [sd _ (all copyFrom: 1 to: all size - 2) withCommas]
-		ifFalse: [sd _ '0'].
-	^ {sd. sc}! !
 
 !HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/14/2016 17:35'!
 generateKeyboardEvent: evtBuf 
@@ -467,7 +398,7 @@ ledger: anObject
 
 	ledger _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 3/19/2016 14:30'!
+!Account methodsFor: 'accessing' stamp: 'dhn 3/21/2016 21:00'!
 listLedgerLines
 	"Answer the transaction content in a form suitable for the ledger list"
 	| col |
@@ -475,16 +406,16 @@ listLedgerLines
 	col _ OrderedCollection new.			
 	balCur _ balOpen.
 	ledger do: [:ea | 
-		balCur _ balCur + ea amount dollarsToCents.
+		balCur _ balCur + ea amount asNumber.
 		col addLast: ea formatTransaction].
 	^ col! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 3/15/2016 21:40'!
+!Account methodsFor: 'accessing' stamp: 'dhn 3/23/2016 10:05'!
 loadTransaction: anObject
 	"Update balances and add anObject to the ledger"
 	| amt ck |
 	
-	amt _ anObject amount dollarsToCents.
+	amt _ anObject amount.
 	
 	anObject reconciled = 'R' ifTrue: [self balRcon: self balRcon + amt].
 	
@@ -505,7 +436,22 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/17/2016 14:41'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/21/2016 12:30'!
+acceptTransaction: aTransaction
+	"Put aTransaction in the ledger"
+	
+	selectedTransaction 
+		ifNotNil: [ | b |
+			b _ PopUpMenu 
+				confirm: 'Regarding your entered data...'
+				trueChoice: 'replace the selected transaction'
+				falseChoice: 'insert a new transaction'.
+			b ifTrue: [
+				selectedAccount ledger remove: selectedTransaction ifAbsent: [nil]]].
+	selectedAccount ledger add: aTransaction
+! !
+
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/23/2016 10:03'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
@@ -520,14 +466,14 @@ accountFromFile
 				ifTrue: [
 					rec _ Transaction new account: acct.
 					rec type: (rec acquire: #type from: line).
-					rec date: (rec acquire: #date from: line) asLdmDate asString.
+					rec date: (LedgerWindow asLdmDate: (rec acquire: #date from: line) asString).
 					rec check: (rec acquire: #check from: line).
 					rec payee: (rec acquire: #payee from: line).
 					rec memo: (rec acquire: #memo from: line).
 					rec category: (rec acquire: #category from: line).
 					rec reconciled: (rec acquire: #reconciled from: line).
-					rec amount: (rec acquire: #amount from: line).
-					rec key: rec date, rec check, rec payee.
+					rec amount: (LedgerWindow dollarsToCents: (rec acquire: #amount from: line)).
+					rec key: rec date asString, rec check, rec payee.
 					self categories: rec category withoutTrailingBlanks.
 					self payees: rec payee withoutTrailingBlanks.
 					self memos: rec memo withoutTrailingBlanks.
@@ -619,7 +565,7 @@ categoriesFromFile
 			whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 		ios close]! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 11/11/2015 19:53'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/23/2016 09:44'!
 computeNet
 	"Display the net sum of all accounts"
 	| ttl str |
@@ -637,7 +583,7 @@ computeNet
 		ifFalse: [
 			netEditor color: Color red.
 			str nextPutAll: ' Loss  '].
-	ttl _ ttl abs centsToDollars.
+	ttl _ LedgerWindow centsToDollars: ttl abs.
 	str 
 		nextPut: $$;
 		nextPutAll: ttl first;
@@ -688,16 +634,17 @@ getCheck
 			selectedAccount ifNil: [^'']]
 		ifFalse: [^ selectedTransaction check withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:45'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/23/2016 09:59'!
 getCredit
 	"Answer the amount if positive; '' otherwise"
 	| x |
 	
 	transactionListIndex = 0
-		ifTrue: [^ '']
+		ifTrue: [x _ '']
 		ifFalse: [
-			x _ selectedTransaction amount withBlanksCondensed.
-			x dollarsToCents < 0 ifTrue: [^ '']].
+			selectedTransaction amount < 0 
+				ifTrue: [x _ '']
+				ifFalse: [x _ LedgerWindow insertDecimalPointIn: selectedTransaction amount asString]].
 		
 	^ x! !
 
@@ -711,19 +658,19 @@ getDate
 			selectedAccount ifNil: [^'']]
 		ifFalse: [^ (Date fromDays: selectedTransaction date asNumber) mmddyyyy]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 2/13/2016 14:57'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/23/2016 10:21'!
 getDebit
 	"Answer the amount if negative; '' otherwise"
-	| x y |
+	| x |
 	
 	transactionListIndex = 0
-		ifTrue: [^ '']
+		ifTrue: [x _ '']
 		ifFalse: [
-			x _ selectedTransaction amount withBlanksCondensed dollarsToCents.
-			x >= 0 ifTrue: [^ ''].
-			y _ x negated ledgerFormatted].
+			selectedTransaction amount >= 0 
+				ifTrue: [x _ '']
+				ifFalse: [x _ LedgerWindow insertDecimalPointIn: selectedTransaction amount negated asString]].
 		
-	^ y! !
+	^ x! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:00'!
 getMemo
@@ -843,7 +790,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/18/2016 14:24'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/23/2016 10:24'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -861,11 +808,11 @@ newAccount
 							request: 'Date of opening balance'
 							initialAnswer: Date today mmddyyyy]
 					ifFalse: [
-						bal _ '0'.
+						bal _ 0.
 						balDate _ Date today mmddyyyy].
-				amt _ bal dollarsToCents.
+				amt _ LedgerWindow dollarsToCents: bal.
 				acct
-					openDate: balDate asLdmDate asString;
+					openDate: (LedgerWindow asLdmDate: balDate) asString;
 					balOpen: amt;
 					balCur: amt;
 					balRcon: amt.
@@ -875,7 +822,7 @@ newAccount
 					payee: '**Opening Balance';
 					reconciled: 'R';
 					type: '';
-					amount: '0.00';
+					amount: 0;
 					category: '';
 					memo: '';
 					transfer: '';
@@ -1166,7 +1113,7 @@ openCompletionMenu
 				completer: self
 				position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld ]! !
 
-!LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 2/14/2016 14:31'!
+!LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 3/22/2016 22:25'!
 initialize
 	"Answer an evaluated expression in ledger format"
 	| w x y ok err |
@@ -1186,7 +1133,7 @@ initialize
 					nil inform: 'Error in the arithmetic expression'].
 				err ifFalse: [
 					ok _ true.
-					y _ w asString dollarsToCents ledgerFormatted]]
+					y _ (LedgerWindow dollarsToCents: w asString) ledgerFormatted]]
 			ifFalse: [ok _ true]].
 		
 	^ y! !
@@ -1289,7 +1236,7 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 20:05'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 22:31'!
 amount: debit or: credit
 	"Answer an amount string with an appropriate sign"
 	| x |
@@ -1297,7 +1244,7 @@ amount: debit or: credit
 	((self entryContents: debit) allSatisfy: [:a | a = $ ])
 		ifTrue: [x _ self entryContents: credit]
 		ifFalse: [x _ '-', (self entryContents: debit)].
-	^ x dollarsToCents ledgerFormatted! !
+	^ (LedgerWindow dollarsToCents: x) asString! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 22:19'!
 autoCompleterClassFor: textGetter
@@ -1586,13 +1533,13 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 20:53'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 23:30'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
 	
 	tx _ Transaction new.
-	dt _ (self entryContents: #Date) asLdmDate asString.
+	dt _ (LedgerWindow asLdmDate: (self entryContents: #Date)) asString.
 	ck _ self entryContents: #Check.
 	py _ self entryContents: #Payee.
 	
@@ -1607,22 +1554,14 @@ changeTransaction
 		reconciled: (self entryContents: #R).
 		
 	tx amount: (self amount: #Debit or: #Credit).
-	
+	{tx amount.} print.
 	(tx check allSatisfy: [:a | a isDigit])
 		ifTrue: [
 			tx type: 'DEB'.
 			model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
 		ifFalse: [tx type: tx check].
 
-	model selectedTransaction 
-		ifNotNil: [ | b |
-			b _ PopUpMenu 
-				confirm: 'Regarding your entered data...'
-				trueChoice: 'replace the selected transaction'
-				falseChoice: 'insert a new transaction'.
-			b ifTrue: [
-				model selectedAccount ledger remove: model selectedTransaction ifAbsent: [nil]]].
-	model selectedAccount ledger add: tx.
+	model acceptTransaction: tx.
 
 	self resetUnacceptedEdits.
 	windowLedgerList updateList! !
@@ -1663,27 +1602,27 @@ checkPlus: anEntry
 	anEntry scroller selectAll.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 16:18'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 23:31'!
 dateEarlier: anEntry
 	"Subtract 1 from Ledgerdemain date"
 	| x |
 	
 	(x _ anEntry model actualContents) asString size = 0
 		ifTrue: [x _ Date today julianDayNumber - Time squeakEpoch]
-		ifFalse: [x _ x asString asLdmDate].
+		ifFalse: [x _ (LedgerWindow asLdmDate: x) asString].
 	x _ x - 1.
 	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
 	anEntry scroller selectAll.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 16:15'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 23:32'!
 dateLater: anEntry
 	"Add 1 to Ledgerdemain date"
 	| x |
 	
 	(x _ anEntry model actualContents) asString size = 0
 		ifTrue: [x _ Date today julianDayNumber - Time squeakEpoch]
-		ifFalse: [x _ x asString asLdmDate].
+		ifFalse: [x _ (LedgerWindow asLdmDate: x) asString].
 	x _ x + 1.
 	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
 	anEntry scroller selectAll.
@@ -2033,6 +1972,66 @@ windowLedgerList: anObject
 
 	windowLedgerList _ anObject! !
 
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 23:24'!
+asLdmDate: aString
+	"Convert aString in the form of mm/dd/yyyy to a Ledgerdemain date number"
+	"Covers dates from 1/1/1901 to 2/27/2935093 (quite a long time!!)"
+	| w x |
+	w _ aString select: [:a | a isDigit or: a = $/].
+	x _ w findTokens: '/'.
+	x size ~= 3 
+		ifTrue: [nil error: 'not a date'].
+
+	^ (Date 
+		newDay: x second asNumber 
+		month: x first asNumber 
+		year: x third asNumber)
+			 julianDayNumber - Time squeakEpoch! !
+
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/23/2016 09:38'!
+asMmDdYyyy: aDate
+	"Convert aDate from Ledgerdemain date number to mm/dd/yyyy"
+	^ (Date fromDays: aDate) mmddyyyy! !
+
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/23/2016 09:42'!
+centsToDollars: anAmount
+	"Answer anAmount as an array of strings in the form {'d,ddd'. 'cc'} "
+	| all sd sc |
+	
+	all _ anAmount asString.
+	all size < 2 ifTrue: [all _ ('0', all, '0') copyFrom: 1 to: 2].
+	sc _ all copyFrom: all size - 1 to: all size.
+	all size > 2
+		ifTrue: [sd _ LedgerWindow withCommas: (all copyFrom: 1 to: all size - 2)]
+		ifFalse: [sd _ '0'].
+	^ {sd. sc}! !
+
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 22:21'!
+dollarsToCents: aString
+	"Answer aString converted to a number of cents"
+	| x y z neg fracC |
+	
+	aString first = $. 
+		ifTrue: [x _ '0', aString withBlanksCondensed]
+		ifFalse: [x _ aString withBlanksCondensed].
+	[x asNumber] on: Error do: [^nil].
+	
+	y _ x findTokens: '-.' keep: '-.'.
+	(neg _ y first = '-') ifTrue: [y _ y removeFirst;	yourself].
+	y size = 1 ifTrue: [y _ y addAll: #('.' '00'); yourself].
+	y size = 2 ifTrue: [y _ y addAll: #('00'); yourself].
+	fracC _ 0.
+	y third size = 1 ifTrue: [y at: 3 put: (y third, '0')].
+	y third size > 2 
+		ifTrue: [
+			fracC _ (y third at: 3) asString asNumber.
+			y at: 3 put: (y third copyFrom: 1 to: 2); yourself].
+		
+	z _ ((y first), y third) asNumber.
+	fracC >= 5 ifTrue: [z _ z + 1].	"fraction of a cent"
+	neg ifTrue: [z _ z negated].
+	^ z! !
+
 !LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 6/22/2015 16:03'!
 how
 "
@@ -2043,6 +2042,21 @@ how
 includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
+
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 22:58'!
+insertDecimalPointIn: aString
+	"Answer aString with decimal point inserted in the hundreds position"
+	| x |
+
+	aString first = $-
+		ifTrue: [x _ aString first asString, (LedgerWindow prependZeros: (aString copyFrom: 2 to: aString size))]
+		ifFalse: [x _ LedgerWindow prependZeros: aString].
+		
+	^ String streamContents: [:str |
+		str 
+			nextPutAll: (x copyFrom: 1 to: x size - 2);
+			nextPut: $.;
+			nextPutAll: (x copyFrom: x size - 1 to: x size)]! !
 
 !LedgerWindow class methodsFor: 'key selection' stamp: 'dhn 3/1/2016 14:45'!
 keys
@@ -2066,6 +2080,13 @@ open
 		morphExtent: 1250@500;
 		setWindowColor:  Theme current workspace! !
 
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 22:34'!
+prependZeros: aString
+	"Answer aString with '0' or '00' prepended as necessary for a length of at least 3"
+	
+	 aString size > 2 ifTrue: [^ aString].
+	^ ('00' copyFrom: 1 count: (3 - aString size max: 0)), aString! !
+
 !LedgerWindow class methodsFor: 'key selection' stamp: 'dhn 3/14/2016 20:09'!
 transactionTypes
 	"Answer an array of transaction types"
@@ -2076,6 +2097,16 @@ transactionTypes
 		'TXFR' 		"transfer between accounts"
 		'WD' 		"withdraw from account (i.e. cashier's check)"
 	)! !
+
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 23:18'!
+withCommas: aString
+	"Answer aString with commas at the thousands, millions, etc positions"
+
+	aString size > 3
+		ifTrue: [
+			^ ((LedgerWindow withCommas: (aString copyFrom: 1 to: aString size - 3)), 
+				',', (aString copyFrom: aString size - 2 to: aString size))].
+	^ aString! !
 
 !Suggestion class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:37'!
 try
@@ -2118,11 +2149,11 @@ acquire: aField from: aRecord
 	loc _ (self class fileFields at: aField asSymbol) location.
 	^ aRecord copyFrom: loc x to: loc y.! !
 
-!Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:24'!
+!Transaction methodsFor: 'accessing' stamp: 'dhn 3/23/2016 10:23'!
 amount
 	"Answer the content of the amount field"
 
-	amount ifNil: [amount _ String new].
+	amount ifNil: [amount _ 0].
 	^ amount! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/8/2015 20:52'!
@@ -2184,7 +2215,7 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 3/19/2016 14:30'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 3/22/2016 23:04'!
 formatTransaction
 	"Answer the receiver as a formatted ledger line"
 
@@ -2210,7 +2241,7 @@ formatTransaction
 					with: self reconciled withoutTrailingBlanks);
 			nextPutAll: 
 				(self rightJustify: (self class listFields at: #amount) 
-					with: self amount);
+					with: (LedgerWindow insertDecimalPointIn: self amount asString));
 			nextPutAll: 
 				(self rightJustify: (self class listFields at: #Blank07) 
 					with: ' ');
@@ -2219,8 +2250,7 @@ formatTransaction
 					with: self type withoutTrailingBlanks);
 			nextPutAll: 
 				(self rightJustify: (self class listFields at: #balance) 
-					with: self account balCur ledgerFormatted)
-	]! !
+					with: self account balCur ledgerFormatted)]! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 3/15/2016 20:25'!
 key
