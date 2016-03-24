@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 23 March 2016 at 10:41:55.476359 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 24 March 2016 at 5:25:18.060237 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 179!
+!provides: 'Ledgerdemain' 1 180!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -410,7 +410,7 @@ listLedgerLines
 		col addLast: ea formatTransaction].
 	^ col! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 3/23/2016 10:05'!
+!Account methodsFor: 'accessing' stamp: 'dhn 3/24/2016 16:54'!
 loadTransaction: anObject
 	"Update balances and add anObject to the ledger"
 	| amt ck |
@@ -422,7 +422,7 @@ loadTransaction: anObject
 	((ck _ anObject check) allSatisfy: [:ea | ea isDigit])
 		ifTrue: [lastCheck _ lastCheck max: ck asNumber].
 		
-	self ledger add: anObject copy! !
+	self ledger add: anObject! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:49'!
 openDate
@@ -436,7 +436,7 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/21/2016 12:30'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/23/2016 14:41'!
 acceptTransaction: aTransaction
 	"Put aTransaction in the ledger"
 	
@@ -447,7 +447,8 @@ acceptTransaction: aTransaction
 				trueChoice: 'replace the selected transaction'
 				falseChoice: 'insert a new transaction'.
 			b ifTrue: [
-				selectedAccount ledger remove: selectedTransaction ifAbsent: [nil]]].
+				selectedAccount ledger remove: selectedTransaction ifAbsent: [self halt]].
+				self transactionListIndex: 0].
 	selectedAccount ledger add: aTransaction
 ! !
 
@@ -790,7 +791,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/23/2016 10:24'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/24/2016 16:52'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -808,7 +809,7 @@ newAccount
 							request: 'Date of opening balance'
 							initialAnswer: Date today mmddyyyy]
 					ifFalse: [
-						bal _ 0.
+						bal _ '0'.
 						balDate _ Date today mmddyyyy].
 				amt _ LedgerWindow dollarsToCents: bal.
 				acct
@@ -1236,15 +1237,15 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 22:31'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 12:12'!
 amount: debit or: credit
-	"Answer an amount string with an appropriate sign"
+	"Answer an amount with an appropriate sign"
 	| x |
 	
 	((self entryContents: debit) allSatisfy: [:a | a = $ ])
 		ifTrue: [x _ self entryContents: credit]
 		ifFalse: [x _ '-', (self entryContents: debit)].
-	^ (LedgerWindow dollarsToCents: x) asString! !
+	^ LedgerWindow dollarsToCents: x! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 22:19'!
 autoCompleterClassFor: textGetter
@@ -1401,7 +1402,7 @@ buildDebitEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:58'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/23/2016 14:44'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	| n |
@@ -1414,7 +1415,6 @@ buildEntries
 		addMorph: (self buildPayeeEntry: (n _ n + 1));		
 		addMorph: (self buildCategoryEntry: (n _ n + 1));		
 		addMorph: (self buildMemoEntry: (n _ n + 1));		
-		addMorph: (self buildREntry: (n _ n + 1));		
 		addMorph: (self buildDebitEntry: (n _ n + 1));		
 		addMorph: (self buildCreditEntry: (n _ n + 1))
 ! !
@@ -1533,7 +1533,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 23:30'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 12:28'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1554,7 +1554,7 @@ changeTransaction
 		reconciled: (self entryContents: #R).
 		
 	tx amount: (self amount: #Debit or: #Credit).
-	{tx amount.} print.
+
 	(tx check allSatisfy: [:a | a isDigit])
 		ifTrue: [
 			tx type: 'DEB'.
@@ -1602,27 +1602,27 @@ checkPlus: anEntry
 	anEntry scroller selectAll.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 23:31'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 11:37'!
 dateEarlier: anEntry
 	"Subtract 1 from Ledgerdemain date"
 	| x |
 	
 	(x _ anEntry model actualContents) asString size = 0
 		ifTrue: [x _ Date today julianDayNumber - Time squeakEpoch]
-		ifFalse: [x _ (LedgerWindow asLdmDate: x) asString].
+		ifFalse: [x _ LedgerWindow asLdmDate: x].
 	x _ x - 1.
 	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
 	anEntry scroller selectAll.
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/22/2016 23:32'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 11:36'!
 dateLater: anEntry
 	"Add 1 to Ledgerdemain date"
 	| x |
 	
 	(x _ anEntry model actualContents) asString size = 0
 		ifTrue: [x _ Date today julianDayNumber - Time squeakEpoch]
-		ifFalse: [x _ (LedgerWindow asLdmDate: x) asString].
+		ifFalse: [x _ LedgerWindow asLdmDate: x].
 	x _ x + 1.
 	anEntry model actualContents: (Date fromDays: x) mmddyyyy.
 	anEntry scroller selectAll.
@@ -1972,12 +1972,12 @@ windowLedgerList: anObject
 
 	windowLedgerList _ anObject! !
 
-!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 23:24'!
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/23/2016 11:28'!
 asLdmDate: aString
 	"Convert aString in the form of mm/dd/yyyy to a Ledgerdemain date number"
 	"Covers dates from 1/1/1901 to 2/27/2935093 (quite a long time!!)"
 	| w x |
-	w _ aString select: [:a | a isDigit or: a = $/].
+	w _ aString asString select: [:a | a isDigit or: a = $/].
 	x _ w findTokens: '/'.
 	x size ~= 3 
 		ifTrue: [nil error: 'not a date'].
@@ -2006,29 +2006,52 @@ centsToDollars: anAmount
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 22:21'!
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/24/2016 16:30'!
+dollarExpression: aString
+	"Convert aString to a string expressing dollars and cents"
+	| ix w x |
+	
+	(w _ aString copyWithout: $ )
+		ifNotEmpty: [
+			(ix _ w indexOf: $.) = 0 
+				ifTrue: [x _ w, '.', '00']
+				ifFalse: [
+					w first = $-
+						ifTrue: [
+							ix > 2
+								ifTrue: [x _ w, ('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]
+								ifFalse: [
+									x _ w first asString, '0.', 
+									(w copyFrom: ix + 1 to: w size), 
+									('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]]
+						ifFalse: [
+							ix > 1
+								ifTrue: [x _ w, ('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]
+								ifFalse: [
+									x _ '0.', (w copyFrom: ix + 1 to: w size), 
+									('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]]]]
+	
+		ifEmpty: [x _ '0'].
+	^ x! !
+
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/24/2016 16:07'!
 dollarsToCents: aString
 	"Answer aString converted to a number of cents"
-	| x y z neg fracC |
+	|  y z neg fracC |
 	
-	aString first = $. 
-		ifTrue: [x _ '0', aString withBlanksCondensed]
-		ifFalse: [x _ aString withBlanksCondensed].
-	[x asNumber] on: Error do: [^nil].
-	
-	y _ x findTokens: '-.' keep: '-.'.
-	(neg _ y first = '-') ifTrue: [y _ y removeFirst;	yourself].
-	y size = 1 ifTrue: [y _ y addAll: #('.' '00'); yourself].
-	y size = 2 ifTrue: [y _ y addAll: #('00'); yourself].
+	y _ (LedgerWindow dollarExpression: aString) findTokens: '-.' keep: '-.'.
+	(neg _ y first = '-') ifTrue: [y _ y removeFirst; yourself].
+	(y first, y third allSatisfy: [:a | a isDigit])
+		ifFalse: [nil error: '''', aString,''' can not be converted to cents.'].
+				
 	fracC _ 0.
-	y third size = 1 ifTrue: [y at: 3 put: (y third, '0')].
 	y third size > 2 
 		ifTrue: [
 			fracC _ (y third at: 3) asString asNumber.
 			y at: 3 put: (y third copyFrom: 1 to: 2); yourself].
 		
-	z _ ((y first), y third) asNumber.
-	fracC >= 5 ifTrue: [z _ z + 1].	"fraction of a cent"
+	z _ (y first, y third) asNumber.
+	fracC > 4 ifTrue: [z _ z + 1].	"fraction of a cent"
 	neg ifTrue: [z _ z negated].
 	^ z! !
 
