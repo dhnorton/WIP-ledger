@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 24 March 2016 at 5:25:18.060237 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 24 March 2016 at 9:31:09.042237 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 180!
+!provides: 'Ledgerdemain' 1 181!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -2006,32 +2006,34 @@ centsToDollars: anAmount
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
 
-!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/24/2016 16:30'!
+!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/24/2016 21:15'!
 dollarExpression: aString
 	"Convert aString to a string expressing dollars and cents"
 	| ix w x |
+
+	w _ aString copyWithout: $ .
+		w
+			ifEmpty: [x _ '0']
+			ifNotEmpty: [
+				ix _ w indexOf: $..
+				ix = 0 
+					ifTrue: [x _ w, '.', '00']
+					ifFalse: [
+						w first = $-
+							ifTrue: [
+								ix > 2
+									ifTrue: [x _ w, ('00' copyFrom: 1 count: (w size - ix - 2) abs)]
+									ifFalse: [
+										x _ w first asString, '0.', 
+										(w copyFrom: ix + 1 to: w size), 
+										('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]]
+							ifFalse: [
+								ix > 1
+									ifTrue: [x _ w, ('00' copyFrom: 1 count: (w size - ix - 2) abs)]
+									ifFalse: [
+										x _ '0.', (w copyFrom: ix + 1 to: w size), 
+										('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]]]].
 	
-	(w _ aString copyWithout: $ )
-		ifNotEmpty: [
-			(ix _ w indexOf: $.) = 0 
-				ifTrue: [x _ w, '.', '00']
-				ifFalse: [
-					w first = $-
-						ifTrue: [
-							ix > 2
-								ifTrue: [x _ w, ('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]
-								ifFalse: [
-									x _ w first asString, '0.', 
-									(w copyFrom: ix + 1 to: w size), 
-									('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]]
-						ifFalse: [
-							ix > 1
-								ifTrue: [x _ w, ('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]
-								ifFalse: [
-									x _ '0.', (w copyFrom: ix + 1 to: w size), 
-									('00' copyFrom: 1 to: ((1 - ix min: 0) max: 2))]]]]
-	
-		ifEmpty: [x _ '0'].
 	^ x! !
 
 !LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/24/2016 16:07'!
