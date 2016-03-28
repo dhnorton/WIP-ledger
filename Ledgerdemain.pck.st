@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 27 March 2016 at 8:28:34.528434 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 2:20:27.130252 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 182!
+!provides: 'Ledgerdemain' 1 183!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1751,34 +1751,38 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 21:49'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 13:25'!
 goAhead
 	"Go to the next EntryField to the right"
-	| from |
+	| from to |
 	
-	from _ self entryIndex.
-	entryIndex _ from + 1.
+	from _ windowEntries at: entryIndex.
+	entryIndex _ entryIndex + 1.
 	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
-	self releaseKeyboardFocus: (windowEntries at: from) scroller.
+	to _ windowEntries at: entryIndex.
+	self releaseKeyboardFocus: from scroller.
 	windowEntries first scroller releaseCachedState.
-	(windowEntries at: from) scroller releaseCachedState.
-	self newKeyboardFocus: (windowEntries at: entryIndex) scroller.
-	(windowEntries at: entryIndex) scroller selectAll.
+	from scroller releaseCachedState.
+	self newKeyboardFocus: to scroller.
+	to focusText.
+	to scroller selectAll
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/11/2016 21:49'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 14:18'!
 goBack
 	"Go to the next EntryField to the left"
-	| from |
+	| from to |
 	
-	from _ entryIndex.
-	entryIndex _ from - 1.
+	from _ windowEntries at: entryIndex.
+	entryIndex _ entryIndex - 1.
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
-	self releaseKeyboardFocus: (windowEntries at: from) scroller.
+	to _ windowEntries at: entryIndex.
+	self releaseKeyboardFocus: from scroller.
 	windowEntries first scroller releaseCachedState.
-	(windowEntries at: from) scroller releaseCachedState.
-	self newKeyboardFocus: (windowEntries at: entryIndex) scroller.
-	(windowEntries at: entryIndex) scroller selectAll.
+	from scroller releaseCachedState.
+	self newKeyboardFocus: to scroller.
+	to focusText.
+	to scroller selectAll
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/9/2016 21:01'!
