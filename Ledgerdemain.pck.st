@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 2:20:27.130252 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 2:55:46.272252 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 183!
+!provides: 'Ledgerdemain' 1 184!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1751,7 +1751,7 @@ getTrieFor: aSymbol
 	method _ model class completerTable at: aSymbol.
 	^ model perform: method! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 13:25'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 14:52'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from to |
@@ -1761,14 +1761,13 @@ goAhead
 	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
 	to _ windowEntries at: entryIndex.
 	self releaseKeyboardFocus: from scroller.
-	windowEntries first scroller releaseCachedState.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
 	to focusText.
 	to scroller selectAll
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 14:18'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 14:52'!
 goBack
 	"Go to the next EntryField to the left"
 	| from to |
@@ -1778,7 +1777,6 @@ goBack
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
 	to _ windowEntries at: entryIndex.
 	self releaseKeyboardFocus: from scroller.
-	windowEntries first scroller releaseCachedState.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
 	to focusText.
@@ -1929,7 +1927,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/19/2016 14:27'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/28/2016 14:50'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1940,10 +1938,7 @@ update: aSymbol
 			model selectedAccount isNil
 				ifTrue: [windowEntries do: [:ea | ea model actualContents: '']]
 				ifFalse: [windowEntries do: [:ea | ea model refetch]].
-			entryIndex _ 1.
-			self newKeyboardFocus: windowEntries first scroller.
-			windowEntries first scroller selectAll.
-			].
+			entryIndex _ windowEntries size].
 		
 	aSymbol == #xactList
 		ifTrue: [
