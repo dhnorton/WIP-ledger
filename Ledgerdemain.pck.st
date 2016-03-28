@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 24 March 2016 at 9:31:09.042237 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 27 March 2016 at 8:28:34.528434 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 181!
+!provides: 'Ledgerdemain' 1 182!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -625,14 +625,12 @@ getCategory
 		ifTrue: [^ self actualContents asString]
 		ifFalse: [^ selectedTransaction category withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/19/2016 18:11'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/25/2016 17:46'!
 getCheck
 	"Answer the check number"
 	
 	transactionListIndex = 0
-		ifTrue: [
-			selectedAccount ifNotNil: [^ (selectedAccount lastCheck + 1) asString].
-			selectedAccount ifNil: [^'']]
+		ifTrue: [^'']
 		ifFalse: [^ selectedTransaction check withoutTrailingBlanks]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/23/2016 09:59'!
@@ -1247,6 +1245,16 @@ amount: debit or: credit
 		ifFalse: [x _ '-', (self entryContents: debit)].
 	^ LedgerWindow dollarsToCents: x! !
 
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/27/2016 20:23'!
+areAnyMissing: anArray
+	"Answer whether entry fields named in anArray are not empty"
+	| ans |
+	
+	ans _ true.
+	anArray do: [:ea |
+		ans _ ans and: [(self entryContents: ea) notEmpty]].
+	^ ans not! !
+
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/15/2016 22:19'!
 autoCompleterClassFor: textGetter
 	"Essential method. Necessary in order to have a completer available for the containing class"
@@ -1533,40 +1541,45 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 12:28'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/27/2016 19:25'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
 	
-	tx _ Transaction new.
-	dt _ (LedgerWindow asLdmDate: (self entryContents: #Date)) asString.
-	ck _ self entryContents: #Check.
-	py _ self entryContents: #Payee.
+	(self areAnyMissing: {#Date. #Check. #Payee})
+		ifFalse: [	
+			tx _ Transaction new.
+			dt _ (LedgerWindow asLdmDate: (self entryContents: #Date)) asString.
+			ck _ self entryContents: #Check.
+			py _ self entryContents: #Payee.
 	
-	tx 
-		key: dt, ck, py;
-		account: model selectedAccount;
-		date: dt;
-		check: ck;
-		payee: py;
-		category: (self entryContents: #Category);
-		memo: (self entryContents: #Memo);
-		reconciled: (self entryContents: #R).
+			tx 
+				key: dt, ck, py;
+				account: model selectedAccount;
+				date: dt;
+				check: ck;
+				payee: py;
+				category: (self entryContents: #Category);
+				memo: (self entryContents: #Memo).
 		
-	tx amount: (self amount: #Debit or: #Credit).
+			tx amount: (self amount: #Debit or: #Credit).
+			tx amount > 0 ifTrue: [tx check: 'DEP'].
 
-	(tx check allSatisfy: [:a | a isDigit])
-		ifTrue: [
-			tx type: 'DEB'.
-			model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
-		ifFalse: [tx type: tx check].
+			(tx check allSatisfy: [:a | a isDigit])
+				ifTrue: [
+					tx type: 'DEB'.
+					model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
+				ifFalse: [tx type: tx check].
 
-	model acceptTransaction: tx.
+			model acceptTransaction: tx.
 
-	self resetUnacceptedEdits.
-	windowLedgerList updateList! !
+			self resetUnacceptedEdits.
+			windowLedgerList updateList; redrawNeeded.
+			windowAccountList changed]
+		ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']
+! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/18/2016 18:31'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/25/2016 18:55'!
 checkMinus: anEntry
 	"Subtract 1 from check number"
 	| w x |
@@ -1576,15 +1589,21 @@ checkMinus: anEntry
 			w first isDigit
 				ifTrue: [
 					x _ anEntry model actualContents asNumber.
-					(x _ x - 1) > 0 ifTrue: [anEntry model actualContents: x asString]]
+					(x _ x - 1) < 1 ifTrue: [x _ '']]
 				ifFalse: [
 					typeIndex _ typeIndex + 1.
-					anEntry model actualContents: (self class transactionTypes atWrap: typeIndex)]].
+					x _ (self class transactionTypes atWrap: typeIndex)]]
+		ifEmpty: [
+			model selectedAccount
+				ifNotNil: [x _ model selectedAccount lastCheck - 1]].
+			
+	anEntry model actualContents: x asString.
 	anEntry scroller selectAll.
+	model modified: true
 
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/14/2016 18:47'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/25/2016 18:55'!
 checkPlus: anEntry
 	"Add 1 to check number or answer transaction types"
 	| w x |
@@ -1594,12 +1613,17 @@ checkPlus: anEntry
 			w first isDigit
 				ifTrue: [
 					x _ anEntry model actualContents asNumber.
-					x _ x + 1.
-					anEntry model actualContents: x asString]
+					x _ x + 1]
 				ifFalse: [
 					typeIndex _ typeIndex + 1.
-					anEntry model actualContents: (self class transactionTypes atWrap: typeIndex)]].
+					x _ (self class transactionTypes atWrap: typeIndex)]]
+		ifEmpty: [
+			model selectedAccount
+				ifNotNil: [x _ model selectedAccount lastCheck + 1]].
+	
+	anEntry model actualContents: x asString.
 	anEntry scroller selectAll.
+	model modified: true
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 11:37'!
