@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 2:55:46.272252 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 5:46:29.751252 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 184!
+!provides: 'Ledgerdemain' 1 185!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex transactionListTime selectedTransaction entryTable netEditor'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction entryTable netEditor'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -695,13 +695,12 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ selectedTransaction reconciled]! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 3/17/2016 20:34'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 3/28/2016 17:43'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
 	self transactionListIndex: 0.
-	transactionListTime _ Time localMillisecondClock.
 	modified _ false.
 	self changed: #acctList.
 	self changed: #xactList! !
@@ -971,17 +970,12 @@ selectedTransaction: anObject
 	self changed: #xactList
 	! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 20:50'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/28/2016 17:41'!
 transactionList
 	"Answer a list of transactions"
 
-	self accounts isEmpty ifFalse: [ 
-		self accountListIndex > 0 ifTrue: [ 
-			(Time localMillisecondClock) - transactionListTime > 20
-				ifTrue: [	"to avoid doing this 4 times per up or down arrow!!"
-					transactionListTime _ Time localMillisecondClock.
-					^ transactionList _ selectedAccount listLedgerLines]
-				ifFalse: [^ transactionList]]].
+	self accounts isEmpty ifFalse: [
+		self accountListIndex > 0 ifTrue: [^ transactionList _ selectedAccount listLedgerLines]].
 	^ transactionList _ OrderedCollection new 
 ! !
 
@@ -997,7 +991,7 @@ transactionListIndex
 
 	^ transactionListIndex! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/23/2015 20:57'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/28/2016 17:37'!
 transactionListIndex: index
 	"Set the values of transactionListIndex and selectedTransaction"
 
@@ -1005,22 +999,9 @@ transactionListIndex: index
 	transactionListIndex > 0
 		ifTrue: [selectedTransaction _ selectedAccount ledger at: transactionListIndex]
 		ifFalse: [selectedTransaction _ nil].
-	self changed: #xactList.
 	self changed: #fillEntries
 
 ! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
-transactionListTime
-	"Answer the value of transactionListTime"
-
-	^ transactionListTime! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
-transactionListTime: anObject
-	"Set the value of transactionListTime"
-
-	transactionListTime _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/18/2015 15:27'!
 trie: aTrie withPrefix: aString
