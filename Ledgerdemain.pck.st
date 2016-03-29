@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 5:46:29.751252 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 10:08:38.395252 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 185!
+!provides: 'Ledgerdemain' 1 186!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -501,13 +501,14 @@ accountListIndex
 	accounts ifNil: [^ accountListIndex _ 0].
 	^ accountListIndex _ accounts indexOf: selectedAccount! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/24/2015 21:01'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/28/2016 21:24'!
 accountListIndex: index
 	"Set the value of accountListIndex"
 
 	accountListIndex _ index.
 	self selectedAccount:
 		(accounts at: index ifAbsent: nil).
+	self transactionListIndex: transactionList size.
 	self changed: #acctList.
 	self changed: #lastOnList
 	! !
@@ -948,12 +949,11 @@ selectedAccount
 
 	^ selectedAccount! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/24/2015 16:16'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/28/2016 20:41'!
 selectedAccount: anObject
 	"Set the value of selectedAccount "
 
 	selectedAccount _ anObject.
-	self changed: #acctList.
 	self changed: #xactList! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
@@ -1908,7 +1908,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/28/2016 14:50'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/28/2016 22:06'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1929,9 +1929,8 @@ update: aSymbol
 		
 	aSymbol == #lastOnList
 		ifTrue: [
-			model 
-				transactionListIndex: windowLedgerList getListSize;
-				transactionListIndex: 0	"prepare to add a transaction"].
+			windowLedgerList scrollSelectionIntoView.
+			model transactionListIndex: 0].
 		
 	aSymbol == #acctList
 		ifTrue: [
