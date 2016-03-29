@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 28 March 2016 at 10:08:38.395252 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 29 March 2016 at 7:49:04.968303 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 186!
+!provides: 'Ledgerdemain' 1 187!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -436,7 +436,7 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/23/2016 14:41'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/29/2016 19:46'!
 acceptTransaction: aTransaction
 	"Put aTransaction in the ledger"
 	
@@ -447,10 +447,11 @@ acceptTransaction: aTransaction
 				trueChoice: 'replace the selected transaction'
 				falseChoice: 'insert a new transaction'.
 			b ifTrue: [
-				selectedAccount ledger remove: selectedTransaction ifAbsent: [self halt]].
-				self transactionListIndex: 0].
-	selectedAccount ledger add: aTransaction
-! !
+				selectedAccount ledger remove: selectedTransaction ifAbsent: [nil]].
+				self transactionListIndex: 0 	"deselect removed transaction"].
+	selectedAccount ledger add: aTransaction.
+	self transactionListIndex: (selectedAccount ledger findFirst: [:a | a key = aTransaction key]).
+	self changed: #xactList! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/23/2016 10:03'!
 accountFromFile
@@ -1522,7 +1523,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/27/2016 19:25'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/29/2016 18:15'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1553,10 +1554,10 @@ changeTransaction
 				ifFalse: [tx type: tx check].
 
 			model acceptTransaction: tx.
-
-			self resetUnacceptedEdits.
-			windowLedgerList updateList; redrawNeeded.
-			windowAccountList changed]
+			self changed: #xactList.
+			windowLedgerList redrawNeeded.
+			self resetUnacceptedEdits]
+		
 		ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']
 ! !
 
