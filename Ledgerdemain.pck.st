@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 29 March 2016 at 7:49:04.968303 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 29 March 2016 at 8:43:51.686303 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 187!
+!provides: 'Ledgerdemain' 1 188!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -635,7 +635,7 @@ getCheck
 		ifTrue: [^'']
 		ifFalse: [^ selectedTransaction check withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/23/2016 09:59'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/29/2016 20:38'!
 getCredit
 	"Answer the amount if positive; '' otherwise"
 	| x |
@@ -645,7 +645,7 @@ getCredit
 		ifFalse: [
 			selectedTransaction amount < 0 
 				ifTrue: [x _ '']
-				ifFalse: [x _ LedgerWindow insertDecimalPointIn: selectedTransaction amount asString]].
+				ifFalse: [x _ selectedTransaction amount ledgerFormatted]].
 		
 	^ x! !
 
@@ -659,7 +659,7 @@ getDate
 			selectedAccount ifNil: [^'']]
 		ifFalse: [^ (Date fromDays: selectedTransaction date asNumber) mmddyyyy]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/23/2016 10:21'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/29/2016 20:39'!
 getDebit
 	"Answer the amount if negative; '' otherwise"
 	| x |
@@ -669,7 +669,7 @@ getDebit
 		ifFalse: [
 			selectedTransaction amount >= 0 
 				ifTrue: [x _ '']
-				ifFalse: [x _ LedgerWindow insertDecimalPointIn: selectedTransaction amount negated asString]].
+				ifFalse: [x _ selectedTransaction amount negated ledgerFormatted]].
 		
 	^ x! !
 
@@ -2072,21 +2072,6 @@ includeInNewMorphMenu
 
 	^ false 	"Not to be instantiated from the menu"! !
 
-!LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 22:58'!
-insertDecimalPointIn: aString
-	"Answer aString with decimal point inserted in the hundreds position"
-	| x |
-
-	aString first = $-
-		ifTrue: [x _ aString first asString, (LedgerWindow prependZeros: (aString copyFrom: 2 to: aString size))]
-		ifFalse: [x _ LedgerWindow prependZeros: aString].
-		
-	^ String streamContents: [:str |
-		str 
-			nextPutAll: (x copyFrom: 1 to: x size - 2);
-			nextPut: $.;
-			nextPutAll: (x copyFrom: x size - 1 to: x size)]! !
-
 !LedgerWindow class methodsFor: 'key selection' stamp: 'dhn 3/1/2016 14:45'!
 keys
 	"Answer the event keyValue for keys which receive special processing in #navigateWith:for:"
@@ -2244,7 +2229,7 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 3/22/2016 23:04'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 3/29/2016 20:36'!
 formatTransaction
 	"Answer the receiver as a formatted ledger line"
 
@@ -2270,7 +2255,7 @@ formatTransaction
 					with: self reconciled withoutTrailingBlanks);
 			nextPutAll: 
 				(self rightJustify: (self class listFields at: #amount) 
-					with: (LedgerWindow insertDecimalPointIn: self amount asString));
+					with: self amount ledgerFormatted);
 			nextPutAll: 
 				(self rightJustify: (self class listFields at: #Blank07) 
 					with: ' ');
