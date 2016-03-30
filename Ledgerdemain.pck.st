@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 29 March 2016 at 8:43:51.686303 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 29 March 2016 at 9:19:10.467303 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 188!
+!provides: 'Ledgerdemain' 1 189!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -436,12 +436,14 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/29/2016 19:46'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/29/2016 21:14'!
 acceptTransaction: aTransaction
 	"Put aTransaction in the ledger"
+	| match |
 	
-	selectedTransaction 
-		ifNotNil: [ | b |
+	match _ selectedAccount ledger detect: [:a | a key = aTransaction key] ifNone: [0].
+	(selectedTransaction notNil and: [match > 0])
+		ifTrue: [ | b |
 			b _ PopUpMenu 
 				confirm: 'Regarding your entered data...'
 				trueChoice: 'replace the selected transaction'
@@ -1523,7 +1525,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/29/2016 18:15'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/29/2016 21:02'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1545,7 +1547,6 @@ changeTransaction
 				memo: (self entryContents: #Memo).
 		
 			tx amount: (self amount: #Debit or: #Credit).
-			tx amount > 0 ifTrue: [tx check: 'DEP'].
 
 			(tx check allSatisfy: [:a | a isDigit])
 				ifTrue: [
