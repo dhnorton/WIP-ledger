@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 11:43:08.472983 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 7:07:58.155983 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 190!
+!provides: 'Ledgerdemain' 1 191!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -455,7 +455,7 @@ acceptTransaction: aTransaction
 	self transactionListIndex: (selectedAccount ledger findFirst: [:a | a key = aTransaction key]).
 	self changed: #xactList! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 3/23/2016 10:03'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/2/2016 16:26'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger ivar"
 	| file ios line rec acct |
@@ -1910,7 +1910,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 11:39'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 17:27'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1931,14 +1931,16 @@ update: aSymbol
 		
 	aSymbol == #lastOnList
 		ifTrue: [
-			windowLedgerList
-				selection: model selectedAccount ledger last;
-				scrollSelectionIntoView.
-			model transactionListIndex: 0].
+			model selectedAccount
+				ifNotNil: [
+					model transactionListIndex: model selectedAccount ledger size.
+					windowLedgerList scrollSelectionIntoView].
+			model transactionListIndex: 0.
+			windowLedgerList updateList].
 		
 	aSymbol == #acctList
 		ifTrue: [
-			windowAccountList 
+			windowAccountList
 				getList; 
 				updateList.
 			model computeNet]
