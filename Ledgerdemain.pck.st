@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2701] on 29 March 2016 at 9:19:10.467303 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 11:43:08.472983 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 189!
+!provides: 'Ledgerdemain' 1 190!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1910,7 +1910,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 3/28/2016 22:06'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 11:39'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1931,7 +1931,9 @@ update: aSymbol
 		
 	aSymbol == #lastOnList
 		ifTrue: [
-			windowLedgerList scrollSelectionIntoView.
+			windowLedgerList
+				selection: model selectedAccount ledger last;
+				scrollSelectionIntoView.
 			model transactionListIndex: 0].
 		
 	aSymbol == #acctList
