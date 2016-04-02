@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 7:07:58.155983 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 7:24:40.733983 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 191!
+!provides: 'Ledgerdemain' 1 192!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1910,7 +1910,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 17:27'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 19:23'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1924,10 +1924,7 @@ update: aSymbol
 			entryIndex _ windowEntries size].
 		
 	aSymbol == #xactList
-		ifTrue: [
-			windowLedgerList 
-				getList;
-				updateList].
+		ifTrue: [windowLedgerList updateList].
 		
 	aSymbol == #lastOnList
 		ifTrue: [
@@ -1940,9 +1937,7 @@ update: aSymbol
 		
 	aSymbol == #acctList
 		ifTrue: [
-			windowAccountList
-				getList; 
-				updateList.
+			windowAccountList updateList.
 			model computeNet]
 ! !
 
