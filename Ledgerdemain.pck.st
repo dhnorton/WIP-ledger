@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 7:24:40.733983 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 7:33:12.862983 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 192!
+!provides: 'Ledgerdemain' 1 193!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1806,7 +1806,7 @@ menuLedger
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 7/1/2015 14:18'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/2/2016 19:31'!
 menuMain
 	"Main pop-up menu"
 
@@ -1816,10 +1816,10 @@ menuMain
 		addTitle: 'Main Menu'; 
 		addStayUpIcons;
 		addLine.
-	aMenu add: 'Restore a file'			target: self model 	action:	#restoreFile.
+	aMenu add: 'Restore Accounts'			target: self model 	action:	#restoreFile.
 	aMenu balloonTextForLastItem: 'load a previously saved file 
 of account ledgers'.
-	aMenu add: 'Save the current file'	target: self model 	action:	#saveFile.
+	aMenu add: 'Save current Accounts'	target: self model 	action:	#saveFile.
 	aMenu balloonTextForLastItem: 'preserve changes to the data'.
 	aMenu addLine.
 	self addAccountActionsTo: aMenu.
