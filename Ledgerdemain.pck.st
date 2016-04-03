@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 11:14:27.984983 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 3 April 2016 at 10:42:51.939452 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 194!
+!provides: 'Ledgerdemain' 1 195!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -436,20 +436,20 @@ openDate: anObject
 
 	openDate _ anObject! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 3/29/2016 21:14'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/3/2016 10:38'!
 acceptTransaction: aTransaction
 	"Put aTransaction in the ledger"
 	| match |
 	
-	match _ selectedAccount ledger detect: [:a | a key = aTransaction key] ifNone: [0].
-	(selectedTransaction notNil and: [match > 0])
+	match _ selectedAccount ledger detect: [:a | a key = aTransaction key] ifNone: [nil].
+	(self transactionCurrent notNil and: [match notNil])
 		ifTrue: [ | b |
 			b _ PopUpMenu 
 				confirm: 'Regarding your entered data...'
 				trueChoice: 'replace the selected transaction'
 				falseChoice: 'insert a new transaction'.
 			b ifTrue: [
-				selectedAccount ledger remove: selectedTransaction ifAbsent: [nil]].
+				selectedAccount ledger remove: self transactionCurrent ifAbsent: [nil]].
 				self transactionListIndex: 0 	"deselect removed transaction"].
 	selectedAccount ledger add: aTransaction.
 	self transactionListIndex: (selectedAccount ledger findFirst: [:a | a key = aTransaction key]).
@@ -792,7 +792,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/2/2016 22:38'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/3/2016 10:02'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -804,14 +804,10 @@ newAccount
 				bal _ FillInTheBlankMorph 
 					request: 'Opening balance for ', temp
 					initialAnswer: '0.00'.
-				bal ~= '' 
-					ifTrue: [
-						balDate _ FillInTheBlankMorph 
-							request: 'Date of opening balance'
-							initialAnswer: Date today mmddyyyy]
-					ifFalse: [
-						bal _ '0'.
-						balDate _ Date today mmddyyyy].
+				bal = '' ifTrue: [bal _ '0'].
+				balDate _ FillInTheBlankMorph 
+					request: 'Date of opening balance'
+					initialAnswer: Date today mmddyyyy].
 				amt _ LedgerWindow dollarsToCents: bal.
 				acct
 					openDate: (LedgerWindow asLdmDate: balDate);
@@ -836,7 +832,7 @@ newAccount
 					computeNet.
 				self changed: #acctList.
 				self changed: #xactList]
-			ifFalse: [nil inform: temp,' is already an account']]
+			ifFalse: [nil inform: temp,' is already an account']
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
@@ -1007,14 +1003,15 @@ transactionListIndex
 	transactionList ifNil: [^ transactionListIndex _ 0].
 	^ transactionListIndex _ transactionList indexOf: selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/2/2016 22:42'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/3/2016 09:51'!
 transactionListIndex: index
 	"Set the values of transactionListIndex and selectedTransaction"
 
 	transactionListIndex _ index.
-	self selectedTransaction:
-		(transactionList at: index ifAbsent: nil).		
-	self changed: #fillEntries
+	transactionList ifNotNil: [
+		self selectedTransaction:
+			(transactionList at: index ifAbsent: nil).		
+		self changed: #fillEntries]
 
 ! !
 
@@ -1231,7 +1228,7 @@ addPayeeActionsTo: aMenu
 	subMenu add: 'Payees from file'	target: self model 	action: #payeesFromFile.
 	aMenu add: 'Payees...' subMenu: subMenu! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 12:12'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/3/2016 10:11'!
 amount: debit or: credit
 	"Answer an amount with an appropriate sign"
 	| x |
@@ -1239,6 +1236,7 @@ amount: debit or: credit
 	((self entryContents: debit) allSatisfy: [:a | a = $ ])
 		ifTrue: [x _ self entryContents: credit]
 		ifFalse: [x _ '-', (self entryContents: debit)].
+	x ifEmpty: [x _ '0'].
 	^ LedgerWindow dollarsToCents: x! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/27/2016 20:23'!
@@ -1537,41 +1535,42 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/2/2016 22:49'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/3/2016 10:20'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
 	
-	(self areAnyMissing: {#Date. #Check. #Payee})
-		ifFalse: [	
-			tx _ Transaction new.
-			dt _ LedgerWindow asLdmDate: (self entryContents: #Date).
-			ck _ self entryContents: #Check.
-			py _ self entryContents: #Payee.
+	model selectedAccount ifNotNil: [
+		(self areAnyMissing: {#Date. #Check. #Payee})
+			ifFalse: [	
+				tx _ Transaction new.
+				dt _ LedgerWindow asLdmDate: (self entryContents: #Date).
+				ck _ self entryContents: #Check.
+				py _ self entryContents: #Payee.
 	
-			tx 
-				key: dt asString, ck, py;
-				account: model selectedAccount;
-				date: dt;
-				check: ck;
-				payee: py;
-				category: (self entryContents: #Category);
-				memo: (self entryContents: #Memo).
+				tx 
+					key: dt asString, ck, py;
+					account: model selectedAccount;
+					date: dt;
+					check: ck;
+					payee: py;
+					category: (self entryContents: #Category);
+					memo: (self entryContents: #Memo).
 		
-			tx amount: (self amount: #Debit or: #Credit).
+				tx amount: (self amount: #Debit or: #Credit).
 
-			(tx check allSatisfy: [:a | a isDigit])
-				ifTrue: [
-					tx type: 'DEB'.
-					model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
-				ifFalse: [tx type: tx check].
+				(tx check allSatisfy: [:a | a isDigit])
+					ifTrue: [
+						tx type: 'DEB'.
+						model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
+					ifFalse: [tx type: tx check].
 
-			model acceptTransaction: tx.
-			self changed: #xactList.
-			windowLedgerList redrawNeeded.
-			self resetUnacceptedEdits]
+				model acceptTransaction: tx.
+				self changed: #xactList.
+				windowLedgerList redrawNeeded.
+				self resetUnacceptedEdits]
 		
-		ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']
+			ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']]
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/25/2016 18:55'!
