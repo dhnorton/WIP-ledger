@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 3 April 2016 at 11:43:25.054452 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 3 April 2016 at 12:51:16.191452 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 196!
+!provides: 'Ledgerdemain' 1 197!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -596,6 +596,21 @@ computeNet
 		nextPutAll: ttl second.
 	netEditor contents: str contents.
 ! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/3/2016 12:47'!
+deleteTransaction
+	"Remove the selected entry from the ledger"
+	
+	transactionListIndex > 1
+		ifTrue: [
+			self selectedAccount ledger 
+				remove: (self selectedAccount ledger at: transactionListIndex) ifAbsent: [].
+				self changed: #xactList]
+		ifFalse: [
+			transactionListIndex = 1 
+				ifTrue: [self inform: 'can not delete opening balance']
+				ifFalse: [self inform: 'no entry is selected']]
+	! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
 directory
@@ -1803,7 +1818,7 @@ keyboardFocus: anObject
 
 	keyboardFocus _ anObject! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 14:49'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/3/2016 12:51'!
 menuLedger
 	"Ledger pop-up menu"
 
@@ -1812,10 +1827,12 @@ menuLedger
 	aMenu
 		addTitle: 'Ledger Menu'; 
 		addLine.
-	aMenu add: 'Reconcile...'	target: self model 	action:	#reconcile.
+	aMenu add: 'Reconcile...'		target: self model 	action:	#reconcile.
 	aMenu balloonTextForLastItem: 'reconcile this account'.
-	aMenu add: 'Search...'		target: self model 	action:	#searchOneAccount.
+	aMenu add: 'Search...'			target: self model 	action:	#searchOneAccount.
 	aMenu balloonTextForLastItem: 'search within this account only'.
+	aMenu add: 'Delete entry...'	target: self model 	action:	#deleteTransaction.
+	aMenu balloonTextForLastItem: 'delete the selected ledger entry'.
 	aMenu popUpInWorld: self world.
 ! !
 
