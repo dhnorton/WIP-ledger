@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 3 April 2016 at 10:42:51.939452 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 3 April 2016 at 11:43:25.054452 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 195!
+!provides: 'Ledgerdemain' 1 196!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -969,11 +969,13 @@ selectedTransaction: anObject
 	self changed: #xactList
 	! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/2/2016 23:02'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/3/2016 11:40'!
 transactionCurrent
 	"Answer the transaction indexed by transactionListIndex"
 	
-	^ selectedAccount ledger at: transactionListIndex! !
+	^ transactionListIndex > 0
+		ifTrue: [selectedAccount ledger at: transactionListIndex]
+		ifFalse: [nil]! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/2/2016 23:00'!
 transactionLast
@@ -1921,7 +1923,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 22:40'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/3/2016 11:42'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -1935,7 +1937,9 @@ update: aSymbol
 			entryIndex _ windowEntries size].
 		
 	aSymbol == #xactList
-		ifTrue: [windowLedgerList updateList].
+		ifTrue: [
+			windowLedgerList updateList.
+			model computeNet].
 		
 	aSymbol == #lastOnList
 		ifTrue: [
