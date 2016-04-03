@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2706] on 3 April 2016 at 4:06:43.967805 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2706] on 3 April 2016 at 4:38:49.955805 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 198!
+!provides: 'Ledgerdemain' 1 199!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1818,6 +1818,14 @@ keyboardFocus: anObject
 
 	keyboardFocus _ anObject! !
 
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/3/2016 16:36'!
+listTransactionTypes
+	"List the type codes for transactions"
+	| pick |
+	
+	pick _ (SelectionMenu selections: self class transactionTypes) startUpMenu.
+	TextEditor  new clipboardTextPut:  pick! !
+
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/3/2016 12:51'!
 menuLedger
 	"Ledger pop-up menu"
@@ -1836,7 +1844,7 @@ menuLedger
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/2/2016 19:31'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/3/2016 16:37'!
 menuMain
 	"Main pop-up menu"
 
@@ -1853,10 +1861,10 @@ of account ledgers'.
 	aMenu balloonTextForLastItem: 'preserve changes to the data'.
 	aMenu addLine.
 	self addAccountActionsTo: aMenu.
-	self addPayeeActionsTo: aMenu.
-	self addCategoryActionsTo: aMenu.
-	self addMemoActionsTo: aMenu.
-	aMenu add: 'List transaction types'			target: self model 	action:	#listType.
+	aMenu add: 'Payees to clipboard'			target: self model 	selector: #list: argument: #payees.
+	aMenu add: 'Categories to clipboard'			target: self model 	selector: #list: argument: #categories.
+	aMenu add: 'Memos to clipboard'			target: self model 	selector: #list: argument: #memos.
+	aMenu add: 'Transaction Types to clipboard'			target: self  	action:	#listTransactionTypes.
 	aMenu popUpInWorld: self world.
 ! !
 
