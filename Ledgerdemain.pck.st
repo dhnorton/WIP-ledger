@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 7:33:12.862983 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 2 April 2016 at 11:14:27.984983 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 193!
+!provides: 'Ledgerdemain' 1 194!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -621,23 +621,23 @@ entryTable: aSymbol
 
 	entryTable _ self perform: aSymbol! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:01'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:04'!
 getCategory
 	"Answer the category"
 	
 	transactionListIndex = 0
 		ifTrue: [^ self actualContents asString]
-		ifFalse: [^ selectedTransaction category withoutTrailingBlanks]! !
+		ifFalse: [^ self transactionCurrent category withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/25/2016 17:46'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:05'!
 getCheck
 	"Answer the check number"
 	
 	transactionListIndex = 0
 		ifTrue: [^'']
-		ifFalse: [^ selectedTransaction check withoutTrailingBlanks]! !
+		ifFalse: [^ self transactionCurrent check withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/29/2016 20:38'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:05'!
 getCredit
 	"Answer the amount if positive; '' otherwise"
 	| x |
@@ -645,23 +645,23 @@ getCredit
 	transactionListIndex = 0
 		ifTrue: [x _ '']
 		ifFalse: [
-			selectedTransaction amount < 0 
+			self transactionCurrent amount < 0 
 				ifTrue: [x _ '']
-				ifFalse: [x _ selectedTransaction amount ledgerFormatted]].
+				ifFalse: [x _ self transactionCurrent amount ledgerFormatted]].
 		
 	^ x! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/20/2016 15:26'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:07'!
 getDate
 	"Answer the date"
 	
 	transactionListIndex = 0
 		ifTrue: [
-			selectedAccount ifNotNil: [^ (Date fromDays: selectedAccount ledger last date asNumber) mmddyyyy].
+			selectedAccount ifNotNil: [^ (Date fromDays: self transactionLast date) mmddyyyy].
 			selectedAccount ifNil: [^'']]
-		ifFalse: [^ (Date fromDays: selectedTransaction date asNumber) mmddyyyy]! !
+		ifFalse: [^ (Date fromDays: self transactionCurrent date) mmddyyyy]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/29/2016 20:39'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:08'!
 getDebit
 	"Answer the amount if negative; '' otherwise"
 	| x |
@@ -669,35 +669,35 @@ getDebit
 	transactionListIndex = 0
 		ifTrue: [x _ '']
 		ifFalse: [
-			selectedTransaction amount >= 0 
+			self transactionCurrent amount >= 0 
 				ifTrue: [x _ '']
-				ifFalse: [x _ selectedTransaction amount negated ledgerFormatted]].
+				ifFalse: [x _ self transactionCurrent amount negated ledgerFormatted]].
 		
 	^ x! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 21:00'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:08'!
 getMemo
 	"Answer the memo"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ selectedTransaction memo withoutTrailingBlanks]! !
+		ifFalse: [^ self transactionCurrent memo withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 3/11/2016 20:58'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:08'!
 getPayee
 	"Answer the payee"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ selectedTransaction payee withoutTrailingBlanks]! !
+		ifFalse: [^ self transactionCurrent payee withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 10/21/2015 12:30'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:09'!
 getR
 	"Answer the reconciled indicator"
 	
 	transactionListIndex = 0
 		ifTrue: [^ '']
-		ifFalse: [^ selectedTransaction reconciled]! !
+		ifFalse: [^ self transactionCurrent reconciled]! !
 
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 3/28/2016 17:43'!
 initialize
@@ -792,7 +792,7 @@ netEditor: anObject
 
 	netEditor _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/24/2016 16:52'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/2/2016 22:38'!
 newAccount
 	| temp bal amt balDate acct rec |
 	
@@ -814,7 +814,7 @@ newAccount
 						balDate _ Date today mmddyyyy].
 				amt _ LedgerWindow dollarsToCents: bal.
 				acct
-					openDate: (LedgerWindow asLdmDate: balDate) asString;
+					openDate: (LedgerWindow asLdmDate: balDate);
 					balOpen: amt;
 					balCur: amt;
 					balRcon: amt.
@@ -973,6 +973,18 @@ selectedTransaction: anObject
 	self changed: #xactList
 	! !
 
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/2/2016 23:02'!
+transactionCurrent
+	"Answer the transaction indexed by transactionListIndex"
+	
+	^ selectedAccount ledger at: transactionListIndex! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/2/2016 23:00'!
+transactionLast
+	"Answer the last transaction in the ledger of the selected account"
+	
+	^ selectedAccount ledger last! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/28/2016 17:41'!
 transactionList
 	"Answer a list of transactions"
@@ -988,20 +1000,20 @@ transactionList: anObject
 
 	transactionList _ anObject! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 18:33'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/2/2016 21:27'!
 transactionListIndex
 	"Answer the value of transactionListIndex"
 
-	^ transactionListIndex! !
+	transactionList ifNil: [^ transactionListIndex _ 0].
+	^ transactionListIndex _ transactionList indexOf: selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/28/2016 17:37'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/2/2016 22:42'!
 transactionListIndex: index
 	"Set the values of transactionListIndex and selectedTransaction"
 
 	transactionListIndex _ index.
-	transactionListIndex > 0
-		ifTrue: [selectedTransaction _ selectedAccount ledger at: transactionListIndex]
-		ifFalse: [selectedTransaction _ nil].
+	self selectedTransaction:
+		(transactionList at: index ifAbsent: nil).		
 	self changed: #fillEntries
 
 ! !
@@ -1525,7 +1537,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/29/2016 21:02'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/2/2016 22:49'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1533,12 +1545,12 @@ changeTransaction
 	(self areAnyMissing: {#Date. #Check. #Payee})
 		ifFalse: [	
 			tx _ Transaction new.
-			dt _ (LedgerWindow asLdmDate: (self entryContents: #Date)) asString.
+			dt _ LedgerWindow asLdmDate: (self entryContents: #Date).
 			ck _ self entryContents: #Check.
 			py _ self entryContents: #Payee.
 	
 			tx 
-				key: dt, ck, py;
+				key: dt asString, ck, py;
 				account: model selectedAccount;
 				date: dt;
 				check: ck;
@@ -1910,7 +1922,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 19:23'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/2/2016 22:40'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
