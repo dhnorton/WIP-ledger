@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2712] on 3 April 2016 at 12:51:16.191452 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2706] on 3 April 2016 at 4:06:43.967805 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 197!
+!provides: 'Ledgerdemain' 1 198!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction entryTable netEditor'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction entryTable netString'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -559,18 +559,18 @@ categories: anObject
 	(self categories includesKey: anObject)
 		ifFalse: [self addCategory: anObject]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:30'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/3/2016 16:02'!
 categoriesFromFile
 	"Copy category names from a file and add them to the categories ivar"
 	| file ios line |
 	file _ FillInTheBlankMorph request: 'Name of categories File:' initialAnswer: 'c:\directory\file.ext'.
 	file ~= '' ifTrue: [
-		ios _ FileStream oldFileNamed: file.
+		ios _ ReadStream on: file asFileEntry fileContents.
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 ifTrue: [self addCategory: line]].
 		ios close]! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 3/23/2016 09:44'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/3/2016 15:36'!
 computeNet
 	"Display the net sum of all accounts"
 	| ttl str |
@@ -583,10 +583,10 @@ computeNet
 		nextPutAll: '    Net'.
 	ttl >= 0
 		ifTrue: [
-			netEditor color: Color black.
+			netString color: Color black.
 			str nextPutAll: ' Total  ']
 		ifFalse: [
-			netEditor color: Color red.
+			netString color: Color red.
 			str nextPutAll: ' Loss  '].
 	ttl _ LedgerWindow centsToDollars: ttl abs.
 	str 
@@ -594,7 +594,7 @@ computeNet
 		nextPutAll: ttl first;
 		nextPut: $.;
 		nextPutAll: ttl second.
-	netEditor contents: str contents.
+	netString contents: str contents.
 ! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/3/2016 12:47'!
@@ -714,17 +714,18 @@ getR
 		ifTrue: [^ '']
 		ifFalse: [^ self transactionCurrent reconciled]! !
 
-!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 3/28/2016 17:43'!
+!LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 4/3/2016 16:05'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
 	self transactionListIndex: 0.
 	modified _ false.
+	netString _ ''.
 	self changed: #acctList.
 	self changed: #xactList! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 8/12/2015 21:25'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/3/2016 15:24'!
 list: aSymbol
 	"Show the results of the method named aSymbol in a SelectionMenu"
 	| entries rcvr pick |
@@ -734,8 +735,7 @@ list: aSymbol
 	rcvr keysDo: [:k | entries add: k].
 	entries size = 0 ifTrue: [^ Smalltalk beep].
 	pick _ (SelectionMenu selections: entries) startUpMenu.
-	{pick} print.
-	^ pick
+	TextEditor  new clipboardTextPut:  pick
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 7/1/2015 14:17'!
@@ -759,13 +759,13 @@ memos: anObject
 	(self memos includesKey: anObject)
 		ifFalse: [self memos at: anObject put: 1]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 11:03'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/3/2016 16:02'!
 memosFromFile
 	"Copy memos from a file and add them to the memos ivar"
 	| file ios line |
 	file _ FillInTheBlankMorph request: 'Name of memos file:' initialAnswer: 'c:\directory\file.ext'.
 	file ~= '' ifTrue: [
-		ios _ FileStream oldFileNamed: file.
+		ios _ ReadStream on: file asFileEntry fileContents.
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 ifTrue: [self memos: line]].
 		ios close]! !
@@ -795,17 +795,17 @@ net: anObject
 	net _ anObject.
 	self modified: true! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/11/2015 14:31'!
-netEditor
-	"Answer the value of netEditor"
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/3/2016 15:39'!
+netString
+	"Answer the value of netString"
 
-	^ netEditor! !
+	^ netString! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/11/2015 14:32'!
-netEditor: anObject
-	"Set the value of netEditor"
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/3/2016 15:39'!
+netString: anObject
+	"Set the value of netString"
 
-	netEditor _ anObject! !
+	netString _ anObject! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/3/2016 10:02'!
 newAccount
@@ -884,13 +884,13 @@ payees: anObject
 	(self payees includesKey: anObject)
 		ifFalse: [self payees at: anObject put: Payee new]! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/23/2015 20:19'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/3/2016 16:03'!
 payeesFromFile
 	"Copy payee names from a file and add them to the payees ivar"
 	| file ios line |
 	file _ FillInTheBlankMorph request: 'Name of payees File:' initialAnswer: 'c:\directory\file.ext'.
 	file ~= '' ifTrue: [
-		ios _ FileStream oldFileNamed: file.
+		ios _ ReadStream on: file asFileEntry fileContents.
 		[(line _ ios nextLine) notNil]
 			whileTrue: [	line size > 0 ifTrue: [self payees at: line put: Payee new]].
 		ios close]! !
@@ -904,7 +904,7 @@ putDebit: aString
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:51'!
 reconcile! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 6/24/2015 10:07'!
+!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/3/2016 16:03'!
 restorationOf: fileName
 	"Restore accounts from file named fileName"
 	"File scheme:
@@ -920,7 +920,7 @@ restorationOf: fileName
 	
 	"must consider: effect on balances"
 	acct _ 0.
-	ios _ FileStream oldFileNamed: fileName.
+	ios _ ReadStream on: fileName asFileEntry fileContents.
 	[(x _ ios nextLine) notNil]
 		whileTrue: [
 			acct _ acct + 1.
@@ -1272,7 +1272,7 @@ autoCompleterClassFor: textGetter
 
 	^ LedgerCompleter! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 1/28/2016 19:41'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/3/2016 15:43'!
 buildAccountList
 	"Answer the specifications for the list of accounts in the window"
 	| net ttl |
@@ -1293,7 +1293,7 @@ buildAccountList
 		layoutSpec: (LayoutSpec proportionalWidth: 1.0 fixedHeight: 100).
 	ttl _  (StringMorph new contents: '    Net Total:   $0.00'; name: #Total)
 		layoutSpec: (LayoutSpec proportionalWidth: 1.0 proportionalHeight: 0.1 minorDirectionPadding: #center).
-	model netEditor: ttl.
+	model netString: ttl.
 	net addMorph: ttl.
 
 	^ LayoutMorph newColumn
