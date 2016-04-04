@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 4 April 2016 at 2:27:42.297718 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 4 April 2016 at 2:37:58.944718 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 201!
+!provides: 'Ledgerdemain' 1 202!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -860,7 +860,7 @@ netString: anObject
 
 	netString _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/4/2016 13:08'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/4/2016 14:35'!
 newAccount
 	"Ensure data needed to open a new account is available and open the account if so"
 	| temp bal balDate |
@@ -877,8 +877,8 @@ newAccount
 						request: 'Date of opening balance'
 						initialAnswer: Date today mmddyyyy.
 					balDate ~= '' ifTrue: [
-						self accounts: (self accountNamed: temp opening: bal at: balDate)]]]]
-		ifFalse: [nil inform: temp,' is already an account']
+						self accounts: (self accountNamed: temp opening: bal at: balDate)]]]
+			ifFalse: [nil inform: temp,' is already an account']]
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
