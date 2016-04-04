@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2706] on 3 April 2016 at 4:38:49.955805 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 4 April 2016 at 11:10:37.594718 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 199!
+!provides: 'Ledgerdemain' 1 200!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -316,6 +316,32 @@ specialKeys
 		43 		"+ (plus)"
 		45 		"- (minus)"
 	)! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/3/2016 21:46'!
+mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition
+	"Make this TextMorph be the keyboard input focus, if it isn't already,
+		and repond to the text selection gesture."
+
+	"If we don't focus, Get focus, and do nothing else (the user will need to click again to do further interaction)"
+	self hasKeyboardFocus ifFalse: [
+		^aMouseButtonEvent hand newKeyboardFocus: self].
+
+	super mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition.
+
+	self handleInteraction: [ 
+		self owner class = EntryField
+			ifTrue: [
+				self owningWindow triggerEvent: #mouseSelected withArguments: {self owner position}].
+		editor mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition ].
+
+	aMouseButtonEvent hand
+		waitForClicksOrDragOrSimulatedMouseButton2: self
+		event: aMouseButtonEvent
+		clkSel: nil
+		clkNHalf: #clickAndHalf:localPosition:
+		dblClkSel: nil
+		dblClkNHalfSel: #doubleClickAndHalf:localPosition:
+		tripleClkSel: nil! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
@@ -1794,6 +1820,21 @@ goBack
 	to scroller selectAll
 ! !
 
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/4/2016 11:00'!
+goMouse: index
+	"Go to the EntryField selected by the mouse"
+	| from to |
+	
+	from _ windowEntries at: entryIndex.
+	entryIndex _ index.
+	to _ windowEntries at: entryIndex.
+	self releaseKeyboardFocus: from scroller.
+	from scroller releaseCachedState.
+	self newKeyboardFocus: to.
+	to focusText
+	
+	! !
+
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/9/2016 21:01'!
 handlesKeyboard
 
@@ -1901,13 +1942,14 @@ resetUnacceptedEdits
 		ea scroller hasUnacceptedEdits 
 			ifTrue: [ea scroller hasUnacceptedEdits: false]]! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/14/2016 17:47'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/3/2016 20:00'!
 sayWhen
 	"Establish the receiving half of the Observer Pattern"
 	
 	self when: #toTheRight send: #goAhead to: self.
 	self when: #toTheLeft send: #goBack to: self.
 	self when: #specialKey send: #'someKey:of:with:' to: self withArguments: #(#a #b #c).
+	self when: #mouseSelected send: #goMouse: to: self withArguments: #(#ndx).
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 14:11'!
