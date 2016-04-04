@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 4 April 2016 at 11:10:37.594718 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 4 April 2016 at 2:27:42.297718 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 200!
+!provides: 'Ledgerdemain' 1 201!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -542,6 +542,33 @@ accountListIndex: index
 	self changed: #lastOnList
 	! !
 
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/4/2016 13:09'!
+accountNamed: aString opening: amount at: date
+	"Answer an account named aString with an opening balance of amount as of date"
+	| acct amt rec |
+	
+	acct _ Account new accountName: aString.
+	amt _ LedgerWindow dollarsToCents: amount.
+	acct
+		openDate: (LedgerWindow asLdmDate: date);
+		balOpen: amt;
+		balCur: amt;
+		balRcon: amt.
+	rec _ Transaction new account: acct.
+	rec
+		date: acct openDate;
+		payee: '**Opening Balance';
+		reconciled: 'R';
+		type: '';
+		amount: 0;
+		category: '';
+		memo: '';
+		transfer: '';
+		check: '';
+		balance: acct balOpen ledgerFormatted.
+	acct ledger add: rec.
+	^ acct! !
+
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 13:09'!
 accounts
 	"Answer the value of accounts"
@@ -833,47 +860,25 @@ netString: anObject
 
 	netString _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/3/2016 10:02'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/4/2016 13:08'!
 newAccount
-	| temp bal amt balDate acct rec |
+	"Ensure data needed to open a new account is available and open the account if so"
+	| temp bal balDate |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
 		(accounts allSatisfy: [:a | temp ~= a accountName])
 			ifTrue: [
-				acct _ Account new accountName: temp.
 				bal _ FillInTheBlankMorph 
 					request: 'Opening balance for ', temp
 					initialAnswer: '0.00'.
-				bal = '' ifTrue: [bal _ '0'].
-				balDate _ FillInTheBlankMorph 
-					request: 'Date of opening balance'
-					initialAnswer: Date today mmddyyyy].
-				amt _ LedgerWindow dollarsToCents: bal.
-				acct
-					openDate: (LedgerWindow asLdmDate: balDate);
-					balOpen: amt;
-					balCur: amt;
-					balRcon: amt.
-				rec _ Transaction new account: acct.
-				rec
-					date: acct openDate;
-					payee: '**Opening Balance';
-					reconciled: 'R';
-					type: '';
-					amount: 0;
-					category: '';
-					memo: '';
-					transfer: '';
-					check: '';
-					balance: acct balOpen ledgerFormatted.
-				acct ledger add: rec.
-				self 
-					accounts: acct;
-					computeNet.
-				self changed: #acctList.
-				self changed: #xactList]
-			ifFalse: [nil inform: temp,' is already an account']
+				bal ~= '' ifTrue: [
+					balDate _ FillInTheBlankMorph 
+						request: 'Date of opening balance'
+						initialAnswer: Date today mmddyyyy.
+					balDate ~= '' ifTrue: [
+						self accounts: (self accountNamed: temp opening: bal at: balDate)]]]]
+		ifFalse: [nil inform: temp,' is already an account']
 ! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
