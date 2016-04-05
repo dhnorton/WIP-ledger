@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 3:08:53.612452 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 3:19:25.018452 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 205!
+!provides: 'Ledgerdemain' 1 206!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -474,7 +474,7 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/3/2016 10:38'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/5/2016 15:15'!
 acceptTransaction: aTransaction
 	"Put aTransaction in the ledger"
 	| match |
@@ -491,7 +491,8 @@ acceptTransaction: aTransaction
 				self transactionListIndex: 0 	"deselect removed transaction"].
 	selectedAccount ledger add: aTransaction.
 	self transactionListIndex: (selectedAccount ledger findFirst: [:a | a key = aTransaction key]).
-	self changed: #xactList! !
+	self changed: #xactList.
+	self changed: #acctList! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 14:28'!
 accountList
@@ -1589,7 +1590,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/5/2016 15:02'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/5/2016 15:17'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1620,8 +1621,6 @@ changeTransaction
 					ifFalse: [tx type: tx check].
 
 				model acceptTransaction: tx.
-				self changed: #xactList.
-				self changed: #acctList.
 				windowLedgerList redrawNeeded.
 				windowAccountList redrawNeeded.
 				self resetUnacceptedEdits]
