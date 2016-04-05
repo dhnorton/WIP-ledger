@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 3:19:25.018452 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 3:28:53.897452 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 206!
+!provides: 'Ledgerdemain' 1 207!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1590,7 +1590,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/5/2016 15:17'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/5/2016 15:26'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1621,8 +1621,6 @@ changeTransaction
 					ifFalse: [tx type: tx check].
 
 				model acceptTransaction: tx.
-				windowLedgerList redrawNeeded.
-				windowAccountList redrawNeeded.
 				self resetUnacceptedEdits]
 		
 			ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']]
