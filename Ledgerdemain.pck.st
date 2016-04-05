@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 12:15:33.894452 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 3:08:53.612452 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 204!
+!provides: 'Ledgerdemain' 1 205!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -493,13 +493,13 @@ acceptTransaction: aTransaction
 	self transactionListIndex: (selectedAccount ledger findFirst: [:a | a key = aTransaction key]).
 	self changed: #xactList! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/23/2015 21:20'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 14:28'!
 accountList
 	"Answer a list of accounts"
 
 	^ accounts
 		ifNil: [#()]
-		ifNotNil: [accounts collect: [:a | a accountName]]! !
+		ifNotNil: [accounts collect: [:a | self formatAccount: a]]! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 10/20/2015 20:03'!
 accountListIndex
@@ -667,6 +667,19 @@ entryTable: aSymbol
 	"Set the value of entryTable"
 
 	entryTable _ self perform: aSymbol! !
+
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 14:54'!
+formatAccount: anAccount 
+	"Answer a justified string with name and current balance"
+	| t s1 s2 str |
+	
+	t _ 27.	"desired line length"
+	s1 _ anAccount accountName.
+	s2 _ anAccount balCur ledgerFormatted.
+	(str _ String new writeStream)
+		nextPutAll: (s1 padded: #right to: (t - (s2 size)) with: $ );
+		nextPutAll: s2.
+	^ str contents! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:04'!
 getCategory
@@ -1295,7 +1308,7 @@ autoCompleterClassFor: textGetter
 
 	^ LedgerCompleter! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/3/2016 15:43'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/5/2016 14:15'!
 buildAccountList
 	"Answer the specifications for the list of accounts in the window"
 	| net ttl |
@@ -1309,6 +1322,7 @@ buildAccountList
 			menuGetter: #menuMain
 			keystrokeAction: nil)
 				name: #Accounts;
+				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9);
 				borderWidth: 1;
 				name: 'Account List').
 	
@@ -1575,7 +1589,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/3/2016 10:20'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/5/2016 15:02'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1607,7 +1621,9 @@ changeTransaction
 
 				model acceptTransaction: tx.
 				self changed: #xactList.
+				self changed: #acctList.
 				windowLedgerList redrawNeeded.
+				windowAccountList redrawNeeded.
 				self resetUnacceptedEdits]
 		
 			ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']]
