@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 11:15:13.754452 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 12:15:33.894452 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 203!
+!provides: 'Ledgerdemain' 1 204!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -493,40 +493,6 @@ acceptTransaction: aTransaction
 	self transactionListIndex: (selectedAccount ledger findFirst: [:a | a key = aTransaction key]).
 	self changed: #xactList! !
 
-!LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/2/2016 16:26'!
-accountFromFile
-	"Copy account ledger entries from a file and add them to the account ledger ivar"
-	| file ios line rec acct |
-	
-	selectedAccount ifNil: [self newAccount].
-	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.txt'.
-	file ~= '' ifTrue: [
-		ios _ ReadStream on: file asFileEntry fileContents.
-		acct _ accounts at: accountListIndex.
-		[(line _ ios nextLine) notNil]
-			whileTrue: [	line size > 0 
-				ifTrue: [
-					rec _ Transaction new account: acct.
-					rec type: (rec acquire: #type from: line).
-					rec date: (LedgerWindow asLdmDate: (rec acquire: #date from: line) asString).
-					rec check: (rec acquire: #check from: line).
-					rec payee: (rec acquire: #payee from: line).
-					rec memo: (rec acquire: #memo from: line).
-					rec category: (rec acquire: #category from: line).
-					rec reconciled: (rec acquire: #reconciled from: line).
-					rec amount: (LedgerWindow dollarsToCents: (rec acquire: #amount from: line)).
-					rec key: rec date asString, rec check, rec payee.
-					self categories: rec category withoutTrailingBlanks.
-					self payees: rec payee withoutTrailingBlanks.
-					self memos: rec memo withoutTrailingBlanks.
-					self type: rec type withoutTrailingBlanks.
-					acct loadTransaction: rec]].
-		
-		self computeNet.
-		self changed: #acctList.
-		self changed: #xactList.
-		self changed: #lastOnList]! !
-
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/23/2015 21:20'!
 accountList
 	"Answer a list of accounts"
@@ -872,31 +838,6 @@ netString: anObject
 	"Set the value of netString"
 
 	netString _ anObject! !
-
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 11:01'!
-newAccount
-	"Ensure data needed to open a new account is available and open the account if so"
-	| temp arr kind bal balDate |
-	
-	temp _ FillInTheBlankMorph request: 'Name of new account:'.
-	temp ~= '' ifTrue: [
-		(accounts allSatisfy: [:a | temp ~= a accountName])
-			ifTrue: [
-				arr _ #(#checking #savings #'credit card' #cash).
-				kind _ (PopUpMenu labelArray: arr) startUpWithCaption: 'Type of account:'.
-				kind > 0
-					ifTrue: [
-						bal _ FillInTheBlankMorph 
-							request: 'Opening balance for ', temp
-							initialAnswer: '0.00'.
-						bal ~= '' ifTrue: [
-							balDate _ FillInTheBlankMorph 
-								request: 'Date of opening balance'
-								initialAnswer: Date today mmddyyyy.
-							balDate ~= '' ifTrue: [
-								self accounts: (self accountNamed: temp type: (arr at: kind) opening: bal at: balDate)]]]]
-			ifFalse: [nil inform: temp,' is already an account']]
-! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/24/2015 09:49'!
 newCategory
@@ -1250,14 +1191,48 @@ textProvider: aTextProvider getter: symb1 name: aName
 		textGetter: symb1)
 	name: aName! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/30/2015 20:36'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 12:05'!
+accountFromFile
+	"Copy account ledger entries from a file and add them to the account ledger"
+	| file ios line rec acct |
+	
+	model selectedAccount ifNil: [self newAccount].
+	file _ FillInTheBlankMorph request: 'Name of file with xactions:' initialAnswer: 'c:\directory\file.txt'.
+	file ~= '' ifTrue: [
+		ios _ ReadStream on: file asFileEntry fileContents.
+		acct _ model accounts at: model accountListIndex.
+		[(line _ ios nextLine) notNil]
+			whileTrue: [	line size > 0 
+				ifTrue: [
+					rec _ Transaction new account: acct.
+					rec type: (rec acquire: #type from: line).
+					rec date: (LedgerWindow asLdmDate: (rec acquire: #date from: line) asString).
+					rec check: (rec acquire: #check from: line).
+					rec payee: (rec acquire: #payee from: line).
+					rec memo: (rec acquire: #memo from: line).
+					rec category: (rec acquire: #category from: line).
+					rec reconciled: (rec acquire: #reconciled from: line).
+					rec amount: (LedgerWindow dollarsToCents: (rec acquire: #amount from: line)).
+					rec key: rec date asString, rec check, rec payee.
+					model categories: rec category withoutTrailingBlanks.
+					model payees: rec payee withoutTrailingBlanks.
+					model memos: rec memo withoutTrailingBlanks.
+					model type: rec type withoutTrailingBlanks.
+					acct loadTransaction: rec]].
+		
+		model computeNet.
+		model changed: #acctList.
+		model changed: #xactList.
+		model changed: #lastOnList]! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 12:09'!
 addAccountActionsTo: aMenu
 	"Add items to aMenu for account actions"
 
 	| subMenu |
 	subMenu := MenuMorph new defaultTarget: self.
-	subMenu add: 'Add an account'	target: self model 	action:	#newAccount.
-	subMenu add: 'Load account from file...'	target: self model 	action:	#accountFromFile.
+	subMenu add: 'Add an account'				target: self  			action:	#newAccount.
+	subMenu add: 'Load account from file...'	target: self 		 	action:	#accountFromFile.
 	subMenu add: 'Search all accounts...'		target: self model 	action: #searchAllAccounts.
 	aMenu add: 'Accounts...' subMenu: subMenu! !
 
@@ -1929,6 +1904,31 @@ of account ledgers'.
 	aMenu add: 'Memos to clipboard'			target: self model 	selector: #list: argument: #memos.
 	aMenu add: 'Transaction Types to clipboard'			target: self  	action:	#listTransactionTypes.
 	aMenu popUpInWorld: self world.
+! !
+
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 11:52'!
+newAccount
+	"Ensure data needed to open a new account is available and open the account if so"
+	| temp arr kind bal balDate |
+	
+	temp _ FillInTheBlankMorph request: 'Name of new account:'.
+	temp ~= '' ifTrue: [
+		(model accounts allSatisfy: [:a | temp ~= a accountName])
+			ifTrue: [
+				arr _ #(#checking #savings #'credit card' #cash).
+				kind _ (PopUpMenu labelArray: arr) startUpWithCaption: 'Type of account:'.
+				kind > 0
+					ifTrue: [
+						bal _ FillInTheBlankMorph 
+							request: 'Opening balance for ', temp
+							initialAnswer: '0.00'.
+						bal ~= '' ifTrue: [
+							balDate _ FillInTheBlankMorph 
+								request: 'Date of opening balance'
+								initialAnswer: Date today mmddyyyy.
+							balDate ~= '' ifTrue: [
+								model accounts: (model accountNamed: temp type: (arr at: kind) opening: bal at: balDate)]]]]
+			ifFalse: [nil inform: temp,' is already an account']]
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:01'!
