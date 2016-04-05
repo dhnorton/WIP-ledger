@@ -1,5 +1,5 @@
 # Ledger d'Main
-Keep records of personal accounts such as:
+Keep records of personal financial accounts such as:
 
 - checking
 - savings
