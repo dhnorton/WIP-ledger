@@ -1,10 +1,10 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 4 April 2016 at 2:37:58.944718 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 11:15:13.754452 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 202!
+!provides: 'Ledgerdemain' 1 203!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
-	instanceVariableNames: 'accountName ledger balOpen openDate balRcon balCur lastCheck'
+	instanceVariableNames: 'accountName type ledger balOpen openDate balRcon balCur lastCheck'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -462,6 +462,18 @@ openDate: anObject
 
 	openDate _ anObject! !
 
+!Account methodsFor: 'accessing' stamp: 'dhn 4/5/2016 11:10'!
+type
+	"Answer the value of type"
+
+	^ type! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 4/5/2016 11:10'!
+type: anObject
+	"Set the value of type"
+
+	type _ anObject! !
+
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/3/2016 10:38'!
 acceptTransaction: aTransaction
 	"Put aTransaction in the ledger"
@@ -542,14 +554,15 @@ accountListIndex: index
 	self changed: #lastOnList
 	! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/4/2016 13:09'!
-accountNamed: aString opening: amount at: date
-	"Answer an account named aString with an opening balance of amount as of date"
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 11:11'!
+accountNamed: aString type: aSymbol opening: amount at: date
+	"Answer an account named aString of type aSymbol with an opening balance of amount as of date"
 	| acct amt rec |
 	
 	acct _ Account new accountName: aString.
 	amt _ LedgerWindow dollarsToCents: amount.
 	acct
+		type: aSymbol;
 		openDate: (LedgerWindow asLdmDate: date);
 		balOpen: amt;
 		balCur: amt;
@@ -860,24 +873,28 @@ netString: anObject
 
 	netString _ anObject! !
 
-!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/4/2016 14:35'!
+!LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 11:01'!
 newAccount
 	"Ensure data needed to open a new account is available and open the account if so"
-	| temp bal balDate |
+	| temp arr kind bal balDate |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
 		(accounts allSatisfy: [:a | temp ~= a accountName])
 			ifTrue: [
-				bal _ FillInTheBlankMorph 
-					request: 'Opening balance for ', temp
-					initialAnswer: '0.00'.
-				bal ~= '' ifTrue: [
-					balDate _ FillInTheBlankMorph 
-						request: 'Date of opening balance'
-						initialAnswer: Date today mmddyyyy.
-					balDate ~= '' ifTrue: [
-						self accounts: (self accountNamed: temp opening: bal at: balDate)]]]
+				arr _ #(#checking #savings #'credit card' #cash).
+				kind _ (PopUpMenu labelArray: arr) startUpWithCaption: 'Type of account:'.
+				kind > 0
+					ifTrue: [
+						bal _ FillInTheBlankMorph 
+							request: 'Opening balance for ', temp
+							initialAnswer: '0.00'.
+						bal ~= '' ifTrue: [
+							balDate _ FillInTheBlankMorph 
+								request: 'Date of opening balance'
+								initialAnswer: Date today mmddyyyy.
+							balDate ~= '' ifTrue: [
+								self accounts: (self accountNamed: temp type: (arr at: kind) opening: bal at: balDate)]]]]
 			ifFalse: [nil inform: temp,' is already an account']]
 ! !
 
