@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 10:16:16.434859 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 6 April 2016 at 1:07:10.879492 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 208!
+!provides: 'Ledgerdemain' 1 209!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -329,7 +329,7 @@ char: anObject
 
 	char _ anObject! !
 
-!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/5/2016 22:00'!
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/5/2016 20:38'!
 keyStroke: aKeyboardEvent
 
 	(Theme current keyStroke: aKeyboardEvent morph: self)
@@ -349,7 +349,7 @@ keyStroke: aKeyboardEvent
 		ifNil: [ self processKeyStroke: aKeyboardEvent ]
 		ifNotNil: [
 			char := aKeyboardEvent keyValue asCharacter.
-			autoCompleter class = LedgerCompleter ifTrue: [autoCompleter openCompletionMenu].
+			autoCompleter = LedgerCompleter ifTrue: [autoCompleter openCompletionMenu].
 			autoCompleter
 				autoCompletionAround: [ self processKeyStroke: aKeyboardEvent ]
 				keyStroke: aKeyboardEvent ]! !
