@@ -1105,7 +1105,7 @@ computeEntries
 	
 	signal _ textMorph owner valueOfProperty: #morphName. 	"where are we?"
 	trie _ textMorph owner textModel getTrieFor: signal. 	"get the Trie for this field"
-	char _ textMorph editor text first asString. 	"hack, cough"
+	char _ textMorph char asString. 	"hack, cough"
 	prefix _ char. 	"hack, cough"
 	col _ OrderedCollection new.
 	trie forPrefix: char keysAndValuesDo: [:key :val | col add: key]. 	"extract entries from the Trie"
