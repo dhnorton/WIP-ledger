@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 3:28:53.897452 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 5 April 2016 at 10:16:16.434859 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 207!
+!provides: 'Ledgerdemain' 1 208!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -316,6 +316,43 @@ specialKeys
 		43 		"+ (plus)"
 		45 		"- (minus)"
 	)! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/5/2016 21:35'!
+char
+	"Answer the value of char"
+
+	^ char! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/5/2016 21:35'!
+char: anObject
+	"Set the value of char"
+
+	char _ anObject! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/5/2016 22:00'!
+keyStroke: aKeyboardEvent
+
+	(Theme current keyStroke: aKeyboardEvent morph: self)
+		ifTrue: [^ self].
+	(self focusKeyboardFor: aKeyboardEvent)
+		ifTrue: [ ^ self ].
+		
+	"Maybe disable? Precludes the use of up and down arrows with control,
+	that are standard keystrokes in Windows to control the cursor.
+	Problem: At least Mac and Win VM generate ctrl-up and ctrl-down for
+	mouse wheel events.
+	I guess most people would prefer the mouse wheel to work properly..."
+	(owner scrollByKeyboard: aKeyboardEvent)
+		ifTrue: [ ^self ].
+
+	autoCompleter 
+		ifNil: [ self processKeyStroke: aKeyboardEvent ]
+		ifNotNil: [
+			char := aKeyboardEvent keyValue asCharacter.
+			autoCompleter class = LedgerCompleter ifTrue: [autoCompleter openCompletionMenu].
+			autoCompleter
+				autoCompletionAround: [ self processKeyStroke: aKeyboardEvent ]
+				keyStroke: aKeyboardEvent ]! !
 
 !InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/3/2016 21:46'!
 mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition
@@ -1205,7 +1242,7 @@ textProvider: aTextProvider getter: symb1 name: aName
 		textGetter: symb1)
 	name: aName! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 12:05'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 22:11'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger"
 	| file ios line rec acct |
@@ -1235,8 +1272,8 @@ accountFromFile
 					acct loadTransaction: rec]].
 		
 		model computeNet.
-		model changed: #acctList.
 		model changed: #xactList.
+		model changed: #acctList.
 		model changed: #lastOnList]! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 12:09'!
