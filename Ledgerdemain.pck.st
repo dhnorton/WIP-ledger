@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 6 April 2016 at 1:23:04.573617 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 6 April 2016 at 3:30:45.711311 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 209!
+!provides: 'Ledgerdemain' 1 210!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1119,18 +1119,28 @@ computeEntries
 	entries _ col.
 	self triggerEvent: signal 	"notify that the completer entries have changed"! !
 
-!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 11/9/2015 20:17'!
+!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/6/2016 14:55'!
 openCompletionMenu
+	"Open a completer menu if the field has one"
 	| theEditor |
-	theEditor _ textMorph editor.
-	position _ theEditor startIndex - 1.
-	self closeMenu.
-	self computeEntries.
-	entries notEmpty
-		ifTrue: [ 
-			menuMorph _  LedgerCompleterMorph 
-				completer: self
-				position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld ]! !
+	
+	(self class entryFields includes: textMorph owner name)
+		ifTrue: [
+			theEditor _ textMorph editor.
+			position _ theEditor startIndex - 1.
+			self closeMenu.
+			self computeEntries.
+			entries notEmpty
+				ifTrue: [ 
+					menuMorph _  LedgerCompleterMorph 
+						completer: self
+						position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld]]! !
+
+!LedgerCompleter class methodsFor: 'entries' stamp: 'dhn 4/6/2016 13:56'!
+entryFields
+	"Answer the fields which have completers"
+	
+	^ #(#Payee #Category #Memo)! !
 
 !LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 3/22/2016 22:25'!
 initialize
@@ -1156,6 +1166,12 @@ initialize
 			ifFalse: [ok _ true]].
 		
 	^ y! !
+
+!LedgerCompleterMorph methodsFor: 'as yet unclassified' stamp: 'dhn 4/6/2016 15:27'!
+timeout
+	"Answer the time given to the user for selecting a completion menu item"
+	
+	^ 15000! !
 
 !LedgerCompleterMorph class methodsFor: 'instance creation' stamp: 'dhn 11/9/2015 17:08'!
 initializedInstance
@@ -1679,6 +1695,12 @@ checkPlus: anEntry
 	anEntry scroller selectAll.
 	model modified: true
 ! !
+
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/6/2016 15:26'!
+complete: aSymbol
+	"Indicate which entry field is active"
+	
+	{'#complete:'. aSymbol} print.! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/23/2016 11:37'!
 dateEarlier: anEntry
