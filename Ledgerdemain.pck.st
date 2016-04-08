@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2717] on 6 April 2016 at 3:30:45.711311 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2720] on 8 April 2016 at 7:36:54.363241 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 210!
+!provides: 'Ledgerdemain' 1 211!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -339,12 +339,13 @@ generateKeyboardEvent: evtBuf
 		hand: self
 		stamp: stamp! !
 
-!HandMorph class methodsFor: '*Ledgerdemain' stamp: 'dhn 3/9/2016 16:35'!
+!HandMorph class methodsFor: '*Ledgerdemain' stamp: 'dhn 4/8/2016 19:33'!
 specialKeys
 	"Answer the event keyValue for keys which receive special processing"
 	
 	^ #(
-		  9 		"tab (right unshifted, left shifted)"
+		28 		"left arrow"
+		29 		"right arrow"
 		13 		"enter"
 		43 		"+ (plus)"
 		45 		"- (minus)"
@@ -664,17 +665,11 @@ directory: dir
 
 	directory _ dir! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/10/2015 20:15'!
-entryTable
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/8/2016 19:30'!
+entryTable: index
 	"Answer the value of entryTable"
 
-	^ entryTable! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 11/13/2015 16:08'!
-entryTable: aSymbol
-	"Set the value of entryTable"
-
-	entryTable _ self perform: aSymbol! !
+	^ #(Payee Category Memo) at: index - 2! !
 
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 14:54'!
 formatAccount: anAccount 
@@ -1094,30 +1089,17 @@ keyTable
 look
 	Payees explore! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 11/13/2015 16:25'!
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/8/2016 19:24'!
 addEntriesTo: aStream
 	"Supply content to the completer"
-	| db pref |
+	| db nam pref |
 
-	db _ model textProvider entryTable.
+	nam _ model textProvider model entryTable: model textProvider entryIndex.
+	db _ model textProvider getTrieFor: nam.
 	pref _ model actualContents asString.
 	db 
 		forPrefix: pref
 		keysAndValuesDo: [:key :val | aStream nextPut: key]! !
-
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 2/15/2016 21:50'!
-computeEntries
-	"Set the list for the completer"
-	| signal trie char col |
-	
-	signal _ textMorph owner valueOfProperty: #morphName. 	"where are we?"
-	trie _ textMorph owner textModel getTrieFor: signal. 	"get the Trie for this field"
-	char _ textMorph char asString. 	"hack, cough"
-	prefix _ char. 	"hack, cough"
-	col _ OrderedCollection new.
-	trie forPrefix: char keysAndValuesDo: [:key :val | col add: key]. 	"extract entries from the Trie"
-	entries _ col.
-	self triggerEvent: signal 	"notify that the completer entries have changed"! !
 
 !LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/6/2016 14:55'!
 openCompletionMenu
@@ -2016,17 +1998,18 @@ sayWhen
 	self when: #mouseSelected send: #goMouse: to: self withArguments: #(#ndx).
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/20/2016 14:11'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/8/2016 18:14'!
 someKey: aKey of: aType with: aModifier
 	"Process special key strokes"
 	| entr |
 	
 	entr _ windowEntries at: entryIndex.
 	
-	aKey = 9 ifTrue: [	"tabs"
-		aType = #keyUp  ifTrue: [ 
-			aModifier = 0 ifTrue: [self goAhead].
-			aModifier = 8 ifTrue: [self goBack]]].
+	aKey = 28 ifTrue: [	"left arrow"
+		aType = #keyUp  ifTrue: [self goBack]].
+	
+	aKey = 29 ifTrue: [	"right arrow"
+		aType = #keyUp  ifTrue: [self goAhead]].
 	
 	aKey = 13 ifTrue: [	"enter"
 		aType = #keyUp  ifTrue: [self changeTransaction]].
@@ -2946,6 +2929,13 @@ selectionChanged
 showsBlinkingCursor
 
 	^self handlesKeyboard and: [ self disablesEdition not ]! !
+
+!InnerTextMorph methodsFor: 'notifications' stamp: 'jmv 4/7/2016 17:34'!
+someSubmorphPositionOrExtentChanged
+	"Our extent, or some submorph changed. Must layout submorphs again."
+
+	super someSubmorphPositionOrExtentChanged.
+	self releaseEditorAndTextComposition! !
 
 !InnerTextMorph methodsFor: 'blinking cursor' stamp: 'jmv 2/2/2014 22:18'!
 startBlinking
