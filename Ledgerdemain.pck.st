@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2720] on 8 April 2016 at 7:36:54.363241 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 8 April 2016 at 10:02:42.453339 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 211!
+!provides: 'Ledgerdemain' 1 212!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -339,14 +339,14 @@ generateKeyboardEvent: evtBuf
 		hand: self
 		stamp: stamp! !
 
-!HandMorph class methodsFor: '*Ledgerdemain' stamp: 'dhn 4/8/2016 19:33'!
+!HandMorph class methodsFor: '*Ledgerdemain' stamp: 'dhn 4/8/2016 21:39'!
 specialKeys
 	"Answer the event keyValue for keys which receive special processing"
 	
 	^ #(
 		28 		"left arrow"
 		29 		"right arrow"
-		13 		"enter"
+		10 		"ctl-enter"
 		43 		"+ (plus)"
 		45 		"- (minus)"
 	)! !
@@ -761,6 +761,18 @@ getR
 	transactionListIndex = 0
 		ifTrue: [^ '']
 		ifFalse: [^ self transactionCurrent reconciled]! !
+
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/8/2016 21:49'!
+growTries: aTransaction
+	"Populate tries with data from aTransaction"
+	
+	self
+		categories: aTransaction category withoutTrailingBlanks;
+		payees: aTransaction payee withoutTrailingBlanks;
+		memos: aTransaction memo withoutTrailingBlanks;
+		type: aTransaction type withoutTrailingBlanks
+		
+! !
 
 !LedgerDeMain methodsFor: 'initialization' stamp: 'dhn 4/3/2016 16:05'!
 initialize
@@ -1210,7 +1222,7 @@ textProvider: aTextProvider getter: symb1 name: aName
 		textGetter: symb1)
 	name: aName! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 22:11'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/8/2016 21:50'!
 accountFromFile
 	"Copy account ledger entries from a file and add them to the account ledger"
 	| file ios line rec acct |
@@ -1233,10 +1245,7 @@ accountFromFile
 					rec reconciled: (rec acquire: #reconciled from: line).
 					rec amount: (LedgerWindow dollarsToCents: (rec acquire: #amount from: line)).
 					rec key: rec date asString, rec check, rec payee.
-					model categories: rec category withoutTrailingBlanks.
-					model payees: rec payee withoutTrailingBlanks.
-					model memos: rec memo withoutTrailingBlanks.
-					model type: rec type withoutTrailingBlanks.
+					model growTries: rec.
 					acct loadTransaction: rec]].
 		
 		model computeNet.
@@ -1595,7 +1604,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/5/2016 15:26'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/8/2016 21:55'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1625,7 +1634,9 @@ changeTransaction
 						model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
 					ifFalse: [tx type: tx check].
 
-				model acceptTransaction: tx.
+				model
+					growTries: tx;
+					acceptTransaction: tx.
 				self resetUnacceptedEdits]
 		
 			ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']]
@@ -1998,7 +2009,7 @@ sayWhen
 	self when: #mouseSelected send: #goMouse: to: self withArguments: #(#ndx).
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/8/2016 18:14'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/8/2016 21:41'!
 someKey: aKey of: aType with: aModifier
 	"Process special key strokes"
 	| entr |
@@ -2011,7 +2022,7 @@ someKey: aKey of: aType with: aModifier
 	aKey = 29 ifTrue: [	"right arrow"
 		aType = #keyUp  ifTrue: [self goAhead]].
 	
-	aKey = 13 ifTrue: [	"enter"
+	aKey = 10 ifTrue: [	"ctl-enter"
 		aType = #keyUp  ifTrue: [self changeTransaction]].
 	
 	aKey = 43 ifTrue: [	"plus"
