@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 9 April 2016 at 2:38:38.244989 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 10 April 2016 at 12:33:14.444766 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 213!
+!provides: 'Ledgerdemain' 1 214!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction entryTable netString'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction ledgerSelection entryTable netString'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -317,6 +317,32 @@ specialKeys
 		45 		"- (minus)"
 	)! !
 
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/10/2016 12:19'!
+mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition
+	"Make this TextMorph be the keyboard input focus, if it isn't already,
+		and repond to the text selection gesture."
+
+	"If we don't focus, Get focus, and do nothing else (the user will need to click again to do further interaction)"
+	self hasKeyboardFocus ifFalse: [
+		^aMouseButtonEvent hand newKeyboardFocus: self].
+
+	super mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition.
+
+	self handleInteraction: [ 
+		self owner class = EntryField
+			ifTrue: [
+				self owningWindow triggerEvent: #mouseSelected withArguments: {self owner position}].
+		editor mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition ].
+
+	aMouseButtonEvent hand
+		waitForClicksOrDragOrSimulatedMouseButton2: self
+		event: aMouseButtonEvent
+		clkSel: nil
+		clkNHalf: #clickAndHalf:localPosition:
+		dblClkSel: nil
+		dblClkNHalfSel: #doubleClickAndHalf:localPosition:
+		tripleClkSel: nil! !
+
 !Account methodsFor: 'accessing' stamp: 'dhn 8/7/2015 11:38'!
 accountName
 	"Answer the value of accountName"
@@ -448,12 +474,12 @@ type: anObject
 
 	type _ anObject! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/5/2016 15:15'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/9/2016 20:54'!
 acceptTransaction: aTransaction
 	"Put aTransaction in the ledger"
 	| match |
 	
-	match _ selectedAccount ledger detect: [:a | a key = aTransaction key] ifNone: [nil].
+	match _ selectedAccount ledger detect: [:a | a key withoutTrailingBlanks = aTransaction key] ifNone: [nil].
 	(self transactionCurrent notNil and: [match notNil])
 		ifTrue: [ | b |
 			b _ PopUpMenu 
@@ -631,6 +657,12 @@ directory: dir
 
 	directory _ dir! !
 
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/9/2016 21:06'!
+entryTable
+	"Answer the value of entryTable"
+
+	^ entryTable! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/8/2016 19:30'!
 entryTable: index
 	"Answer the value of entryTable"
@@ -750,6 +782,18 @@ initialize
 	netString _ ''.
 	self changed: #acctList.
 	self changed: #xactList! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/9/2016 21:06'!
+ledgerSelection
+	"Answer the value of ledgerSelection"
+
+	^ ledgerSelection! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/9/2016 21:06'!
+ledgerSelection: anObject
+	"Set the value of ledgerSelection"
+
+	ledgerSelection _ anObject! !
 
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/3/2016 15:24'!
 list: aSymbol
@@ -967,12 +1011,12 @@ selectedTransaction: anObject
 	self changed: #xactList
 	! !
 
-!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/3/2016 11:40'!
+!LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/9/2016 21:21'!
 transactionCurrent
 	"Answer the transaction indexed by transactionListIndex"
 	
-	^ transactionListIndex > 0
-		ifTrue: [selectedAccount ledger at: transactionListIndex]
+	^ self transactionListIndex > 0
+		ifTrue: [self ledgerSelection]
 		ifFalse: [nil]! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/2/2016 23:00'!
@@ -1003,14 +1047,17 @@ transactionListIndex
 	transactionList ifNil: [^ transactionListIndex _ 0].
 	^ transactionListIndex _ transactionList indexOf: selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/3/2016 09:51'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/9/2016 21:35'!
 transactionListIndex: index
-	"Set the values of transactionListIndex and selectedTransaction"
+	"Set the values of transactionListIndex, selectedTransaction, and ledgerSelection"
 
 	transactionListIndex _ index.
 	transactionList ifNotNil: [
 		self selectedTransaction:
-			(transactionList at: index ifAbsent: nil).		
+			(transactionList at: index ifAbsent: nil).
+		self ledgerSelection: (self selectedAccount notNil
+			ifTrue: [(self selectedAccount ledger at: index ifAbsent: nil)]
+			ifFalse: [nil]).
 		self changed: #fillEntries]
 
 ! !
