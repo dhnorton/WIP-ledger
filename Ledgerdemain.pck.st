@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 10 April 2016 at 12:33:14.444766 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 10 April 2016 at 1:42:24.512766 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 214!
+!provides: 'Ledgerdemain' 1 215!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction ledgerSelection entryTable netString'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction ledgerSelection netString'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -657,18 +657,6 @@ directory: dir
 
 	directory _ dir! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/9/2016 21:06'!
-entryTable
-	"Answer the value of entryTable"
-
-	^ entryTable! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/8/2016 19:30'!
-entryTable: index
-	"Answer the value of entryTable"
-
-	^ #(Payee Category Memo) at: index - 2! !
-
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 4/5/2016 14:54'!
 formatAccount: anAccount 
 	"Answer a justified string with name and current balance"
@@ -1114,13 +1102,12 @@ keyTable
 look
 	Payees explore! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/8/2016 19:24'!
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/10/2016 13:32'!
 addEntriesTo: aStream
 	"Supply content to the completer"
-	| db nam pref |
+	| db pref |
 
-	nam _ model textProvider model entryTable: model textProvider entryIndex.
-	db _ model textProvider getTrieFor: nam.
+	db _ model textProvider getEntryTrie.
 	pref _ model actualContents asString.
 	db 
 		forPrefix: pref
@@ -1821,6 +1808,12 @@ getDebit
 	
 	^ model getDebit! !
 
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/10/2016 13:37'!
+getEntryTrie
+	"Answer the completer database for the entry field at entryIndex"
+	
+	^ model perform: (model class completerTable at: (windowEntries at: entryIndex) name)! !
+
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:27'!
 getMemo
 	"Answer the memo"
@@ -1838,14 +1831,6 @@ getR
 	"Answer the reconciled indicator"
 	
 	^ model getR! !
-
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 2/15/2016 21:44'!
-getTrieFor: aSymbol
-	"Answer the contents Trie for the field named aSymbol"
-	| method |
-	
-	method _ model class completerTable at: aSymbol.
-	^ model perform: method! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 14:52'!
 goAhead
