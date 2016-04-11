@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 2:46:08.017613 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 3:01:15.354613 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 218!
+!provides: 'Ledgerdemain' 1 219!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1825,7 +1825,7 @@ getR
 	
 	^ model getR! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:42'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:58'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from to |
@@ -1834,6 +1834,7 @@ goAhead
 	entryIndex _ entryIndex + 1.
 	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
 	to _ windowEntries at: entryIndex.
+	from scroller autoCompleter closeMenu.
 	self releaseKeyboardFocus: from scroller.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
@@ -1843,7 +1844,7 @@ goAhead
 	self openCompleterFor: to
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:43'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:59'!
 goBack
 	"Go to the next EntryField to the left"
 	| from to |
@@ -1852,6 +1853,7 @@ goBack
 	entryIndex _ entryIndex - 1.
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
 	to _ windowEntries at: entryIndex.
+	from scroller autoCompleter closeMenu.
 	self releaseKeyboardFocus: from scroller.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
@@ -1862,7 +1864,7 @@ goBack
 
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:43'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:59'!
 goMouse: index
 	"Go to the EntryField selected by the mouse"
 	| from to |
@@ -1870,6 +1872,7 @@ goMouse: index
 	from _ windowEntries at: entryIndex.
 	entryIndex _ index.
 	to _ windowEntries at: entryIndex.
+	from scroller autoCompleter closeMenu.
 	self releaseKeyboardFocus: from scroller.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to.
