@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 3:01:15.354613 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 3:32:06.872613 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 219!
+!provides: 'Ledgerdemain' 1 220!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1462,7 +1462,7 @@ buildDebitEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/9/2016 14:18'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 15:16'!
 buildEntries
 	"Answer the layout for transaction entry fields"
 	| n |
@@ -1476,10 +1476,7 @@ buildEntries
 		addMorph: (self buildCategoryEntry: (n _ n + 1));		
 		addMorph: (self buildMemoEntry: (n _ n + 1));		
 		addMorph: (self buildDebitEntry: (n _ n + 1));		
-		addMorph: (self buildCreditEntry: (n _ n + 1));
-		addMorph: (
-			entryButton _ (PluggableButtonMorph model: self action: #changeTransaction label: 'Enter')
-				morphExtent: 60 @ 30)! !
+		addMorph: (self buildCreditEntry: (n _ n + 1))! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:48'!
 buildLedgerList
@@ -1825,14 +1822,18 @@ getR
 	
 	^ model getR! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:58'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 15:27'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from to |
 	
 	from _ windowEntries at: entryIndex.
 	entryIndex _ entryIndex + 1.
-	entryIndex > windowEntries size ifTrue: [entryIndex _ 1].
+	entryIndex > windowEntries size 
+		ifTrue: [
+			(PopUpMenu confirm: 'Enter transaction?')
+				ifTrue: [self changeTransaction].
+			entryIndex _ 1].
 	to _ windowEntries at: entryIndex.
 	from scroller autoCompleter closeMenu.
 	self releaseKeyboardFocus: from scroller.
@@ -2255,18 +2256,15 @@ keys
 		31 		"down arrow"
 	)! !
 
-!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 4/9/2016 14:27'!
+!LedgerWindow class methodsFor: 'instance creation' stamp: 'dhn 4/11/2016 15:28'!
 open
 	"
 	LedgerWindow open.
 	"
-	| w |
 
-	w _ (LedgerWindow open: (LedgerDeMain new) label: 'Ledger d''Main')
+	(LedgerWindow open: (LedgerDeMain new) label: 'Ledger d''Main')
 		morphExtent: 1250@500;
-		setWindowColor:  Theme current workspace.
-	w entryButton color: Color lightGreen.
-! !
+		setWindowColor:  Theme current workspace! !
 
 !LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/22/2016 22:34'!
 prependZeros: aString
