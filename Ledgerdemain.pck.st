@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 12:49:07.061613 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 2:46:08.017613 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 217!
+!provides: 'Ledgerdemain' 1 218!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -316,6 +316,12 @@ specialKeys
 		43 		"+ (plus)"
 		45 		"- (minus)"
 	)! !
+
+!InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/11/2016 14:33'!
+autoCompleter
+	"Answer the value of autoCompleter"
+	
+	^ autoCompleter! !
 
 !InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/10/2016 12:19'!
 mouseButton1Down: aMouseButtonEvent localPosition: localEventPosition
@@ -1819,7 +1825,7 @@ getR
 	
 	^ model getR! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 14:52'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:42'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from to |
@@ -1832,10 +1838,12 @@ goAhead
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
 	to focusText.
-	to scroller selectAll
+	to scroller selectAll.
+	
+	self openCompleterFor: to
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/28/2016 14:52'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:43'!
 goBack
 	"Go to the next EntryField to the left"
 	| from to |
@@ -1848,10 +1856,13 @@ goBack
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
 	to focusText.
-	to scroller selectAll
+	to scroller selectAll.
+	
+	self openCompleterFor: to
+
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/4/2016 11:00'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:43'!
 goMouse: index
 	"Go to the EntryField selected by the mouse"
 	| from to |
@@ -1862,7 +1873,10 @@ goMouse: index
 	self releaseKeyboardFocus: from scroller.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to.
-	to focusText
+	to focusText.
+	
+	self openCompleterFor: to
+
 	
 	! !
 
@@ -1973,6 +1987,14 @@ newKeyboardFocus: aMorphOrNil
 	keyboardFocus _ aMorphOrNil.
 	oldFocus ifNotNil: [oldFocus == aMorphOrNil ifFalse: [oldFocus keyboardFocusChange: false]].
 	aMorphOrNil ifNotNil: [aMorphOrNil keyboardFocusChange: true].
+! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:41'!
+openCompleterFor: aField
+	"Display completer menu for aField"
+	
+	(self class completerTable includesKey: aField name)
+		ifTrue: [aField scroller autoCompleter openCompletionMenu]
 ! !
 
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
