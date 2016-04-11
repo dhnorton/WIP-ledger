@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 10 April 2016 at 1:42:24.512766 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 10 April 2016 at 10:05:30.091766 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 215!
+!provides: 'Ledgerdemain' 1 216!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1606,7 +1606,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/8/2016 21:55'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/10/2016 21:55'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| tx dt ck py |
@@ -1616,7 +1616,7 @@ changeTransaction
 			ifFalse: [	
 				tx _ Transaction new.
 				dt _ LedgerWindow asLdmDate: (self entryContents: #Date).
-				ck _ self entryContents: #Check.
+				ck _ (self entryContents: #Check) withoutTrailingBlanks.
 				py _ self entryContents: #Payee.
 	
 				tx 
@@ -1630,6 +1630,10 @@ changeTransaction
 		
 				tx amount: (self amount: #Debit or: #Credit).
 
+				tx reconciled: (model ledgerSelection notNil
+					ifTrue: [model ledgerSelection reconciled]
+					ifFalse: ['']).
+					
 				(tx check allSatisfy: [:a | a isDigit])
 					ifTrue: [
 						tx type: 'DEB'.
