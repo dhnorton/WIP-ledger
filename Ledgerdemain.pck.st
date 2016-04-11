@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 10 April 2016 at 10:05:30.091766 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 12:49:07.061613 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 216!
+!provides: 'Ledgerdemain' 1 217!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1074,17 +1074,6 @@ withPrefix: aString
 	"Answer the leaves which contain aString as the first character(s)"
 	^ self forPrefix: aString keysAndValuesDo: [:key :v | key]! !
 
-!LedgerDeMain class methodsFor: 'completer' stamp: 'dhn 1/29/2016 21:13'!
-completerTable
-	"Translate entry field names to methods for completer entries"
-	
-	^ Dictionary new
-		at: #Category put: #categories;
-		at: #Memo put: #memos;
-		at: #Payee put: #payees;
-		at: #Type put: #type;
-		yourself! !
-
 !LedgerDeMain class methodsFor: 'fileIn/Out' stamp: 'dhn 6/23/2015 21:10'!
 keyTable
 	"Answer a dictionary of keys and their hash values"
@@ -1113,12 +1102,12 @@ addEntriesTo: aStream
 		forPrefix: pref
 		keysAndValuesDo: [:key :val | aStream nextPut: key]! !
 
-!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/6/2016 14:55'!
+!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/11/2016 12:35'!
 openCompletionMenu
 	"Open a completer menu if the field has one"
 	| theEditor |
 	
-	(self class entryFields includes: textMorph owner name)
+	(textMorph owningWindow class completerTable includesKey: textMorph owner name)
 		ifTrue: [
 			theEditor _ textMorph editor.
 			position _ theEditor startIndex - 1.
@@ -1129,12 +1118,6 @@ openCompletionMenu
 					menuMorph _  LedgerCompleterMorph 
 						completer: self
 						position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld]]! !
-
-!LedgerCompleter class methodsFor: 'entries' stamp: 'dhn 4/6/2016 13:56'!
-entryFields
-	"Answer the fields which have completers"
-	
-	^ #(#Payee #Category #Memo)! !
 
 !LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 3/22/2016 22:25'!
 initialize
@@ -1812,11 +1795,11 @@ getDebit
 	
 	^ model getDebit! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/10/2016 13:37'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/11/2016 12:41'!
 getEntryTrie
 	"Answer the completer database for the entry field at entryIndex"
 	
-	^ model perform: (model class completerTable at: (windowEntries at: entryIndex) name)! !
+	^ model perform: (self class completerTable at: (windowEntries at: entryIndex) name)! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:27'!
 getMemo
@@ -2161,6 +2144,17 @@ centsToDollars: anAmount
 		ifTrue: [sd _ LedgerWindow withCommas: (all copyFrom: 1 to: all size - 2)]
 		ifFalse: [sd _ '0'].
 	^ {sd. sc}! !
+
+!LedgerWindow class methodsFor: 'completer' stamp: 'dhn 4/11/2016 12:29'!
+completerTable
+	"Translate entry field names to methods for completer entries"
+	
+	^ Dictionary new
+		at: #Category put: #categories;
+		at: #Memo put: #memos;
+		at: #Payee put: #payees;
+		at: #Type put: #type;
+		yourself! !
 
 !LedgerWindow class methodsFor: 'conversion' stamp: 'dhn 3/24/2016 21:15'!
 dollarExpression: aString
