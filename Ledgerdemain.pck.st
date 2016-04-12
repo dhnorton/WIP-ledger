@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 3:32:06.872613 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 9:02:17.318157 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 220!
+!provides: 'Ledgerdemain' 1 221!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1822,7 +1822,7 @@ getR
 	
 	^ model getR! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 15:27'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 20:41'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from to |
@@ -1831,9 +1831,9 @@ goAhead
 	entryIndex _ entryIndex + 1.
 	entryIndex > windowEntries size 
 		ifTrue: [
+			entryIndex _ 1.
 			(PopUpMenu confirm: 'Enter transaction?')
-				ifTrue: [self changeTransaction].
-			entryIndex _ 1].
+				ifTrue: [self changeTransaction]].
 	to _ windowEntries at: entryIndex.
 	from scroller autoCompleter closeMenu.
 	self releaseKeyboardFocus: from scroller.
@@ -2034,12 +2034,12 @@ sayWhen
 	self when: #mouseSelected send: #goMouse: to: self withArguments: #(#ndx).
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/9/2016 13:46'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 20:24'!
 someKey: aKey of: aType with: aModifier
 	"Process special key strokes"
 	| entr |
 	
-	entr _ windowEntries at: entryIndex.
+	entr _ windowEntries at: (entryIndex _ entryIndex max: 1).
 	aKey = 28 ifTrue: [	"left arrow"
 		aType = #keyUp  ifTrue: [self goBack]].
 	
@@ -2069,7 +2069,7 @@ typeIndex: anObject
 
 	typeIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/3/2016 11:42'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/11/2016 20:51'!
 update: aSymbol
 	"Receive a change notice, as a dependent, from a dependee" 
 	
@@ -2079,8 +2079,7 @@ update: aSymbol
 		ifTrue: [
 			model selectedAccount isNil
 				ifTrue: [windowEntries do: [:ea | ea model actualContents: '']]
-				ifFalse: [windowEntries do: [:ea | ea model refetch]].
-			entryIndex _ windowEntries size].
+				ifFalse: [windowEntries do: [:ea | ea model refetch]]].
 		
 	aSymbol == #xactList
 		ifTrue: [
