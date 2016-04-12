@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 9:02:17.318157 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 9:40:39.400157 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 221!
+!provides: 'Ledgerdemain' 1 222!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -74,7 +74,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryButton entryIndex entryTable keyboardFocus typeIndex'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryButton entryIndex keyboardFocus typeIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1342,7 +1342,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:49'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
 buildCategoryEntry: aNumber
 	"Answer the label and entry field for Category"
 	| m fld |
@@ -1356,7 +1356,6 @@ buildCategoryEntry: aNumber
 			textProvider: self
 			getter: #getCategory
 			name: #Category)
-				when: #atEntry send: #entryTable: to: self with: #categories;
 				textModel: self;
 				setBalloonText: 'What transaction was for';
 				hideScrollBarsIndefinitely;
@@ -1506,7 +1505,7 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:49'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
 buildMemoEntry: aNumber
 	"Answer the label and entry field for Memo"
 	| m fld |
@@ -1520,7 +1519,6 @@ buildMemoEntry: aNumber
 			textProvider: self
 			getter: #getMemo
 			name: #Memo)
-				when: #atEntry send: #entryTable: to: self with: #memos;
 				textModel: self;
 				setBalloonText: 'Additional transaction details';
 				hideScrollBarsIndefinitely;
@@ -1545,7 +1543,7 @@ buildMorphicWindow
 	self sayWhen
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 11:47'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
 buildPayeeEntry: aNumber
 	"Answer the label and entry field for Payee"
 	| m fld |
@@ -1558,7 +1556,6 @@ buildPayeeEntry: aNumber
 			textProvider: self
 			getter: #getPayee
 			name: #Payee)
-				when: #atEntry send: #entryTable: to: self with: #payees;
 				textModel: self;
 				setBalloonText: 'Transaction destination or source';
 				hideScrollBarsIndefinitely;
@@ -1755,18 +1752,6 @@ entryIndex: anObject
 	"Set the value of entryIndex"
 
 	entryIndex _ anObject! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/1/2016 11:36'!
-entryTable
-	"Answer the value of entryTable"
-
-	^ entryTable! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/15/2016 10:29'!
-entryTable: aSymbol
-	"Set the value of entryTable"
-
-	entryTable _ model entryTable: aSymbol! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:26'!
 getCategory
