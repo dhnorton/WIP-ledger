@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 11 April 2016 at 9:40:39.400157 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 16 April 2016 at 4:08:28.100218 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 222!
+!provides: 'Ledgerdemain' 1 223!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1097,33 +1097,34 @@ keyTable
 look
 	Payees explore! !
 
-!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/10/2016 13:32'!
-addEntriesTo: aStream
-	"Supply content to the completer"
-	| db pref |
+!LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/16/2016 12:33'!
+computeEntries
+	"Set the entries for the completer menu"
+	| prefixStart prefixStop string |
+	
+	string _ model actualContents string.
+	prefixStop _ position.
+	prefixStart _ position.
+	[ prefixStart > 0 and: [ (string at: prefixStart) isSeparator not ]] whileTrue: [
+		prefixStart _ prefixStart - 1 ].
+	prefix _ string copyFrom: prefixStart+1 to: prefixStop.
+	entries _ Array streamContents: [ :strm |
+		model textProvider getEntryTrie 
+			forPrefix: prefix
+			keysAndValuesDo: [:key :val | strm nextPut: key]]! !
 
-	db _ model textProvider getEntryTrie.
-	pref _ model actualContents asString.
-	db 
-		forPrefix: pref
-		keysAndValuesDo: [:key :val | aStream nextPut: key]! !
-
-!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/11/2016 12:35'!
+!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/16/2016 12:47'!
 openCompletionMenu
-	"Open a completer menu if the field has one"
+	"Open the completer menu, but first close any open already"
 	| theEditor |
 	
-	(textMorph owningWindow class completerTable includesKey: textMorph owner name)
-		ifTrue: [
-			theEditor _ textMorph editor.
-			position _ theEditor startIndex - 1.
-			self closeMenu.
-			self computeEntries.
-			entries notEmpty
-				ifTrue: [ 
-					menuMorph _  LedgerCompleterMorph 
-						completer: self
-						position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld]]! !
+	theEditor _ textMorph editor.
+	position _ theEditor startIndex - 1.
+	self closeMenu.
+	self computeEntries.
+	menuMorph _  LedgerCompleterMorph 
+		completer: self
+		position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld! !
 
 !LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 3/22/2016 22:25'!
 initialize
@@ -1389,6 +1390,22 @@ buildCheckEntry: aNumber
 	^ m
 		! !
 
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/12/2016 10:40'!
+buildCheckingEntries
+	"Answer the layout for transaction entry fields for checking accounts"
+	| n |
+	
+	n _ 0.
+	^ (OrderedCollection new)
+		add: (self buildDateEntry: (n _ n + 1));		
+		add: (self buildCheckEntry: (n _ n + 1));		
+		add: (self buildPayeeEntry: (n _ n + 1));		
+		add: (self buildCategoryEntry: (n _ n + 1));		
+		add: (self buildMemoEntry: (n _ n + 1));		
+		add: (self buildDebitEntry: (n _ n + 1));		
+		add: (self buildCreditEntry: (n _ n + 1));
+		yourself! !
+
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
 buildCreditEntry: aNumber
 	"Answer the label and entry field for the Credit amount"
@@ -1461,21 +1478,12 @@ buildDebitEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 15:16'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/12/2016 10:02'!
 buildEntries
-	"Answer the layout for transaction entry fields"
-	| n |
+	"Answer the empty layout for transaction entry fields"
 	
-	n _ 0.
 	^ (LayoutMorph newRow separation: 5)
-		name: #'Entry Fields';
-		addMorph: (self buildDateEntry: (n _ n + 1));		
-		addMorph: (self buildCheckEntry: (n _ n + 1));		
-		addMorph: (self buildPayeeEntry: (n _ n + 1));		
-		addMorph: (self buildCategoryEntry: (n _ n + 1));		
-		addMorph: (self buildMemoEntry: (n _ n + 1));		
-		addMorph: (self buildDebitEntry: (n _ n + 1));		
-		addMorph: (self buildCreditEntry: (n _ n + 1))! !
+		name: #'Entry Fields'! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:48'!
 buildLedgerList
@@ -1529,7 +1537,7 @@ buildMemoEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/11/2016 21:30'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/12/2016 09:57'!
 buildMorphicWindow
 	"Lay out a window for Ledger d'Main"
 
@@ -1538,10 +1546,23 @@ buildMorphicWindow
 		addMorph: self buildLedgerList
 			layoutSpec: (LayoutSpec useAll).
 	
-	self newKeyboardFocus: (windowEntries at: self entryIndex) scroller.
-	(windowEntries at: self entryIndex) scroller selectAll.
 	self sayWhen
 ! !
+
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/12/2016 10:40'!
+buildOtherEntries
+	"Answer the layout for transaction entry fields for accounts which have no checks"
+	| n |
+	
+	n _ 0.
+	^ (OrderedCollection new)
+		add: (self buildDateEntry: (n _ n + 1));		
+		add: (self buildPayeeEntry: (n _ n + 1));		
+		add: (self buildCategoryEntry: (n _ n + 1));		
+		add: (self buildMemoEntry: (n _ n + 1));		
+		add: (self buildDebitEntry: (n _ n + 1));		
+		add: (self buildCreditEntry: (n _ n + 1));
+		yourself! !
 
 !LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
 buildPayeeEntry: aNumber
@@ -1589,46 +1610,57 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/10/2016 21:55'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/12/2016 14:55'!
 changeTransaction
 	"Form a transaction from the EntryFields"
-	| tx dt ck py |
+	| acct useCk tx dt ck py |
 	
-	model selectedAccount ifNotNil: [
-		(self areAnyMissing: {#Date. #Check. #Payee})
+	acct _ model selectedAccount.
+	acct ifNotNil: [
+			(self areAnyMissing: ((useCk _ acct type = #checking)
+				ifTrue: [{#Date. #Check. #Payee}]
+				ifFalse: [{#Date. #Payee}]))
 			ifFalse: [	
 				tx _ Transaction new.
 				dt _ LedgerWindow asLdmDate: (self entryContents: #Date).
-				ck _ (self entryContents: #Check) withoutTrailingBlanks.
 				py _ self entryContents: #Payee.
-	
-				tx 
-					key: dt asString, ck, py;
-					account: model selectedAccount;
+				
+				useCk
+					ifTrue: [
+						ck _ (self entryContents: #Check) withoutTrailingBlanks.
+						tx 
+							key: dt asString, ck, py;
+							check: ck.
+						(ck allSatisfy: [:a | a isDigit])
+							ifTrue: [
+								tx type: 'DEB'.
+								acct lastCheck: (acct lastCheck max: tx check asNumber)]
+					ifFalse: [tx type: tx check].
+							]
+					ifFalse: [tx key: dt asString,  py].
+		
+				tx 					
+					account: acct;
 					date: dt;
-					check: ck;
 					payee: py;
 					category: (self entryContents: #Category);
-					memo: (self entryContents: #Memo).
-		
-				tx amount: (self amount: #Debit or: #Credit).
+					memo: (self entryContents: #Memo);
+					amount: (self amount: #Debit or: #Credit).
 
 				tx reconciled: (model ledgerSelection notNil
 					ifTrue: [model ledgerSelection reconciled]
 					ifFalse: ['']).
 					
-				(tx check allSatisfy: [:a | a isDigit])
-					ifTrue: [
-						tx type: 'DEB'.
-						model selectedAccount lastCheck: (model selectedAccount lastCheck max: tx check asNumber)]
-					ifFalse: [tx type: tx check].
 
 				model
 					growTries: tx;
 					acceptTransaction: tx.
 				self resetUnacceptedEdits]
 		
-			ifTrue: [nil inform: 'Something missing in Date, Check, or Payee.']]
+			ifTrue: [nil inform: 
+				(useCk
+					ifTrue: ['Something missing in Date, Check, or Payee.']
+					ifFalse: ['Something missing in Date or Payee.'])]]
 ! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/25/2016 18:55'!
@@ -1734,11 +1766,11 @@ entryButton: anObject
 
 	entryButton _ anObject! !
 
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/20/2016 11:25'!
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/12/2016 11:03'!
 entryContents: aSymbol
 	"Answer the contents of the entry field named aSymbol"
 	
-	^ (windowEntries detect: [:a | a name = aSymbol] ifNone: [nil]) model actualContents asString! !
+	^ (windowEntries detect: [:a | a name = aSymbol] ifNone: ['']) model actualContents asString! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/3/2016 16:00'!
 entryIndex
@@ -1874,11 +1906,10 @@ handlesKeyboard
 
 	^self visible! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/20/2016 15:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/12/2016 15:18'!
 initialize
 
 	super initialize.
-	windowEntries _ OrderedCollection new.
 	typeIndex _ 0! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 3/19/2016 17:32'!
@@ -1943,10 +1974,10 @@ of account ledgers'.
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/5/2016 11:52'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/12/2016 15:18'!
 newAccount
 	"Ensure data needed to open a new account is available and open the account if so"
-	| temp arr kind bal balDate |
+	| temp arr kind bal balDate fields |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
@@ -1964,7 +1995,15 @@ newAccount
 								request: 'Date of opening balance'
 								initialAnswer: Date today mmddyyyy.
 							balDate ~= '' ifTrue: [
-								model accounts: (model accountNamed: temp type: (arr at: kind) opening: bal at: balDate)]]]]
+								model accounts: (model accountNamed: temp type: (arr at: kind) opening: bal at: balDate)].
+							fields _ self findDeepSubmorphThat: [:m | m name = #'Entry Fields'] ifAbsent: [nil].
+							fields removeAllMorphs.
+							windowEntries _ OrderedCollection new.
+							fields addAllMorphs: (
+								(arr at: kind) = #checking
+									ifTrue: [self buildCheckingEntries reverse]
+									ifFalse: [self buildOtherEntries reverse])
+							]]]
 			ifFalse: [nil inform: temp,' is already an account']]
 ! !
 
@@ -2019,12 +2058,12 @@ sayWhen
 	self when: #mouseSelected send: #goMouse: to: self withArguments: #(#ndx).
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 20:24'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/12/2016 10:48'!
 someKey: aKey of: aType with: aModifier
 	"Process special key strokes"
 	| entr |
 	
-	entr _ windowEntries at: (entryIndex _ entryIndex max: 1).
+	entr _ windowEntries at: (entryIndex _ self entryIndex max: 1).
 	aKey = 28 ifTrue: [	"left arrow"
 		aType = #keyUp  ifTrue: [self goBack]].
 	
@@ -2385,18 +2424,22 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 3/29/2016 20:36'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 4/12/2016 15:04'!
 formatTransaction
 	"Answer the receiver as a formatted ledger line"
 
 	^ String streamContents: [:str |
-		str 
-			nextPutAll: 
-				(self leftJustify: (self class listFields at: #date) 
-					with: (Date fromDays: self date asNumber) mmddyyyy);
-			nextPutAll: 
-				(self leftJustify: (self class listFields at: #check) 
-					with: self check withoutTrailingBlanks);
+		str 	nextPutAll: 
+			(self leftJustify: (self class listFields at: #date) 
+				with: (Date fromDays: self date asNumber) mmddyyyy).
+
+		self account type = #checking
+			ifTrue: [
+				str	nextPutAll: 
+					(self leftJustify: (self class listFields at: #check) 
+						with: self check withoutTrailingBlanks)].
+
+		str
 			nextPutAll: 
 				(self leftJustify: (self class listFields at: #payee) 
 					with: self payee withoutTrailingBlanks);
