@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 3:08:07.100589 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 6:07:02.097658 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 227!
+!provides: 'Ledgerdemain' 1 228!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1186,6 +1186,25 @@ computeEntries
 		model textProvider getEntryTrie 
 			forPrefix: prefix
 			keysAndValuesDo: [:key :val | strm nextPut: key]]! !
+
+!LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/17/2016 18:00'!
+insertSelected
+	"Insert the completer menu selection"
+	| entry editor selEnd str |
+	
+	textMorph ifNil: [ ^self ].
+	entry _ self selectedEntry.
+	editor _ textMorph editor.
+	str _ model actualContents string.
+	selEnd _ str size.
+	editor selectFrom: 1 to: selEnd.
+	editor
+		replaceSelectionWith: entry withoutTrailingBlanks;
+		deselectAndPlaceCursorAt: 1 + (self newCursorPosition: entry).
+	textMorph redrawNeeded.
+	menuMorph delete.
+	menuMorph _ nil.
+	^ true! !
 
 !LedgerCompleter methodsFor: 'menu morph' stamp: 'dhn 4/16/2016 12:47'!
 openCompletionMenu
