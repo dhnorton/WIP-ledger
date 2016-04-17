@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 2:46:38.563589 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 3:08:07.100589 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 226!
+!provides: 'Ledgerdemain' 1 227!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1417,7 +1417,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:04'!
 buildCategoryEntry: aNumber
 	"Answer the label and entry field for Category"
 	| m fld |
@@ -1426,6 +1426,7 @@ buildCategoryEntry: aNumber
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
 	m addMorph: ((StringMorph contents: 'Category')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m color: Color transparent.	
 		
 	m addMorph: ((fld _ EntryField 
 			textProvider: self
@@ -1441,7 +1442,7 @@ buildCategoryEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:50'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:05'!
 buildCheckEntry: aNumber
 	"Answer the label and entry field for Check number"
 	| m fld |
@@ -1450,6 +1451,7 @@ buildCheckEntry: aNumber
 				layoutSpec: (LayoutSpec fixedWidth: 60).
 	m addMorph: ((StringMorph contents: 'Check')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m color: Color transparent.	
 		
 	m addMorph: ((fld _ EntryField 
 			textProvider: self
@@ -1480,7 +1482,7 @@ buildCheckingEntries
 		add: (self buildCreditEntry: (n _ n + 1));
 		yourself! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:05'!
 buildCreditEntry: aNumber
 	"Answer the label and entry field for the Credit amount"
 	| m fld |
@@ -1489,6 +1491,7 @@ buildCreditEntry: aNumber
 				layoutSpec: (LayoutSpec fixedWidth: 65).
 	m addMorph: ((StringMorph contents: 'Credit')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m color: Color transparent.	
 		
 	m addMorph: ((fld _ EntryField 
 			textProvider: self
@@ -1503,7 +1506,7 @@ buildCreditEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/13/2016 22:14'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:03'!
 buildDateEntry: aNumber
 	"Answer the label and entry field for Date"
 	| m fld |
@@ -1512,7 +1515,8 @@ buildDateEntry: aNumber
 				layoutSpec: (LayoutSpec fixedWidth: 85).
 	m addMorph: ((StringMorph contents: 'Date')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
-		
+	m color: Color transparent.	
+	
 	m addMorph: ((fld _ EntryField
 			textProvider: self
 			getter: #getDate 
@@ -1527,7 +1531,7 @@ buildDateEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:05'!
 buildDebitEntry: aNumber
 	"Answer the label and entry field for the Debit amount"
 	| m fld |
@@ -1537,6 +1541,7 @@ buildDebitEntry: aNumber
 	m addMorph: ((StringMorph contents: 'Debit')
 		color: Color red;
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m color: Color transparent.	
 		
 	m addMorph: ((fld _ EntryField 
 			textProvider: self
@@ -1586,7 +1591,7 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:05'!
 buildMemoEntry: aNumber
 	"Answer the label and entry field for Memo"
 	| m fld |
@@ -1595,6 +1600,7 @@ buildMemoEntry: aNumber
 				layoutSpec: (LayoutSpec proportionalWidth: 0.8).
 	m addMorph: ((StringMorph contents: 'Memo')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m color: Color transparent.	
 		
 	m addMorph: ((fld _ EntryField 
 			textProvider: self
@@ -1637,7 +1643,7 @@ buildOtherEntries
 		add: (self buildCreditEntry: (n _ n + 1));
 		yourself! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:06'!
 buildPayeeEntry: aNumber
 	"Answer the label and entry field for Payee"
 	| m fld |
@@ -1654,13 +1660,14 @@ buildPayeeEntry: aNumber
 				setBalloonText: 'Transaction destination or source';
 				hideScrollBarsIndefinitely;
 				layoutSpec: (LayoutSpec useAll)).
+	m color: Color transparent.	
 	fld position: aNumber.
 	windowEntries add: fld.
 	
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/17/2016 15:06'!
 buildREntry: aNumber
 	"Answer the label and entry field for the Reconciled indicator"
 	| m fld |
@@ -1677,6 +1684,7 @@ buildREntry: aNumber
 				textModel: self;
 				setBalloonText: 'Reconciled?';
 				layoutSpec: (LayoutSpec useAll)).
+	m color: Color transparent.	
 	fld position: aNumber.
 	windowEntries add: fld.
 	
