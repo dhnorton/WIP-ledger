@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 6:07:02.097658 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 6:51:21.468427 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 228!
+!provides: 'Ledgerdemain' 1 229!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1244,7 +1244,13 @@ initialize
 		
 	^ y! !
 
-!LedgerCompleterMorph methodsFor: 'as yet unclassified' stamp: 'dhn 4/6/2016 15:27'!
+!LedgerCompleterMorph methodsFor: 'drawing' stamp: 'dhn 4/17/2016 18:39'!
+drawOn: aCanvas
+	"Ensure completer entries is not empty"
+	
+	completer entries notEmpty ifTrue: [super drawOn: aCanvas]! !
+
+!LedgerCompleterMorph methodsFor: 'persistence' stamp: 'dhn 4/6/2016 15:27'!
 timeout
 	"Answer the time given to the user for selecting a completion menu item"
 	
