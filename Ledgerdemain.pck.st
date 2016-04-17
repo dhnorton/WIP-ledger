@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 16 April 2016 at 4:08:28.100218 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 16 April 2016 at 9:20:22.350218 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 223!
+!provides: 'Ledgerdemain' 1 224!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -74,7 +74,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryButton entryIndex keyboardFocus typeIndex'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryMorphs entryIndex keyboardFocus typeIndex'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -706,15 +706,19 @@ getCredit
 		
 	^ x! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:07'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/16/2016 21:17'!
 getDate
 	"Answer the date"
 	
+	{transactionListIndex} print.
 	transactionListIndex = 0
 		ifTrue: [
-			selectedAccount ifNotNil: [^ (Date fromDays: self transactionLast date) mmddyyyy].
+			selectedAccount ifNotNil: [^ (Date fromDays: (self transactionLast date)) mmddyyyy].
 			selectedAccount ifNil: [^'']]
-		ifFalse: [^ (Date fromDays: self transactionCurrent date) mmddyyyy]! !
+		ifFalse: [
+			^ (Date fromDays: (self transactionCurrent
+				ifNil: [self transactionLast date]
+				ifNotNil: [self transactionCurrent date])) mmddyyyy]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:08'!
 getDebit
@@ -991,6 +995,14 @@ selectedAccount: anObject
 	selectedAccount _ anObject.
 	self changed: #xactList! !
 
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/16/2016 16:37'!
+selectedEntries: anAccount 
+	"Set the entry fields for anAccount"
+	
+	anAccount type = #checking
+		ifTrue: [self triggerEvent: #checkingAccount]
+		ifFalse: [self triggerEvent: #otherAccount]! !
+
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
 selectedTransaction
 	"Answer the value of selectedTransaction"
@@ -1041,12 +1053,15 @@ transactionListIndex
 	transactionList ifNil: [^ transactionListIndex _ 0].
 	^ transactionListIndex _ transactionList indexOf: selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/9/2016 21:35'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/16/2016 16:51'!
 transactionListIndex: index
 	"Set the values of transactionListIndex, selectedTransaction, and ledgerSelection"
 
 	transactionListIndex _ index.
 	transactionList ifNotNil: [
+		selectedAccount
+			ifNil: [self triggerEvent: #removeEntries]
+			ifNotNil: [self selectedEntries: selectedAccount].
 		self selectedTransaction:
 			(transactionList at: index ifAbsent: nil).
 		self ledgerSelection: (self selectedAccount notNil
@@ -1343,7 +1358,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:35'!
 buildCategoryEntry: aNumber
 	"Answer the label and entry field for Category"
 	| m fld |
@@ -1354,7 +1369,7 @@ buildCategoryEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: self
+			textProvider: model
 			getter: #getCategory
 			name: #Category)
 				textModel: self;
@@ -1367,7 +1382,7 @@ buildCategoryEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:50'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:38'!
 buildCheckEntry: aNumber
 	"Answer the label and entry field for Check number"
 	| m fld |
@@ -1378,7 +1393,7 @@ buildCheckEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: self
+			textProvider: model
 			getter: #getCheck
 			name: #Check)
 				textModel: self;
@@ -1406,7 +1421,7 @@ buildCheckingEntries
 		add: (self buildCreditEntry: (n _ n + 1));
 		yourself! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:37'!
 buildCreditEntry: aNumber
 	"Answer the label and entry field for the Credit amount"
 	| m fld |
@@ -1417,7 +1432,7 @@ buildCreditEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: self
+			textProvider: model
 			getter: #getCredit
 			name: #Credit)
 				textModel: self;
@@ -1429,7 +1444,7 @@ buildCreditEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/13/2016 22:14'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:35'!
 buildDateEntry: aNumber
 	"Answer the label and entry field for Date"
 	| m fld |
@@ -1440,7 +1455,7 @@ buildDateEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField
-			textProvider: self
+			textProvider: model
 			getter: #getDate 
 			name: #Date)
 				textModel: self;
@@ -1453,7 +1468,7 @@ buildDateEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:36'!
 buildDebitEntry: aNumber
 	"Answer the label and entry field for the Debit amount"
 	| m fld |
@@ -1465,7 +1480,7 @@ buildDebitEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: self
+			textProvider: model
 			getter: #getDebit
 			name: #Debit)
 				textModel: self;
@@ -1485,10 +1500,9 @@ buildEntries
 	^ (LayoutMorph newRow separation: 5)
 		name: #'Entry Fields'! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 2/18/2016 15:48'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 18:44'!
 buildLedgerList
 	"Answer the specifications for the ledger list in the window"
-	| entries |
 	
 	windowLedgerList _ (PluggableListMorph
 			model: model
@@ -1502,18 +1516,18 @@ buildLedgerList
 				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9).
 	windowLedgerList  layoutSpec: (LayoutSpec useAll).
 				
-	entries _ self buildEntries
+	entryMorphs _ self buildEntries
 		layoutSpec: (LayoutSpec fixedHeight: 50).
 
 	
 	^ (LayoutMorph newColumn name: 'Ledger Column')
 		addMorph: windowLedgerList;
-		addMorph: entries
+		addMorph: entryMorphs
 		
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:36'!
 buildMemoEntry: aNumber
 	"Answer the label and entry field for Memo"
 	| m fld |
@@ -1524,7 +1538,7 @@ buildMemoEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: self
+			textProvider: model
 			getter: #getMemo
 			name: #Memo)
 				textModel: self;
@@ -1564,7 +1578,7 @@ buildOtherEntries
 		add: (self buildCreditEntry: (n _ n + 1));
 		yourself! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:35'!
 buildPayeeEntry: aNumber
 	"Answer the label and entry field for Payee"
 	| m fld |
@@ -1574,7 +1588,7 @@ buildPayeeEntry: aNumber
 	m addMorph: ((StringMorph contents: 'Payee')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((fld _ EntryField 
-			textProvider: self
+			textProvider: model
 			getter: #getPayee
 			name: #Payee)
 				textModel: self;
@@ -1587,7 +1601,7 @@ buildPayeeEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:37'!
 buildREntry: aNumber
 	"Answer the label and entry field for the Reconciled indicator"
 	| m fld |
@@ -1598,7 +1612,7 @@ buildREntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField  
-			textProvider: self
+			textProvider: model
 			getter: #getR
 			name: #R)
 				textModel: self;
@@ -1754,17 +1768,13 @@ delete
 	cancel ifFalse: [super delete]		"terminate"
 	"otherwise, cancel this"! !
 
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/9/2016 14:27'!
-entryButton
-	"Answer the value of entryButton"
-
-	^ entryButton! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/9/2016 14:27'!
-entryButton: anObject
-	"Set the value of entryButton"
-
-	entryButton _ anObject! !
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/16/2016 18:45'!
+deleteEntries
+	"Ensure that there are no entry fields"
+	
+	windowEntries _ OrderedCollection new.
+	entryMorphs ifNotNil: [entryMorphs removeAllMorphs]
+! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/12/2016 11:03'!
 entryContents: aSymbol
@@ -1785,59 +1795,11 @@ entryIndex: anObject
 
 	entryIndex _ anObject! !
 
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:26'!
-getCategory
-	"Answer the category"
-	
-	^ model getCategory! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:25'!
-getCheck
-	"Answer the check number"
-	
-	^ model getCheck! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:29'!
-getCredit
-	"Answer the amount if positive; '' otherwise"
-	
-	^ model getCredit! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:24'!
-getDate
-	"Answer the date"
-	
-	^ model getDate! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:29'!
-getDebit
-	"Answer the amount if negative; '' otherwise"
-	
-	^ model getDebit! !
-
 !LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/11/2016 12:41'!
 getEntryTrie
 	"Answer the completer database for the entry field at entryIndex"
 	
 	^ model perform: (self class completerTable at: (windowEntries at: entryIndex) name)! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:27'!
-getMemo
-	"Answer the memo"
-	
-	^ model getMemo! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:25'!
-getPayee
-	"Answer the payee"
-	
-	^ model getPayee! !
-
-!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 2/14/2016 21:28'!
-getR
-	"Answer the reconciled indicator"
-	
-	^ model getR! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 20:41'!
 goAhead
@@ -1974,14 +1936,15 @@ of account ledgers'.
 	aMenu popUpInWorld: self world.
 ! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/12/2016 15:18'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/16/2016 20:49'!
 newAccount
 	"Ensure data needed to open a new account is available and open the account if so"
-	| temp arr kind bal balDate fields |
+	| temp arr kind bal balDate |
 	
 	temp _ FillInTheBlankMorph request: 'Name of new account:'.
 	temp ~= '' ifTrue: [
 		(model accounts allSatisfy: [:a | temp ~= a accountName])
+		
 			ifTrue: [
 				arr _ #(#checking #savings #'credit card' #cash).
 				kind _ (PopUpMenu labelArray: arr) startUpWithCaption: 'Type of account:'.
@@ -1996,14 +1959,10 @@ newAccount
 								initialAnswer: Date today mmddyyyy.
 							balDate ~= '' ifTrue: [
 								model accounts: (model accountNamed: temp type: (arr at: kind) opening: bal at: balDate)].
-							fields _ self findDeepSubmorphThat: [:m | m name = #'Entry Fields'] ifAbsent: [nil].
-							fields removeAllMorphs.
-							windowEntries _ OrderedCollection new.
-							fields addAllMorphs: (
-								(arr at: kind) = #checking
-									ifTrue: [self buildCheckingEntries reverse]
-									ifFalse: [self buildOtherEntries reverse])
-							]]]
+							(arr at: kind) = #checking
+								ifTrue: [self selectChecking]
+								ifFalse: [self selectOther]]]]
+					
 			ifFalse: [nil inform: temp,' is already an account']]
 ! !
 
@@ -2048,7 +2007,7 @@ resetUnacceptedEdits
 		ea scroller hasUnacceptedEdits 
 			ifTrue: [ea scroller hasUnacceptedEdits: false]]! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/3/2016 20:00'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 17:15'!
 sayWhen
 	"Establish the receiving half of the Observer Pattern"
 	
@@ -2056,7 +2015,24 @@ sayWhen
 	self when: #toTheLeft send: #goBack to: self.
 	self when: #specialKey send: #'someKey:of:with:' to: self withArguments: #(#a #b #c).
 	self when: #mouseSelected send: #goMouse: to: self withArguments: #(#ndx).
+	self model when: #checkingAccount send: #selectChecking to: self.
+	self model when: #otherAccount send: #selectOther to: self.
+	self model when: #removeEntries send: #deleteEntries to: self.
 ! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/16/2016 18:48'!
+selectChecking
+	"Set entry fields for a checking account"
+	
+	self deleteEntries.
+	entryMorphs addAllMorphs: self buildCheckingEntries reverse! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/16/2016 18:48'!
+selectOther
+	"Set entry fields for an account other than a checking account"
+	
+	self deleteEntries.
+	entryMorphs addAllMorphs: self buildOtherEntries reverse! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/12/2016 10:48'!
 someKey: aKey of: aType with: aModifier
