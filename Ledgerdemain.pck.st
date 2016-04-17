@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 16 April 2016 at 9:20:22.350218 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 12:13:10.403633 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 224!
+!provides: 'Ledgerdemain' 1 225!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -555,6 +555,14 @@ accountNamed: aString type: aSymbol opening: amount at: date
 	acct ledger add: rec.
 	^ acct! !
 
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/16/2016 21:31'!
+accountPicked: anAccount 
+	"Signal whether anAccount is a checking account"
+	
+	anAccount type = #checking
+		ifTrue: [self triggerEvent: #checkingAccount]
+		ifFalse: [self triggerEvent: #otherAccount]! !
+
 !LedgerDeMain methodsFor: 'account' stamp: 'dhn 10/15/2015 13:09'!
 accounts
 	"Answer the value of accounts"
@@ -706,11 +714,10 @@ getCredit
 		
 	^ x! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/16/2016 21:17'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/16/2016 21:39'!
 getDate
 	"Answer the date"
 	
-	{transactionListIndex} print.
 	transactionListIndex = 0
 		ifTrue: [
 			selectedAccount ifNotNil: [^ (Date fromDays: (self transactionLast date)) mmddyyyy].
@@ -995,14 +1002,6 @@ selectedAccount: anObject
 	selectedAccount _ anObject.
 	self changed: #xactList! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/16/2016 16:37'!
-selectedEntries: anAccount 
-	"Set the entry fields for anAccount"
-	
-	anAccount type = #checking
-		ifTrue: [self triggerEvent: #checkingAccount]
-		ifFalse: [self triggerEvent: #otherAccount]! !
-
 !LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 3/17/2016 18:30'!
 selectedTransaction
 	"Answer the value of selectedTransaction"
@@ -1053,7 +1052,7 @@ transactionListIndex
 	transactionList ifNil: [^ transactionListIndex _ 0].
 	^ transactionListIndex _ transactionList indexOf: selectedTransaction! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/16/2016 16:51'!
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/16/2016 21:32'!
 transactionListIndex: index
 	"Set the values of transactionListIndex, selectedTransaction, and ledgerSelection"
 
@@ -1061,7 +1060,7 @@ transactionListIndex: index
 	transactionList ifNotNil: [
 		selectedAccount
 			ifNil: [self triggerEvent: #removeEntries]
-			ifNotNil: [self selectedEntries: selectedAccount].
+			ifNotNil: [self accountPicked: selectedAccount].
 		self selectedTransaction:
 			(transactionList at: index ifAbsent: nil).
 		self ledgerSelection: (self selectedAccount notNil
@@ -1358,7 +1357,7 @@ buildAccountList
 		addMorph: (windowAccountList layoutSpec: LayoutSpec useAll);
 		addMorph: net! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
 buildCategoryEntry: aNumber
 	"Answer the label and entry field for Category"
 	| m fld |
@@ -1369,7 +1368,7 @@ buildCategoryEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getCategory
 			name: #Category)
 				textModel: self;
@@ -1382,7 +1381,7 @@ buildCategoryEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:38'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:50'!
 buildCheckEntry: aNumber
 	"Answer the label and entry field for Check number"
 	| m fld |
@@ -1393,7 +1392,7 @@ buildCheckEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getCheck
 			name: #Check)
 				textModel: self;
@@ -1421,7 +1420,7 @@ buildCheckingEntries
 		add: (self buildCreditEntry: (n _ n + 1));
 		yourself! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:37'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
 buildCreditEntry: aNumber
 	"Answer the label and entry field for the Credit amount"
 	| m fld |
@@ -1432,7 +1431,7 @@ buildCreditEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getCredit
 			name: #Credit)
 				textModel: self;
@@ -1444,7 +1443,7 @@ buildCreditEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/13/2016 22:14'!
 buildDateEntry: aNumber
 	"Answer the label and entry field for Date"
 	| m fld |
@@ -1455,7 +1454,7 @@ buildDateEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField
-			textProvider: model
+			textProvider: self
 			getter: #getDate 
 			name: #Date)
 				textModel: self;
@@ -1468,7 +1467,7 @@ buildDateEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:36'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
 buildDebitEntry: aNumber
 	"Answer the label and entry field for the Debit amount"
 	| m fld |
@@ -1480,7 +1479,7 @@ buildDebitEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getDebit
 			name: #Debit)
 				textModel: self;
@@ -1527,7 +1526,7 @@ buildLedgerList
 		
 ! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:36'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
 buildMemoEntry: aNumber
 	"Answer the label and entry field for Memo"
 	| m fld |
@@ -1538,7 +1537,7 @@ buildMemoEntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getMemo
 			name: #Memo)
 				textModel: self;
@@ -1578,7 +1577,7 @@ buildOtherEntries
 		add: (self buildCreditEntry: (n _ n + 1));
 		yourself! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:35'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/11/2016 21:20'!
 buildPayeeEntry: aNumber
 	"Answer the label and entry field for Payee"
 	| m fld |
@@ -1588,7 +1587,7 @@ buildPayeeEntry: aNumber
 	m addMorph: ((StringMorph contents: 'Payee')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 	m addMorph: ((fld _ EntryField 
-			textProvider: model
+			textProvider: self
 			getter: #getPayee
 			name: #Payee)
 				textModel: self;
@@ -1601,7 +1600,7 @@ buildPayeeEntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 20:37'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 3/1/2016 12:32'!
 buildREntry: aNumber
 	"Answer the label and entry field for the Reconciled indicator"
 	| m fld |
@@ -1612,7 +1611,7 @@ buildREntry: aNumber
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	m addMorph: ((fld _ EntryField  
-			textProvider: model
+			textProvider: self
 			getter: #getR
 			name: #R)
 				textModel: self;
@@ -1795,13 +1794,61 @@ entryIndex: anObject
 
 	entryIndex _ anObject! !
 
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:09'!
+getCategory
+	"Answer the category - this method necessary for the completer"
+	
+	^ model getCategory! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:09'!
+getCheck
+	"Answer the check number - this method necessary for the completer"
+	
+	^ model getCheck! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:10'!
+getCredit
+	"Answer the credit amount - this method necessary for the completer"
+	
+	^ model getCredit! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:10'!
+getDate
+	"Answer the date - this method necessary for the completer"
+	
+	^ model getDate! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:11'!
+getDebit
+	"Answer the debit amount - this method necessary for the completer"
+	
+	^ model getDebit! !
+
 !LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/11/2016 12:41'!
 getEntryTrie
 	"Answer the completer database for the entry field at entryIndex"
 	
 	^ model perform: (self class completerTable at: (windowEntries at: entryIndex) name)! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 20:41'!
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:11'!
+getMemo
+	"Answer the memo - this method necessary for the completer"
+	
+	^ model getMemo! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:11'!
+getPayee
+	"Answer the payee - this method necessary for the completer"
+	
+	^ model getPayee! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:12'!
+getR
+	"Answer the reconciled indicator - this method necessary for the completer"
+	
+	^ model getR! !
+
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/16/2016 21:45'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from to |
@@ -1814,7 +1861,7 @@ goAhead
 			(PopUpMenu confirm: 'Enter transaction?')
 				ifTrue: [self changeTransaction]].
 	to _ windowEntries at: entryIndex.
-	from scroller autoCompleter closeMenu.
+	from scroller autoCompleter ifNotNil: [from scroller autoCompleter closeMenu].
 	self releaseKeyboardFocus: from scroller.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
@@ -1824,7 +1871,7 @@ goAhead
 	self openCompleterFor: to
 	! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:59'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/16/2016 21:46'!
 goBack
 	"Go to the next EntryField to the left"
 	| from to |
@@ -1833,7 +1880,7 @@ goBack
 	entryIndex _ entryIndex - 1.
 	entryIndex <= 0 ifTrue: [entryIndex _ windowEntries size].
 	to _ windowEntries at: entryIndex.
-	from scroller autoCompleter closeMenu.
+	from scroller autoCompleter ifNotNil: [from scroller autoCompleter closeMenu].
 	self releaseKeyboardFocus: from scroller.
 	from scroller releaseCachedState.
 	self newKeyboardFocus: to scroller.
