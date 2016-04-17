@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 12:13:10.403633 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 2:46:38.563589 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 225!
+!provides: 'Ledgerdemain' 1 226!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -242,6 +242,66 @@ ledgerFormatted
 	str size - pos < 2 ifTrue: [str _ str, '0'].
 	ios nextPutAll: (str copyFrom: pos count: 3).
 	^ ios contents! !
+
+!MenuMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/17/2016 14:44'!
+keyStroke: aKeyboardEvent 
+	| matchString char asc selectable help |
+	"help _ HoverHelpMorph contents: 'Enter text to\narrow selection down\to matching items ' withNewLines.
+	help popUpForHand: self world activeHand."
+	char := aKeyboardEvent keyCharacter.
+	asc := char asciiValue.
+	aKeyboardEvent isReturnKey
+		ifTrue: [
+			selectedItem ifNotNil: [
+					selectedItem hasSubMenu 
+						ifTrue: [
+							aKeyboardEvent hand newMouseFocus: selectedItem subMenu.
+							^aKeyboardEvent hand newKeyboardFocus: selectedItem subMenu]
+						ifFalse: [
+							"self delete."
+							^selectedItem invokeWithEvent: aKeyboardEvent]].
+			(selectable := self items) size = 1 
+				ifTrue: [^selectable first invokeWithEvent: aKeyboardEvent].
+			^self].
+	asc = 27 
+		ifTrue: [
+			"escape key"
+			self
+				valueOfProperty: #matchString
+				ifPresentDo: [ :str | 
+					str isEmpty 
+						ifFalse: [
+							"If filtered, first ESC removes filter"
+							self setProperty: #matchString toValue: String new.
+							self selectItem: nil.
+							^self displayFiltered: aKeyboardEvent]].
+			"If a stand-alone menu, just delete it"
+			popUpOwner ifNil: [^self delete].
+			"If a sub-menu, then deselect, and return focus to outer menu"
+			self selectItem: nil.
+			aKeyboardEvent hand newMouseFocus: popUpOwner owner.
+			^aKeyboardEvent hand newKeyboardFocus: popUpOwner owner].
+	(asc = 28 or: [asc = 29]) 
+		ifTrue: [
+			"left or right arrow key"
+			(selectedItem notNil and: [selectedItem hasSubMenu]) 
+				ifTrue: [
+					aKeyboardEvent hand newMouseFocus: selectedItem subMenu.
+					selectedItem subMenu moveSelectionDown: 1 event: aKeyboardEvent.
+					^aKeyboardEvent hand newKeyboardFocus: selectedItem subMenu]].
+	asc = 30 ifTrue: [^self moveSelectionDown: -1 event: aKeyboardEvent].	"up arrow key"
+	asc = 31 ifTrue: [^self moveSelectionDown: 1 event: aKeyboardEvent].	"down arrow key"
+	asc = 11 ifTrue: [^self moveSelectionDown: -5 event: aKeyboardEvent].	"page up key"
+	asc = 12 ifTrue: [^self moveSelectionDown: 5 event: aKeyboardEvent].	"page down key"
+	matchString := self valueOfProperty: #matchString ifAbsent: [String new].
+	matchString := char = Character backspace 
+				ifTrue: [
+					matchString isEmpty ifTrue: [matchString] ifFalse: [matchString allButLast]]
+				ifFalse: [matchString copyWith: aKeyboardEvent keyCharacter].
+	self setProperty: #matchString toValue: matchString.
+	self displayFiltered: aKeyboardEvent.
+	"help _ HoverHelpMorph contents: 'Enter text to\narrow selection down\to matching items ' withNewLines.
+	help popUpForHand: self world activeHand"! !
 
 !HandMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 3/14/2016 17:35'!
 generateKeyboardEvent: evtBuf 
