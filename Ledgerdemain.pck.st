@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 8:13:08.749427 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 9:17:43.921427 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 230!
+!provides: 'Ledgerdemain' 1 231!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1935,7 +1935,7 @@ getR
 	
 	^ model getR! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/16/2016 21:45'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/17/2016 21:00'!
 goAhead
 	"Go to the next EntryField to the right"
 	| from to |
@@ -1945,8 +1945,11 @@ goAhead
 	entryIndex > windowEntries size 
 		ifTrue: [
 			entryIndex _ 1.
-			(PopUpMenu confirm: 'Enter transaction?')
-				ifTrue: [self changeTransaction]].
+			model selectedTransaction notNil
+				ifTrue: [
+					(PopUpMenu confirm: 'Enter transaction?')
+						ifTrue: [self changeTransaction]]
+				ifFalse: [self changeTransaction]].
 	to _ windowEntries at: entryIndex.
 	from scroller autoCompleter ifNotNil: [from scroller autoCompleter closeMenu].
 	self releaseKeyboardFocus: from scroller.
