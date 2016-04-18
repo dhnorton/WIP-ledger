@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 9:39:26.611427 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 10:10:31.097599 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 232!
+!provides: 'Ledgerdemain' 1 233!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1985,12 +1985,12 @@ goBack
 
 ! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/11/2016 14:59'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/17/2016 21:53'!
 goMouse: index
 	"Go to the EntryField selected by the mouse"
 	| from to |
 	
-	from _ windowEntries at: entryIndex.
+	from _ windowEntries at: (entryIndex ifNil: [1] ifNotNil: [entryIndex]).
 	entryIndex _ index.
 	to _ windowEntries at: entryIndex.
 	from scroller autoCompleter closeMenu.
