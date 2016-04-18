@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 6:51:21.468427 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 8:13:08.749427 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 229!
+!provides: 'Ledgerdemain' 1 230!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -744,35 +744,32 @@ formatAccount: anAccount
 		nextPutAll: s2.
 	^ str contents! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:04'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/17/2016 19:59'!
 getCategory
 	"Answer the category"
 	
-	transactionListIndex = 0
-		ifTrue: [^ self actualContents asString]
-		ifFalse: [^ self transactionCurrent category withoutTrailingBlanks]! !
+	^ transactionListIndex = 0
+		ifTrue: [self actualContents asString]
+		ifFalse: [self transactionCurrent category withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:05'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/17/2016 19:59'!
 getCheck
 	"Answer the check number"
 	
-	transactionListIndex = 0
-		ifTrue: [^'']
-		ifFalse: [^ self transactionCurrent check withoutTrailingBlanks]! !
+	^ transactionListIndex = 0
+		ifTrue: ['']
+		ifFalse: [self transactionCurrent check withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:05'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/17/2016 19:58'!
 getCredit
 	"Answer the amount if positive; '' otherwise"
-	| x |
 	
-	transactionListIndex = 0
-		ifTrue: [x _ '']
+	^ transactionListIndex = 0
+		ifTrue: ['']
 		ifFalse: [
 			self transactionCurrent amount < 0 
-				ifTrue: [x _ '']
-				ifFalse: [x _ self transactionCurrent amount ledgerFormatted]].
-		
-	^ x! !
+				ifTrue: ['']
+				ifFalse: [self transactionCurrent amount ledgerFormatted]]! !
 
 !LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/16/2016 21:39'!
 getDate
@@ -787,43 +784,40 @@ getDate
 				ifNil: [self transactionLast date]
 				ifNotNil: [self transactionCurrent date])) mmddyyyy]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:08'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/17/2016 19:56'!
 getDebit
 	"Answer the amount if negative; '' otherwise"
-	| x |
 	
-	transactionListIndex = 0
-		ifTrue: [x _ '']
+	^ transactionListIndex = 0
+		ifTrue: ['']
 		ifFalse: [
 			self transactionCurrent amount >= 0 
-				ifTrue: [x _ '']
-				ifFalse: [x _ self transactionCurrent amount negated ledgerFormatted]].
-		
-	^ x! !
+				ifTrue: ['']
+				ifFalse: [self transactionCurrent amount negated ledgerFormatted]]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:08'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/17/2016 19:54'!
 getMemo
 	"Answer the memo"
 	
-	transactionListIndex = 0
-		ifTrue: [^ '']
-		ifFalse: [^ self transactionCurrent memo withoutTrailingBlanks]! !
+	^ transactionListIndex = 0
+		ifTrue: ['']
+		ifFalse: [self transactionCurrent memo withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:08'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/17/2016 19:53'!
 getPayee
 	"Answer the payee"
 	
-	transactionListIndex = 0
-		ifTrue: [^ '']
-		ifFalse: [^ self transactionCurrent payee withoutTrailingBlanks]! !
+	^ transactionListIndex = 0
+		ifTrue: ['']
+		ifFalse: [self transactionCurrent payee withoutTrailingBlanks]! !
 
-!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/2/2016 23:09'!
+!LedgerDeMain methodsFor: 'entry' stamp: 'dhn 4/17/2016 20:00'!
 getR
 	"Answer the reconciled indicator"
 	
-	transactionListIndex = 0
-		ifTrue: [^ '']
-		ifFalse: [^ self transactionCurrent reconciled]! !
+	^ transactionListIndex = 0
+		ifTrue: ['']
+		ifFalse: [self transactionCurrent reconciled]! !
 
 !LedgerDeMain methodsFor: 'transaction' stamp: 'dhn 4/8/2016 21:49'!
 growTries: aTransaction
