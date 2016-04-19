@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 19 April 2016 at 12:43:35.032692 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 19 April 2016 at 5:11:19.836692 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 237!
+!provides: 'Ledgerdemain' 1 238!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1270,6 +1270,34 @@ openCompletionMenu
 		completer: self
 		position: theEditor startBlock bottomLeft + textMorph morphPositionInWorld! !
 
+!LedgerCompleter class methodsFor: 'help text' stamp: 'dhn 4/19/2016 13:51'!
+helpText
+	"
+	self helpText edit
+	"
+^'open/close menu
+	ctrl-space, left arrow, or right arrow
+		open the completion menu
+	ESC
+		close menu
+	?
+		open this help
+menu navigation
+	Arrows up/down
+		move the selection up and down
+	Page up/down
+		page up and down
+	Home/End
+		move to first or last page of the menu
+changing menu contents
+	alphanumeric character
+		filter the menu to the given input
+	backspace
+		delete an input character, adjust menu to the new input.
+inserting completion
+	ctrl-space or tab
+		close the menu and insert selected completion.'! !
+
 !LedgerCalculator methodsFor: 'initialization' stamp: 'dhn 3/22/2016 22:25'!
 initialize
 	"Answer an evaluated expression in ledger format"
@@ -1300,6 +1328,10 @@ drawOn: aCanvas
 	"Ensure completer entries is not empty"
 	
 	completer entries notEmpty ifTrue: [super drawOn: aCanvas]! !
+
+!LedgerCompleterMorph methodsFor: 'help' stamp: 'dhn 4/19/2016 17:08'!
+help
+	TextModel new contents: LedgerCompleter helpText; openLabel: 'Completer Keyboard Help'! !
 
 !LedgerCompleterMorph methodsFor: 'persistence' stamp: 'dhn 4/6/2016 15:27'!
 timeout
@@ -2528,9 +2560,9 @@ openFor: aModel
 		morphExtent: 750@400;
 		setWindowColor:  Theme current workspace! !
 
-!ButtonR methodsFor: 'updating' stamp: 'dhn 4/18/2016 21:33'!
+!ButtonR methodsFor: 'updating' stamp: 'dhn 4/19/2016 13:25'!
 colorFor: aBool
-	"Answer the color corresponding to ivar #state"
+	"Answer the color chosen by aBool"
 	
 	^ aBool
 		ifTrue: [self class colorTrue]
