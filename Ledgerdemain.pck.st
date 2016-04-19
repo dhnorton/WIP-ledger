@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 17 April 2016 at 10:10:31.097599 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 19 April 2016 at 12:43:35.032692 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 233!
+!provides: 'Ledgerdemain' 1 237!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -14,7 +14,7 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction ledgerSelection netString'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction ledgerSelection netString reconcileList reconcileListIndex'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -80,6 +80,26 @@ SystemWindow subclass: #LedgerWindow
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerWindow class' category: #Ledgerdemain!
 LedgerWindow class
+	instanceVariableNames: ''!
+
+!classDefinition: #ReconcileWindow category: #Ledgerdemain!
+SystemWindow subclass: #ReconcileWindow
+	instanceVariableNames: 'theList'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'ReconcileWindow class' category: #Ledgerdemain!
+ReconcileWindow class
+	instanceVariableNames: ''!
+
+!classDefinition: #ButtonR category: #Ledgerdemain!
+RectangleLikeMorph subclass: #ButtonR
+	instanceVariableNames: 'state'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'ButtonR class' category: #Ledgerdemain!
+ButtonR class
 	instanceVariableNames: ''!
 
 !classDefinition: #Repository category: #Ledgerdemain!
@@ -183,6 +203,9 @@ The window's model is a LedgerDeMain.
 
 	LedgerWindow open.
 !
+
+!ButtonR commentStamp: 'dhn 4/18/2016 21:21' prior: 0!
+An indicator for a line in the list of transactions to be reconciled.!
 
 !Repository commentStamp: 'dhn 6/12/2015 19:12' prior: 0!
 Repository responsibilities:
@@ -500,6 +523,16 @@ listLedgerLines
 	ledger do: [:ea | 
 		balCur _ balCur + ea amount asNumber.
 		col addLast: ea formatTransaction].
+	^ col! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:54'!
+listReconcileLines
+	"Answer the transaction content in a form suitable for the ledger list"
+	| col |
+
+	col _ OrderedCollection new.			
+	ledger do: [:ea | 
+		col addLast: ea formatForR].
 	^ col! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 3/24/2016 16:54'!
@@ -987,8 +1020,32 @@ putDebit: aString
 	
 	self halt! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 6/26/2015 14:51'!
-reconcile! !
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:58'!
+reconcileList
+	"Answer a list of transactions to be reconciled"
+
+	^ accountListIndex > 0 
+		ifTrue: [reconcileList _ selectedAccount listReconcileLines]
+		ifFalse: [OrderedCollection new]! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:59'!
+reconcileList: anObject
+	"Set the value of reconcileList"
+
+	reconcileList _ anObject! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 12:40'!
+reconcileListIndex
+	"Answer the value of reconcileListIndex"
+
+	reconcileListIndex ifNil: [reconcileListIndex _ 0].
+	^ reconcileListIndex! !
+
+!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:59'!
+reconcileListIndex: anObject
+	"Set the value of reconcileListIndex"
+
+	reconcileListIndex _ anObject! !
 
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/3/2016 16:03'!
 restorationOf: fileName
@@ -2035,7 +2092,7 @@ listTransactionTypes
 	pick _ (SelectionMenu selections: self class transactionTypes) startUpMenu.
 	TextEditor  new clipboardTextPut:  pick! !
 
-!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/3/2016 12:51'!
+!LedgerWindow methodsFor: 'menu' stamp: 'dhn 4/19/2016 12:31'!
 menuLedger
 	"Ledger pop-up menu"
 
@@ -2044,7 +2101,7 @@ menuLedger
 	aMenu
 		addTitle: 'Ledger Menu'; 
 		addLine.
-	aMenu add: 'Reconcile...'		target: self model 	action:	#reconcile.
+	aMenu add: 'Reconcile...'		target: self 		 	action:	#reconcile.
 	aMenu balloonTextForLastItem: 'reconcile this account'.
 	aMenu add: 'Search...'			target: self model 	action:	#searchOneAccount.
 	aMenu balloonTextForLastItem: 'search within this account only'.
@@ -2128,6 +2185,12 @@ openCompleterFor: aField
 !LedgerWindow methodsFor: 'menu' stamp: 'dhn 6/26/2015 11:35'!
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
+
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/19/2016 12:33'!
+reconcile
+	"Reconcile an account"
+	
+	ReconcileWindow openFor: model! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:07'!
 releaseKeyboardFocus
@@ -2434,6 +2497,91 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:22'!
+buildMorphicWindow
+	"Lay out a window for reconciling an account"
+
+	theList _ (PluggableListMorph
+			model: model
+			listGetter: #reconcileList
+			indexGetter: #reconcileListIndex
+			indexSetter: #reconcileListIndex:
+			mainView: self
+			menuGetter: nil
+			keystrokeAction: nil)
+				name: #'To Be Reconciled'.
+
+	(self layoutMorph beColumn name: #'Reconcile List')
+		addMorph: theList fixedWidth: 600;
+			layoutSpec: (LayoutSpec useAll)! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:13'!
+initialize
+
+	super initialize! !
+
+!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/19/2016 12:28'!
+openFor: aModel
+	"Open the reconcile window on aModel"
+
+	(ReconcileWindow open: aModel label: 'Reconcile')
+		morphExtent: 750@400;
+		setWindowColor:  Theme current workspace! !
+
+!ButtonR methodsFor: 'updating' stamp: 'dhn 4/18/2016 21:33'!
+colorFor: aBool
+	"Answer the color corresponding to ivar #state"
+	
+	^ aBool
+		ifTrue: [self class colorTrue]
+		ifFalse: [self class colorFalse]! !
+
+!ButtonR methodsFor: 'event handling' stamp: 'dhn 4/18/2016 21:41'!
+handlesMouseDown: aMouseButtonEvent
+	"Indicate that mouse clicks are processed by this morph"
+	
+	^ true! !
+
+!ButtonR methodsFor: 'initialization' stamp: 'dhn 4/19/2016 11:36'!
+initialize
+	"initialize the state of the receiver"
+
+	super initialize.
+	self morphExtent: 13.0@13.0.
+	state _ false.
+	self color: (self colorFor: state)! !
+
+!ButtonR methodsFor: 'updating' stamp: 'dhn 4/18/2016 21:49'!
+latch
+	"Change the state of the receiver"
+	
+	self color: (self colorFor: (state _ state not))! !
+
+!ButtonR methodsFor: 'event handling' stamp: 'dhn 4/19/2016 11:04'!
+mouseButton1Up: aMouseButtonEvent localPosition: localEventPosition
+	"Process the mouse click"
+
+	self latch
+! !
+
+!ButtonR methodsFor: 'updating' stamp: 'dhn 4/19/2016 10:38'!
+state
+	"Answer the state of the button"
+	
+	^ state! !
+
+!ButtonR class methodsFor: 'indication' stamp: 'dhn 4/18/2016 21:36'!
+colorFalse
+	"Answer the color for false"
+	
+	^ Color yellow! !
+
+!ButtonR class methodsFor: 'indication' stamp: 'dhn 4/18/2016 21:34'!
+colorTrue
+	"Answer the color for true"
+	
+	^ Color green! !
+
 !Suggestion class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:37'!
 try
 	"see if this shows up in unsaved changes"
@@ -2540,6 +2688,38 @@ date: anObject
 	"Set the value of date"
 
 	date _ anObject! !
+
+!Transaction methodsFor: 'displaying' stamp: 'dhn 4/19/2016 10:32'!
+formatForR
+	"Answer the receiver as a formatted line for reconciling"
+	| btn chr |
+
+	chr _ String streamContents: [:str |
+		str 	nextPutAll: 
+			(self leftJustify: (self class listFields at: #date) 
+				with: (Date fromDays: self date asNumber) mmddyyyy).
+
+		self account type = #checking
+			ifTrue: [
+				str	nextPutAll: 
+					(self leftJustify: (self class listFields at: #check) 
+						with: self check withoutTrailingBlanks)].
+
+		str
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #payee) 
+					with: self payee withoutTrailingBlanks);
+			nextPutAll: 
+				(self rightJustify: (self class listFields at: #amount) 
+					with: self amount ledgerFormatted)].
+				
+	btn _ ButtonR new.
+
+	^ (LayoutMorph newRow name: 'Reconcile Entry')
+		addMorph: btn;
+		addMorph: (StringMorph
+			contents: chr 
+			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9))! !
 
 !Transaction methodsFor: 'displaying' stamp: 'dhn 4/12/2016 15:04'!
 formatTransaction
