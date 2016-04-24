@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 19 April 2016 at 5:11:19.836692 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 24 April 2016 at 2:42:51.10549 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 238!
+!provides: 'Ledgerdemain' 1 239!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -525,14 +525,14 @@ listLedgerLines
 		col addLast: ea formatTransaction].
 	^ col! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:54'!
+!Account methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:06'!
 listReconcileLines
 	"Answer the transaction content in a form suitable for the ledger list"
 	| col |
 
 	col _ OrderedCollection new.			
 	ledger do: [:ea | 
-		col addLast: ea formatForR].
+		ea reconciled ~= 'R' ifTrue: [col addLast: ea formatForR]].
 	^ col! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 3/24/2016 16:54'!
@@ -2218,11 +2218,11 @@ openCompleterFor: aField
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/19/2016 12:33'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/19/2016 18:47'!
 reconcile
 	"Reconcile an account"
 	
-	ReconcileWindow openFor: model! !
+	ReconcileWindow openFor: self! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:07'!
 releaseKeyboardFocus
@@ -2529,12 +2529,12 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:22'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 18:41'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
 
 	theList _ (PluggableListMorph
-			model: model
+			model: self
 			listGetter: #reconcileList
 			indexGetter: #reconcileListIndex
 			indexSetter: #reconcileListIndex:
@@ -2551,6 +2551,24 @@ buildMorphicWindow
 initialize
 
 	super initialize! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:40'!
+reconcileList
+	"Answer the list for the view"
+	
+	model reconcileList do: [:ea | ea openInWorld: theList]! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:42'!
+reconcileListIndex
+	"Answer the value of reconcileListIndex"
+
+	model reconcileListIndex! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:43'!
+reconcileListIndex: anObject
+	"Set the value of reconcileListIndex"
+
+	model reconcileListIndex: anObject! !
 
 !ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/19/2016 12:28'!
 openFor: aModel
@@ -2574,12 +2592,11 @@ handlesMouseDown: aMouseButtonEvent
 	
 	^ true! !
 
-!ButtonR methodsFor: 'initialization' stamp: 'dhn 4/19/2016 11:36'!
+!ButtonR methodsFor: 'initialization' stamp: 'dhn 4/24/2016 14:10'!
 initialize
 	"initialize the state of the receiver"
 
 	super initialize.
-	self morphExtent: 13.0@13.0.
 	state _ false.
 	self color: (self colorFor: state)! !
 
@@ -2721,10 +2738,10 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 4/19/2016 10:32'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 4/24/2016 14:42'!
 formatForR
 	"Answer the receiver as a formatted line for reconciling"
-	| btn chr |
+	| chr btn line |
 
 	chr _ String streamContents: [:str |
 		str 	nextPutAll: 
@@ -2745,13 +2762,18 @@ formatForR
 				(self rightJustify: (self class listFields at: #amount) 
 					with: self amount ledgerFormatted)].
 				
-	btn _ ButtonR new.
+	btn _ ButtonR new;
+		morphExtent: 13.0@13.0.
 
-	^ (LayoutMorph newRow name: 'Reconcile Entry')
-		addMorph: btn;
+	line _ LayoutMorph newRow name: 'Reconcile Entry'.
+	line
+		addMorph: btn layoutSpec: (LayoutSpec fixedWidth: 20);
 		addMorph: (StringMorph
 			contents: chr 
-			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9))! !
+			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9))
+				layoutSpec: LayoutSpec useAll.
+				
+	^ line! !
 
 !Transaction methodsFor: 'displaying' stamp: 'dhn 4/12/2016 15:04'!
 formatTransaction
