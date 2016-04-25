@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 24 April 2016 at 9:28:12.58149 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 25 April 2016 at 2:10:00.68674 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 240!
+!provides: 'Ledgerdemain' 1 241!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -2626,13 +2626,24 @@ initialize
 
 	super initialize! !
 
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:44'!
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 14:05'!
 reconcileList
 	"Answer the list for the view"
+	| line |
 
-	^ model xactions 
-		ifEmpty: [OrderedCollection new]
-		ifNotEmpty: [model xactions do: [:ea | ea openInWorld: self]]! !
+	model account listReconcileLines.
+	model account reconcileList do: [:ea | | btn |
+		line _ LayoutMorph newRow name: #'button and line'.
+		btn _ ButtonR new.
+		line
+			separation: 5@5;
+			addMorph: btn layoutSpec: (LayoutSpec fixedWidth: 13 fixedHeight: 13);
+			addMorph: (StringMorph
+				contents: ea 
+				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9))
+					layoutSpec: LayoutSpec useAll.
+		self layoutMorph addMorph: line].
+	^ OrderedCollection new! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:53'!
 reconcileListIndex
@@ -2816,12 +2827,11 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 4/24/2016 14:42'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 4/25/2016 12:32'!
 formatForR
 	"Answer the receiver as a formatted line for reconciling"
-	| chr btn line |
 
-	chr _ String streamContents: [:str |
+	^ String streamContents: [:str |
 		str 	nextPutAll: 
 			(self leftJustify: (self class listFields at: #date) 
 				with: (Date fromDays: self date asNumber) mmddyyyy).
@@ -2838,20 +2848,7 @@ formatForR
 					with: self payee withoutTrailingBlanks);
 			nextPutAll: 
 				(self rightJustify: (self class listFields at: #amount) 
-					with: self amount ledgerFormatted)].
-				
-	btn _ ButtonR new;
-		morphExtent: 13.0@13.0.
-
-	line _ LayoutMorph newRow name: 'Reconcile Entry'.
-	line
-		addMorph: btn layoutSpec: (LayoutSpec fixedWidth: 20);
-		addMorph: (StringMorph
-			contents: chr 
-			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9))
-				layoutSpec: LayoutSpec useAll.
-				
-	^ line! !
+					with: self amount ledgerFormatted)]! !
 
 !Transaction methodsFor: 'displaying' stamp: 'dhn 4/12/2016 15:04'!
 formatTransaction
