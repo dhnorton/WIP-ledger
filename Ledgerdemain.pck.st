@@ -1,10 +1,10 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 24 April 2016 at 2:42:51.10549 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 24 April 2016 at 9:28:12.58149 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 239!
+!provides: 'Ledgerdemain' 1 240!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
-	instanceVariableNames: 'accountName type ledger balOpen openDate balRcon balCur lastCheck'
+	instanceVariableNames: 'accountName type ledger reconcileList reconcileIndex balOpen openDate balRcon balCur lastCheck'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -14,12 +14,22 @@ Account class
 
 !classDefinition: #LedgerDeMain category: #Ledgerdemain!
 TextModel subclass: #LedgerDeMain
-	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction ledgerSelection netString reconcileList reconcileListIndex'
+	instanceVariableNames: 'directory accounts accountListIndex selectedAccount net modified transactionList transactionListIndex selectedTransaction ledgerSelection netString'
 	classVariableNames: 'Categories Memos Payees Type'
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerDeMain class' category: #Ledgerdemain!
 LedgerDeMain class
+	instanceVariableNames: ''!
+
+!classDefinition: #Reconciliation category: #Ledgerdemain!
+TextModel subclass: #Reconciliation
+	instanceVariableNames: 'account xactions xactionIndex indices'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Reconciliation class' category: #Ledgerdemain!
+Reconciliation class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerCompleter category: #Ledgerdemain!
@@ -40,16 +50,6 @@ Object subclass: #LedgerCalculator
 	category: 'Ledgerdemain'!
 !classDefinition: 'LedgerCalculator class' category: #Ledgerdemain!
 LedgerCalculator class
-	instanceVariableNames: ''!
-
-!classDefinition: #Reconciliation category: #Ledgerdemain!
-Morph subclass: #Reconciliation
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Reconciliation class' category: #Ledgerdemain!
-Reconciliation class
 	instanceVariableNames: ''!
 
 !classDefinition: #LedgerCompleterMorph category: #Ledgerdemain!
@@ -84,7 +84,7 @@ LedgerWindow class
 
 !classDefinition: #ReconcileWindow category: #Ledgerdemain!
 SystemWindow subclass: #ReconcileWindow
-	instanceVariableNames: 'theList'
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -172,6 +172,9 @@ recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
 reported amount _ dollars (examples: 29.95 5.00)!
 
+!Reconciliation commentStamp: 'dhn 4/24/2016 19:20' prior: 0!
+The model for ReconcileWindow. Maintains the list of transactions to be reconciled, as well as their indices in the account ledger.!
+
 !LedgerCompleter commentStamp: 'dhn 11/9/2015 15:31' prior: 0!
 The AutoCompleter for LedgerDeMain.!
 
@@ -181,13 +184,6 @@ A rudimentary calculator for arithmetic expressions containing '+-*/' and decima
 The result is formatted for ledger credits or debits.
 
 One or more digits must occur before the decimal point.!
-
-!Reconciliation commentStamp: 'dhn 6/12/2015 19:10' prior: 0!
-Reconciliation responsibilities:
-
-  report withdrawals and deposits
-  update ledger
-!
 
 !LedgerCompleterMorph commentStamp: 'dhn 11/9/2015 17:10' prior: 0!
 The auto completion menu for Ledgerdemain.!
@@ -203,6 +199,9 @@ The window's model is a LedgerDeMain.
 
 	LedgerWindow open.
 !
+
+!ReconcileWindow commentStamp: 'dhn 4/24/2016 17:19' prior: 0!
+A view on the unreconciled transactions of an account.!
 
 !ButtonR commentStamp: 'dhn 4/18/2016 21:21' prior: 0!
 An indicator for a line in the list of transactions to be reconciled.!
@@ -525,15 +524,20 @@ listLedgerLines
 		col addLast: ea formatTransaction].
 	^ col! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:06'!
+!Account methodsFor: 'accessing' stamp: 'dhn 4/24/2016 21:21'!
 listReconcileLines
-	"Answer the transaction content in a form suitable for the ledger list"
-	| col |
+	"Answer the transaction content in a form suitable for the reconcile list"
+	| ix |
 
-	col _ OrderedCollection new.			
-	ledger do: [:ea | 
-		ea reconciled ~= 'R' ifTrue: [col addLast: ea formatForR]].
-	^ col! !
+	reconcileList _ OrderedCollection new.
+	reconcileIndex _ OrderedCollection new.
+	ix _ 0.			
+	ledger do: [:ea |
+		ix _ ix + 1.
+		ea reconciled ~= 'R' ifTrue: [
+			reconcileList addLast: ea formatForR.
+			reconcileIndex addLast: ix]].
+	^ reconcileList! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 3/24/2016 16:54'!
 loadTransaction: anObject
@@ -560,6 +564,30 @@ openDate: anObject
 	"Set the value of openDate"
 
 	openDate _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 4/24/2016 21:13'!
+reconcileIndex
+	"Answer the value of reconcileIndex"
+
+	^ reconcileIndex! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 4/24/2016 21:13'!
+reconcileIndex: anObject
+	"Set the value of reconcileIndex"
+
+	reconcileIndex _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 4/24/2016 21:13'!
+reconcileList
+	"Answer the value of reconcileList"
+
+	^ reconcileList! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 4/24/2016 21:13'!
+reconcileList: anObject
+	"Set the value of reconcileList"
+
+	reconcileList _ anObject! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 4/5/2016 11:10'!
 type
@@ -1020,33 +1048,6 @@ putDebit: aString
 	
 	self halt! !
 
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:58'!
-reconcileList
-	"Answer a list of transactions to be reconciled"
-
-	^ accountListIndex > 0 
-		ifTrue: [reconcileList _ selectedAccount listReconcileLines]
-		ifFalse: [OrderedCollection new]! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:59'!
-reconcileList: anObject
-	"Set the value of reconcileList"
-
-	reconcileList _ anObject! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 12:40'!
-reconcileListIndex
-	"Answer the value of reconcileListIndex"
-
-	reconcileListIndex ifNil: [reconcileListIndex _ 0].
-	^ reconcileListIndex! !
-
-!LedgerDeMain methodsFor: 'accessing' stamp: 'dhn 4/19/2016 11:59'!
-reconcileListIndex: anObject
-	"Set the value of reconcileListIndex"
-
-	reconcileListIndex _ anObject! !
-
 !LedgerDeMain methodsFor: 'save & restore' stamp: 'dhn 4/3/2016 16:03'!
 restorationOf: fileName
 	"Restore accounts from file named fileName"
@@ -1221,6 +1222,78 @@ keyTable
 !LedgerDeMain class methodsFor: 'as yet unclassified' stamp: 'dhn 6/25/2015 20:04'!
 look
 	Payees explore! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
+account
+	"Answer the value of account"
+
+	^ account! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
+account: anObject
+	"Set the value of account"
+
+	account _ anObject! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
+indices
+	"Answer the value of indices"
+
+	^ indices! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
+indices: anObject
+	"Set the value of indices"
+
+	indices _ anObject! !
+
+!Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/24/2016 19:14'!
+initialize
+	"initialize the state of the receiver"
+
+	super initialize.
+! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 20:27'!
+loadXactions
+	"Set the transactions to be reconciled"
+	| ix x |
+	
+	ix _ 0.
+	indices _ OrderedCollection new.
+	xactions _ OrderedCollection new.
+	1 to: account ledger size do: [
+		ix _ ix + 1.
+		(x _ account ledger at: ix) reconciled ~= 'R'
+			ifTrue: [
+				indices add: ix.
+				xactions add: x]]
+	! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:21'!
+xactionIndex
+	"Answer the value of xactionIndex"
+
+	^ xactionIndex! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:21'!
+xactionIndex: anObject
+	"Set the value of xactionIndex"
+
+	xactionIndex _ anObject! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:17'!
+xactions
+	"Answer the list of transactions to be reconciled"
+
+	xactions ifNil: [xactions _ OrderedCollection new].
+	^ xactions! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
+xactions: anObject
+	"Set the value of xactions"
+
+	xactions _ anObject! !
 
 !LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/16/2016 12:33'!
 computeEntries
@@ -2218,11 +2291,11 @@ openCompleterFor: aField
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/19/2016 18:47'!
+!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/24/2016 17:23'!
 reconcile
 	"Reconcile an account"
 	
-	ReconcileWindow openFor: self! !
+	ReconcileWindow openFor: model selectedAccount! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:07'!
 releaseKeyboardFocus
@@ -2529,11 +2602,12 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 18:41'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/24/2016 19:57'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
+	| list |
 
-	theList _ (PluggableListMorph
+	list _ (PluggableListMorph
 			model: self
 			listGetter: #reconcileList
 			indexGetter: #reconcileListIndex
@@ -2544,7 +2618,7 @@ buildMorphicWindow
 				name: #'To Be Reconciled'.
 
 	(self layoutMorph beColumn name: #'Reconcile List')
-		addMorph: theList fixedWidth: 600;
+		addMorph: list fixedWidth: 600;
 			layoutSpec: (LayoutSpec useAll)! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:13'!
@@ -2552,29 +2626,33 @@ initialize
 
 	super initialize! !
 
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:40'!
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:44'!
 reconcileList
 	"Answer the list for the view"
-	
-	model reconcileList do: [:ea | ea openInWorld: theList]! !
 
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:42'!
+	^ model xactions 
+		ifEmpty: [OrderedCollection new]
+		ifNotEmpty: [model xactions do: [:ea | ea openInWorld: self]]! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:53'!
 reconcileListIndex
 	"Answer the value of reconcileListIndex"
 
-	model reconcileListIndex! !
+	^ model xactions
+		ifEmpty: [0]
+		ifNotEmpty: [model xactionIndex]! !
 
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/19/2016 18:43'!
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:45'!
 reconcileListIndex: anObject
 	"Set the value of reconcileListIndex"
 
-	model reconcileListIndex: anObject! !
+	model xactionIndex: anObject! !
 
-!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/19/2016 12:28'!
-openFor: aModel
-	"Open the reconcile window on aModel"
+!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/24/2016 20:07'!
+openFor: anAccount
+	"Open the reconcile window for anAccount"
 
-	(ReconcileWindow open: aModel label: 'Reconcile')
+	(ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
 		morphExtent: 750@400;
 		setWindowColor:  Theme current workspace! !
 
