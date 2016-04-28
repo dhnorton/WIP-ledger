@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 26 April 2016 at 9:36:02.704469 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 27 April 2016 at 10:20:28.13305 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 242!
+!provides: 'Ledgerdemain' 1 243!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -144,7 +144,7 @@ Payee class
 
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
-	instanceVariableNames: 'key account date check payee category memo reconciled amount type balance transfer'
+	instanceVariableNames: 'key account date check payee category memo reconciled amount type balance transfer stateR'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -182,8 +182,15 @@ recorded date _ Date today julianDayNumber - Time squeakEpoch.
 recorded amount _ amount as cents. (examples: 2995 500)
 reported amount _ dollars (examples: 29.95 5.00)!
 
-!Reconciliation commentStamp: 'dhn 4/24/2016 19:20' prior: 0!
-The model for ReconcileWindow. Maintains the list of transactions to be reconciled, as well as their indices in the account ledger.!
+!Reconciliation commentStamp: 'dhn 4/27/2016 15:38' prior: 0!
+The model for ReconcileWindow. Maintains the reconciliation parameters:
+	- previous reconciled balance
+	- amount of payments from statement
+	- amount of returns from statement
+	- amount of purchases from statement
+	- amount of purchases checked off
+	- new reconciled balance
+	!
 
 !LedgerCompleter commentStamp: 'dhn 11/9/2015 15:31' prior: 0!
 The AutoCompleter for LedgerDeMain.!
@@ -408,6 +415,39 @@ specialKeys
 		43 		"+ (plus)"
 		45 		"- (minus)"
 	)! !
+
+!InnerListMorph methodsFor: '*Ledgerdemain' stamp: 'jmv 11/15/2011 19:09'!
+desiredWidth
+"Ok, this is a bit messed up. We need to return the width of the widest item in the list. If we grab every item in the list, it defeats the purpose of LazyListMorph. If we don't, then we don't know the size. This is a compromise -- if the list is less then 30 items, we grab them all. If not, we grab currently visible ones, until we've checked itemsToCheck of them, then take the max width out of that 'sampling', then double it. If you know a better way, please chime in."
+
+	| maxW count itemsToCheck item |
+
+	itemsToCheck _ 30.
+	maxW _ owner viewableWidth.
+	count _ 0.
+	listItems do: [ :each |
+		each ifNotNil: [
+			maxW _ maxW max: (self widthToDisplayItem: each contents)]].
+
+	(count < itemsToCheck) ifTrue: [
+		1 to: listItems size do: [:i | 
+			(listItems at: i) ifNil: [ 
+				item _ self item: i.
+				maxW _ maxW max: (self widthToDisplayItem: item contents).
+				((count _ count + 1) > itemsToCheck) ifTrue: [ ^maxW * 2 ]]]].
+
+	^maxW 
+! !
+
+!InnerListMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/27/2016 14:45'!
+widthToDisplayItem: item
+	"Answer the required width"
+	
+	^ (item isString or: [item is: #Text])
+		ifTrue: [self font widthOfStringOrText: item]
+		ifFalse: [
+			(item respondsTo: #morphExtent)
+				ifTrue: [item morphExtent x]]! !
 
 !InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/11/2016 14:33'!
 autoCompleter
@@ -1320,7 +1360,7 @@ loadXactions
 				xactions add: x]]
 	! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/26/2016 19:51'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/27/2016 21:56'!
 toBeR
 	"Answer the list of transactions which need to be reconciled"
 	| col |
@@ -1328,13 +1368,27 @@ toBeR
 	account listReconcileLines.
 	account reconcileBoxes: OrderedCollection new.
 	col _ OrderedCollection new.
-	
-	account reconcileList do: [:ea | | line btn |
-		account reconcileBoxes add: (btn _ ButtonR new morphExtent: 13.0@13.0).
-		line _ {btn. ea}.
+	account reconcileList do: [:ea | | line |
+		line _ UpdatingMenuItemMorph new.
+		line 
+			target: self;
+			selector: #toggleR;
+			wordingProvider: self wordingSelector: nil;
+			color: Color transparent;
+			morphExtent: 450@34;
+			contents: '<off>', ea;
+			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9);
+			layoutSpec: (LayoutSpec fixedHeight: 13).
+		self halt.
 		col add: line].
 	
 	^ col! !
+
+!Reconciliation methodsFor: 'updating' stamp: 'dhn 4/27/2016 22:09'!
+toggleR
+	"Change the state of the transaction's reconciled indicator"
+	
+	(account ledger at: (account reconcileIndex first)) latch 	"temporary"! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:21'!
 xactionIndex
@@ -1547,7 +1601,7 @@ colorTrue
 	
 	^ Color green! !
 
-!ReconcileListMorph methodsFor: 'model access' stamp: 'dhn 4/26/2016 18:49'!
+!ReconcileListMorph methodsFor: 'model access' stamp: 'dhn 4/27/2016 14:39'!
 getList
 	"Answer the list to be displayed"
 	
@@ -2993,6 +3047,12 @@ key: anObject
 
 	key _ anObject! !
 
+!Transaction methodsFor: 'accessing' stamp: 'dhn 4/27/2016 22:05'!
+latch
+	"Toggle the reconcilation state #stateR"
+	
+	self stateR: self stateR not! !
+
 !Transaction methodsFor: 'displaying' stamp: 'dhn 3/17/2016 20:25'!
 leftJustify: aByteCount with: aString
 	"Answer the contents of  of a field named  aSymbol, left-justifying it and padding it with padChar, if required."
@@ -3073,6 +3133,19 @@ rightJustify: aByteCount with: aString
 	^ String streamContents: [:str |
 		str nextPutAll: padding.
 		str nextPutAll: aString]! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 4/27/2016 22:07'!
+stateR
+	"Answer the value of stateR"
+
+	stateR ifNil: [stateR _ false].
+	^ stateR! !
+
+!Transaction methodsFor: 'accessing' stamp: 'dhn 4/27/2016 18:27'!
+stateR: anObject
+	"Set the value of stateR"
+
+	stateR _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
 transfer
