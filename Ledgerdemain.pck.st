@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 28 April 2016 at 3:54:35.331232 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 28 April 2016 at 4:11:32.965232 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 244!
+!provides: 'Ledgerdemain' 1 245!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 TextModel subclass: #Reconciliation
-	instanceVariableNames: 'account xactions xactionIndex indices temp'
+	instanceVariableNames: 'account indices temp'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1211,50 +1211,6 @@ initialize
 	super initialize.
 ! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/25/2016 21:24'!
-listFor: aMorph
-	"Answer the list for aMorph"
-
-	account listReconcileLines.
-	account reconcileBoxes: OrderedCollection new.
-	account reconcileList do: [:ea | | line box btn |
-		line _ LayoutMorph newRow name: #'button and line'.
-		account reconcileBoxes add: (btn _ ButtonR new).
-		line
-			separation: 5@0;
-			addMorph: btn layoutSpec: (LayoutSpec fixedWidth: 13 fixedHeight: 13);
-			addMorph: (StringMorph
-				contents: ea 
-				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9))
-					layoutSpec: (LayoutSpec fixedHeight: 13).
-		box _ BorderedRectMorph new name: #box.
-		box 
-			color: Color transparent;
-			borderWidth: 1;
-			addMorph: line.
-		aMorph addMorph: box 
-			layoutSpec: (
-				LayoutSpec new
-					fixedWidth: 450;
-					fixedHeight: 34; 
-					minorDirectionPadding: #top)]! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 20:27'!
-loadXactions
-	"Set the transactions to be reconciled"
-	| ix x |
-	
-	ix _ 0.
-	indices _ OrderedCollection new.
-	xactions _ OrderedCollection new.
-	1 to: account ledger size do: [
-		ix _ ix + 1.
-		(x _ account ledger at: ix) reconciled ~= 'R'
-			ifTrue: [
-				indices add: ix.
-				xactions add: x]]
-	! !
-
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 12:47'!
 temp
 	"Answer the value of temp"
@@ -1282,42 +1238,11 @@ toBeR
 	
 	^ col! !
 
-!Reconciliation methodsFor: 'updating' stamp: 'dhn 4/27/2016 22:09'!
-toggleR
-	"Change the state of the transaction's reconciled indicator"
-	
-	(account ledger at: (account reconcileIndex first)) latch 	"temporary"! !
-
 !Reconciliation methodsFor: 'updating' stamp: 'dhn 4/28/2016 12:46'!
 toggleRec
 	"Just for proof of concept"
 	
 	self temp: self temp not! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:21'!
-xactionIndex
-	"Answer the value of xactionIndex"
-
-	^ xactionIndex! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:21'!
-xactionIndex: anObject
-	"Set the value of xactionIndex"
-
-	xactionIndex _ anObject! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:17'!
-xactions
-	"Answer the list of transactions to be reconciled"
-
-	xactions ifNil: [xactions _ OrderedCollection new].
-	^ xactions! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
-xactions: anObject
-	"Set the value of xactions"
-
-	xactions _ anObject! !
 
 !LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/16/2016 12:33'!
 computeEntries
@@ -2656,38 +2581,6 @@ offerTransactionMenu
 	menu addLine.
 	model toBeR do: [ :ea | menu add: ea action: #toggleRec].
 	menu openInHand! !
-
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:39'!
-reconcileList
-	"Answer the list for the view"
-	| line |
-
-	model account listReconcileLines.
-	model account reconcileList do: [:ea | | btn |
-		line _ LayoutMorph newRow name: #'button and line'.
-		btn _ ButtonR new.
-		line
-			separation: 5@5;
-			addMorph: btn layoutSpec: (LayoutSpec fixedWidth: 13 fixedHeight: 13);
-			addMorph: (StringMorph
-				contents: ea 
-				font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9))
-					layoutSpec: LayoutSpec useAll.
-		theList addMorph: line]! !
-
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:53'!
-reconcileListIndex
-	"Answer the value of reconcileListIndex"
-
-	^ model xactions
-		ifEmpty: [0]
-		ifNotEmpty: [model xactionIndex]! !
-
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:45'!
-reconcileListIndex: anObject
-	"Set the value of reconcileListIndex"
-
-	model xactionIndex: anObject! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
 theList
