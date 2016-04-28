@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 27 April 2016 at 10:20:28.13305 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 28 April 2016 at 3:54:35.331232 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 243!
+!provides: 'Ledgerdemain' 1 244!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 TextModel subclass: #Reconciliation
-	instanceVariableNames: 'account xactions xactionIndex indices'
+	instanceVariableNames: 'account xactions xactionIndex indices temp'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -62,26 +62,6 @@ AutoCompleterMorph subclass: #LedgerCompleterMorph
 LedgerCompleterMorph class
 	instanceVariableNames: ''!
 
-!classDefinition: #ButtonR category: #Ledgerdemain!
-BorderedRectMorph subclass: #ButtonR
-	instanceVariableNames: 'state'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'ButtonR class' category: #Ledgerdemain!
-ButtonR class
-	instanceVariableNames: ''!
-
-!classDefinition: #ReconcileListMorph category: #Ledgerdemain!
-PluggableListMorph subclass: #ReconcileListMorph
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'ReconcileListMorph class' category: #Ledgerdemain!
-ReconcileListMorph class
-	instanceVariableNames: ''!
-
 !classDefinition: #EntryField category: #Ledgerdemain!
 TextModelMorph subclass: #EntryField
 	instanceVariableNames: 'textModel position'
@@ -110,36 +90,6 @@ SystemWindow subclass: #ReconcileWindow
 	category: 'Ledgerdemain'!
 !classDefinition: 'ReconcileWindow class' category: #Ledgerdemain!
 ReconcileWindow class
-	instanceVariableNames: ''!
-
-!classDefinition: #Repository category: #Ledgerdemain!
-Object subclass: #Repository
-	instanceVariableNames: 'trail'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Repository class' category: #Ledgerdemain!
-Repository class
-	instanceVariableNames: ''!
-
-!classDefinition: #Suggestion category: #Ledgerdemain!
-Object subclass: #Suggestion
-	instanceVariableNames: ''
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Suggestion class' category: #Ledgerdemain!
-Suggestion class
-	instanceVariableNames: ''!
-
-!classDefinition: #Payee category: #Ledgerdemain!
-Suggestion subclass: #Payee
-	instanceVariableNames: 'last'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'Ledgerdemain'!
-!classDefinition: 'Payee class' category: #Ledgerdemain!
-Payee class
 	instanceVariableNames: ''!
 
 !classDefinition: #Transaction category: #Ledgerdemain!
@@ -205,9 +155,6 @@ One or more digits must occur before the decimal point.!
 !LedgerCompleterMorph commentStamp: 'dhn 11/9/2015 17:10' prior: 0!
 The auto completion menu for Ledgerdemain.!
 
-!ButtonR commentStamp: 'dhn 4/18/2016 21:21' prior: 0!
-An indicator for a line in the list of transactions to be reconciled.!
-
 !EntryField commentStamp: 'dhn 3/1/2016 11:43' prior: 0!
 A data entry and display morph with the ability to encapsulate a symbol of the method which loads the Trie for a completer.!
 
@@ -222,25 +169,6 @@ The window's model is a LedgerDeMain.
 
 !ReconcileWindow commentStamp: 'dhn 4/24/2016 17:19' prior: 0!
 A view on the unreconciled transactions of an account.!
-
-!Repository commentStamp: 'dhn 6/12/2015 19:12' prior: 0!
-Repository responsibilities:
-
-  maintain audit trail
-  search
-  report!
-
-!Suggestion commentStamp: 'dhn 6/12/2015 18:48' prior: 0!
-Suggestion (an abstract class) reponsibilities:
-
-  autotype
-!
-
-!Payee commentStamp: '<historical>' prior: 0!
-Payee responsibilities:
-
-  hold last transaction, by category
-!
 
 !Transaction commentStamp: 'dhn 6/24/2015 10:51' prior: 0!
 Transaction responsibilities:
@@ -415,39 +343,6 @@ specialKeys
 		43 		"+ (plus)"
 		45 		"- (minus)"
 	)! !
-
-!InnerListMorph methodsFor: '*Ledgerdemain' stamp: 'jmv 11/15/2011 19:09'!
-desiredWidth
-"Ok, this is a bit messed up. We need to return the width of the widest item in the list. If we grab every item in the list, it defeats the purpose of LazyListMorph. If we don't, then we don't know the size. This is a compromise -- if the list is less then 30 items, we grab them all. If not, we grab currently visible ones, until we've checked itemsToCheck of them, then take the max width out of that 'sampling', then double it. If you know a better way, please chime in."
-
-	| maxW count itemsToCheck item |
-
-	itemsToCheck _ 30.
-	maxW _ owner viewableWidth.
-	count _ 0.
-	listItems do: [ :each |
-		each ifNotNil: [
-			maxW _ maxW max: (self widthToDisplayItem: each contents)]].
-
-	(count < itemsToCheck) ifTrue: [
-		1 to: listItems size do: [:i | 
-			(listItems at: i) ifNil: [ 
-				item _ self item: i.
-				maxW _ maxW max: (self widthToDisplayItem: item contents).
-				((count _ count + 1) > itemsToCheck) ifTrue: [ ^maxW * 2 ]]]].
-
-	^maxW 
-! !
-
-!InnerListMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/27/2016 14:45'!
-widthToDisplayItem: item
-	"Answer the required width"
-	
-	^ (item isString or: [item is: #Text])
-		ifTrue: [self font widthOfStringOrText: item]
-		ifFalse: [
-			(item respondsTo: #morphExtent)
-				ifTrue: [item morphExtent x]]! !
 
 !InnerTextMorph methodsFor: '*Ledgerdemain' stamp: 'dhn 4/11/2016 14:33'!
 autoCompleter
@@ -1360,7 +1255,20 @@ loadXactions
 				xactions add: x]]
 	! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/27/2016 21:56'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 12:47'!
+temp
+	"Answer the value of temp"
+	
+	temp ifNil: [temp _ false].
+	^ temp! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 12:46'!
+temp: anObject
+	"Set the value of temp"
+
+	temp _ anObject! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 14:51'!
 toBeR
 	"Answer the list of transactions which need to be reconciled"
 	| col |
@@ -1369,17 +1277,7 @@ toBeR
 	account reconcileBoxes: OrderedCollection new.
 	col _ OrderedCollection new.
 	account reconcileList do: [:ea | | line |
-		line _ UpdatingMenuItemMorph new.
-		line 
-			target: self;
-			selector: #toggleR;
-			wordingProvider: self wordingSelector: nil;
-			color: Color transparent;
-			morphExtent: 450@34;
-			contents: '<off>', ea;
-			font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9);
-			layoutSpec: (LayoutSpec fixedHeight: 13).
-		self halt.
+		line _ '<off>', ea.
 		col add: line].
 	
 	^ col! !
@@ -1389,6 +1287,12 @@ toggleR
 	"Change the state of the transaction's reconciled indicator"
 	
 	(account ledger at: (account reconcileIndex first)) latch 	"temporary"! !
+
+!Reconciliation methodsFor: 'updating' stamp: 'dhn 4/28/2016 12:46'!
+toggleRec
+	"Just for proof of concept"
+	
+	self temp: self temp not! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:21'!
 xactionIndex
@@ -1545,68 +1449,6 @@ initializedInstance
 		position: 200 @ 200.
 	completer instVarNamed: 'menuMorph' put: m.
 	^m! !
-
-!ButtonR methodsFor: 'updating' stamp: 'dhn 4/19/2016 13:25'!
-colorFor: aBool
-	"Answer the color chosen by aBool"
-	
-	^ aBool
-		ifTrue: [self class colorTrue]
-		ifFalse: [self class colorFalse]! !
-
-!ButtonR methodsFor: 'event handling' stamp: 'dhn 4/18/2016 21:41'!
-handlesMouseDown: aMouseButtonEvent
-	"Indicate that mouse clicks are processed by this morph"
-	
-	^ true! !
-
-!ButtonR methodsFor: 'initialization' stamp: 'dhn 4/25/2016 16:26'!
-initialize
-	"initialize the state of the receiver"
-
-	super initialize.
-	state _ false.
-	self 
-		color: (self colorFor: state);
-		borderWidth: 1! !
-
-!ButtonR methodsFor: 'updating' stamp: 'dhn 4/18/2016 21:49'!
-latch
-	"Change the state of the receiver"
-	
-	self color: (self colorFor: (state _ state not))! !
-
-!ButtonR methodsFor: 'event handling' stamp: 'dhn 4/19/2016 11:04'!
-mouseButton1Up: aMouseButtonEvent localPosition: localEventPosition
-	"Process the mouse click"
-
-	self latch
-! !
-
-!ButtonR methodsFor: 'updating' stamp: 'dhn 4/19/2016 10:38'!
-state
-	"Answer the state of the button"
-	
-	^ state! !
-
-!ButtonR class methodsFor: 'indication' stamp: 'dhn 4/18/2016 21:36'!
-colorFalse
-	"Answer the color for false"
-	
-	^ Color yellow! !
-
-!ButtonR class methodsFor: 'indication' stamp: 'dhn 4/18/2016 21:34'!
-colorTrue
-	"Answer the color for true"
-	
-	^ Color green! !
-
-!ReconcileListMorph methodsFor: 'model access' stamp: 'dhn 4/27/2016 14:39'!
-getList
-	"Answer the list to be displayed"
-	
-	list _ model perform: (getListSelector ifNil: [#()]).
-	^ list ifNil: [#()]! !
 
 !EntryField methodsFor: 'initialization' stamp: 'dhn 11/13/2015 15:26'!
 initialize
@@ -2784,32 +2626,36 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/26/2016 18:52'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/28/2016 15:37'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
 	| nArea |
 
-	self layoutMorph beRow name: #Row.
-
-	theList _ ReconcileListMorph
-		model: model
-		listGetter: #toBeR
-		indexGetter: nil
-		indexSetter: nil.
-	theList layoutSpec: (LayoutSpec useAll).
-				
 	nArea _ LayoutMorph newColumn name: #'Numbers Area'.
 	nArea layoutSpec: (LayoutSpec new
 				fixedWidth: 150).
+	nArea addMorph: self transactionButton.
 	
 	self layoutMorph
-		addMorph: nArea;
-		addMorph: theList! !
+		addMorph: nArea! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:13'!
 initialize
 
 	super initialize! !
+
+!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/28/2016 15:30'!
+offerTransactionMenu
+	"Show the menu"
+	| menu |
+	
+	(menu _ MenuMorph entitled: 'Transactions to be Reconciled')
+		defaultTarget: model.
+	menu stayUp.
+	menu add: 'more...' action: #peaches.
+	menu addLine.
+	model toBeR do: [ :ea | menu add: ea action: #toggleRec].
+	menu openInHand! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:39'!
 reconcileList
@@ -2855,35 +2701,22 @@ theList: anObject
 
 	theList _ anObject! !
 
-!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/24/2016 20:07'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/28/2016 12:12'!
+transactionButton
+	"Answer the button which will bring up a menu of transactions to be reconciled"
+	
+	^ (PluggableButtonMorph model: self action: #offerTransactionMenu)
+		label: 'Transactions';
+		setBalloonText: 'list transactions';
+		morphExtent: 150@30! !
+
+!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/28/2016 15:39'!
 openFor: anAccount
 	"Open the reconcile window for anAccount"
 
 	(ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
-		morphExtent: 750@400;
+		morphExtent: 400@400;
 		setWindowColor:  Theme current workspace! !
-
-!Suggestion class methodsFor: 'as yet unclassified' stamp: 'dhn 10/16/2015 20:37'!
-try
-	"see if this shows up in unsaved changes"
-	^ Dictionary new
-		at: #date put: (Field at: 1@11);
-		at: #balance put: (Field at: 135@146 left: false);
-		yourself
-! !
-
-!Payee methodsFor: 'accessing' stamp: 'dhn 6/22/2015 14:01'!
-last
-	"Answer the value of last"
-
-	last ifNil: [last _ Dictionary new].
-	^ last! !
-
-!Payee methodsFor: 'accessing' stamp: 'dhn 6/14/2015 21:37'!
-last: anObject
-	"Set the value of last"
-
-	last _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:53'!
 account
