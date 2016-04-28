@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 28 April 2016 at 4:11:32.965232 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 28 April 2016 at 5:14:17.287692 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 245!
+!provides: 'Ledgerdemain' 1 246!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -92,6 +92,26 @@ SystemWindow subclass: #ReconcileWindow
 ReconcileWindow class
 	instanceVariableNames: ''!
 
+!classDefinition: #Suggestion category: #Ledgerdemain!
+Object subclass: #Suggestion
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Suggestion class' category: #Ledgerdemain!
+Suggestion class
+	instanceVariableNames: ''!
+
+!classDefinition: #Payee category: #Ledgerdemain!
+Suggestion subclass: #Payee
+	instanceVariableNames: 'last'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Ledgerdemain'!
+!classDefinition: 'Payee class' category: #Ledgerdemain!
+Payee class
+	instanceVariableNames: ''!
+
 !classDefinition: #Transaction category: #Ledgerdemain!
 Object subclass: #Transaction
 	instanceVariableNames: 'key account date check payee category memo reconciled amount type balance transfer stateR'
@@ -169,6 +189,18 @@ The window's model is a LedgerDeMain.
 
 !ReconcileWindow commentStamp: 'dhn 4/24/2016 17:19' prior: 0!
 A view on the unreconciled transactions of an account.!
+
+!Suggestion commentStamp: 'dhn 4/28/2016 17:13' prior: 0!
+Suggestion (an abstract class) reponsibilities:
+
+  autotype
+!
+
+!Payee commentStamp: 'dhn 4/28/2016 16:57' prior: 0!
+Payee responsibilities:
+
+  hold last transaction, by category
+!
 
 !Transaction commentStamp: 'dhn 6/24/2015 10:51' prior: 0!
 Transaction responsibilities:
@@ -2610,6 +2642,19 @@ openFor: anAccount
 	(ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
 		morphExtent: 400@400;
 		setWindowColor:  Theme current workspace! !
+
+!Payee methodsFor: 'accessing' stamp: 'dhn 4/28/2016 17:02'!
+last
+	"Answer the value of last"
+
+	last ifNil: [last _ Dictionary new].
+	^ last! !
+
+!Payee methodsFor: 'accessing' stamp: 'dhn 4/28/2016 17:02'!
+last: anObject
+	"Set the value of last"
+
+	last _ anObject! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:53'!
 account
