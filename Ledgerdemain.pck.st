@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 4:11:11.241508 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 5:52:13.195508 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 247!
+!provides: 'Ledgerdemain' 1 248!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -2612,7 +2612,7 @@ initialize
 
 	super initialize! !
 
-!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/29/2016 15:47'!
+!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/29/2016 17:50'!
 offerTransactionMenu
 	"Show the menu of transactions to be reconciled"
 	| menu |
@@ -2634,8 +2634,12 @@ offerTransactionMenu
 				addUpdating: #recListItem 
 				target: ea
 				action: #toggleRec]].
+	menu submorphs do: [:m |
+		(m class = UpdatingMenuItemMorph)
+			ifTrue: [
+				m font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9)]].
 		
-	menu openInHand! !
+	menu popUpInWorld: self world! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
 theList
