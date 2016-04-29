@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 28 April 2016 at 5:14:17.287692 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 4:11:11.241508 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 246!
+!provides: 'Ledgerdemain' 1 247!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1242,6 +1242,17 @@ initialize
 
 	super initialize.
 ! !
+
+!Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/29/2016 15:48'!
+moreOver
+	
+	^ 'more maybe...'! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/29/2016 15:20'!
+nextBatch
+	"Answer the succeding group of transactions to be reconciled"
+	
+	^ #('There should' 'Be more.')! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 12:47'!
 temp
@@ -2601,17 +2612,29 @@ initialize
 
 	super initialize! !
 
-!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/28/2016 15:30'!
+!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/29/2016 15:47'!
 offerTransactionMenu
-	"Show the menu"
+	"Show the menu of transactions to be reconciled"
 	| menu |
 	
 	(menu _ MenuMorph entitled: 'Transactions to be Reconciled')
 		defaultTarget: model.
 	menu stayUp.
-	menu add: 'more...' action: #peaches.
+	menu 
+		addUpdating: #moreOver
+		target: model
+		action: #nextBatch.
 	menu addLine.
-	model toBeR do: [ :ea | menu add: ea action: #toggleRec].
+	
+	model account reconcileList: OrderedCollection new.
+	model account ledger do: [ :ea | 
+		ea reconciled ~= 'R' ifTrue: [
+			model account reconcileList addLast: ea.
+			menu 
+				addUpdating: #recListItem 
+				target: ea
+				action: #toggleRec]].
+		
 	menu openInHand! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
@@ -2871,6 +2894,14 @@ payee: anObject
 
 	payee _ anObject! !
 
+!Transaction methodsFor: 'updating' stamp: 'dhn 4/29/2016 15:37'!
+recListItem
+	"Answer the reconcile list item based on state"
+	
+	^ (self stateR
+		ifTrue: ['<on>']
+		ifFalse: ['<off>']), self formatForR! !
+
 !Transaction methodsFor: 'accessing' stamp: 'dhn 8/7/2015 15:27'!
 reconciled
 	"Answer the value of reconciled"
@@ -2917,6 +2948,12 @@ stateR: anObject
 	"Set the value of stateR"
 
 	stateR _ anObject! !
+
+!Transaction methodsFor: 'updating' stamp: 'dhn 4/29/2016 15:05'!
+toggleRec
+	"Toggle the reconciliation state of the receiver"
+	
+	self stateR: self stateR not! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
 transfer
