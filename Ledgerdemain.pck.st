@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 5:52:13.195508 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 9:02:35.984508 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 248!
+!provides: 'Ledgerdemain' 1 249!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 TextModel subclass: #Reconciliation
-	instanceVariableNames: 'account indices temp'
+	instanceVariableNames: 'account'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1224,18 +1224,6 @@ account: anObject
 
 	account _ anObject! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
-indices
-	"Answer the value of indices"
-
-	^ indices! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/24/2016 19:13'!
-indices: anObject
-	"Set the value of indices"
-
-	indices _ anObject! !
-
 !Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/24/2016 19:14'!
 initialize
 	"initialize the state of the receiver"
@@ -1253,39 +1241,6 @@ nextBatch
 	"Answer the succeding group of transactions to be reconciled"
 	
 	^ #('There should' 'Be more.')! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 12:47'!
-temp
-	"Answer the value of temp"
-	
-	temp ifNil: [temp _ false].
-	^ temp! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 12:46'!
-temp: anObject
-	"Set the value of temp"
-
-	temp _ anObject! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/28/2016 14:51'!
-toBeR
-	"Answer the list of transactions which need to be reconciled"
-	| col |
-	
-	account listReconcileLines.
-	account reconcileBoxes: OrderedCollection new.
-	col _ OrderedCollection new.
-	account reconcileList do: [:ea | | line |
-		line _ '<off>', ea.
-		col add: line].
-	
-	^ col! !
-
-!Reconciliation methodsFor: 'updating' stamp: 'dhn 4/28/2016 12:46'!
-toggleRec
-	"Just for proof of concept"
-	
-	self temp: self temp not! !
 
 !LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/16/2016 12:33'!
 computeEntries
@@ -1864,7 +1819,7 @@ buildREntry: aNumber
 	^ m
 		! !
 
-!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/17/2016 21:34'!
+!LedgerWindow methodsFor: 'event handling' stamp: 'dhn 4/29/2016 18:39'!
 changeTransaction
 	"Form a transaction from the EntryFields"
 	| acct useCk tx dt ck py |
@@ -1905,9 +1860,7 @@ changeTransaction
 									ifTrue: ['DEP']
 									ifFalse: ['DEB'])].
 
-				tx reconciled: (model ledgerSelection notNil
-					ifTrue: [model ledgerSelection reconciled]
-					ifFalse: ['']).
+				tx reconciled: ''.
 					
 
 				model
@@ -2594,7 +2547,7 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/28/2016 15:37'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:54'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
 	| nArea |
@@ -2602,17 +2555,56 @@ buildMorphicWindow
 	nArea _ LayoutMorph newColumn name: #'Numbers Area'.
 	nArea layoutSpec: (LayoutSpec new
 				fixedWidth: 150).
-	nArea addMorph: self transactionButton.
+	nArea 
+		addMorph: self cancelButton;
+		addMorph: self postponeButton;
+		addMorph: self transactionButton;
+		addMorph: self finishButton.
 	
 	self layoutMorph
 		addMorph: nArea! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:58'!
+cancelButton
+	"Answer the button which will forget it all"
+	
+	^ (PluggableButtonMorph model: self action: #cancelHit)
+		label: 'Cancel';
+		setBalloonText: 'reset all state and close';
+		morphExtent: 60@30! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:58'!
+cancelHit
+
+	Smalltalk beep! !
+
+!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/29/2016 20:14'!
+closeBoxHit
+	"Terminate the list and window"
+	
+	theList ifNotNil: [theList delete].
+	super closeBoxHit! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:57'!
+finishButton
+	"Answer the button which will complete reconciliation"
+	
+	^ (PluggableButtonMorph model: self action: #finishHit)
+		label: 'Finish';
+		setBalloonText: 'update ledger, reset all state, and close';
+		morphExtent: 60@30! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:59'!
+finishHit
+
+	Smalltalk beep! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:13'!
 initialize
 
 	super initialize! !
 
-!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/29/2016 17:50'!
+!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/29/2016 21:01'!
 offerTransactionMenu
 	"Show the menu of transactions to be reconciled"
 	| menu |
@@ -2620,11 +2612,6 @@ offerTransactionMenu
 	(menu _ MenuMorph entitled: 'Transactions to be Reconciled')
 		defaultTarget: model.
 	menu stayUp.
-	menu 
-		addUpdating: #moreOver
-		target: model
-		action: #nextBatch.
-	menu addLine.
 	
 	model account reconcileList: OrderedCollection new.
 	model account ledger do: [ :ea | 
@@ -2634,12 +2621,27 @@ offerTransactionMenu
 				addUpdating: #recListItem 
 				target: ea
 				action: #toggleRec]].
+		
 	menu submorphs do: [:m |
-		(m class = UpdatingMenuItemMorph)
+		(m is: #UpdatingMenuItemMorph)
 			ifTrue: [
 				m font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9)]].
 		
-	menu popUpInWorld: self world! !
+	theList _ menu popUpInWorld: self world! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:54'!
+postponeButton
+	"Answer the button which will preserve state"
+	
+	^ (PluggableButtonMorph model: self action: #postponeHit)
+		label: 'Postpone';
+		setBalloonText: 'preserve state for resumption and close';
+		morphExtent: 70@30! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:56'!
+postponeHit
+
+	Smalltalk beep! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
 theList
@@ -2653,14 +2655,14 @@ theList: anObject
 
 	theList _ anObject! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/28/2016 12:12'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:30'!
 transactionButton
 	"Answer the button which will bring up a menu of transactions to be reconciled"
 	
 	^ (PluggableButtonMorph model: self action: #offerTransactionMenu)
-		label: 'Transactions';
+		label: 'Select';
 		setBalloonText: 'list transactions';
-		morphExtent: 150@30! !
+		morphExtent: 60@30! !
 
 !ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/28/2016 15:39'!
 openFor: anAccount
