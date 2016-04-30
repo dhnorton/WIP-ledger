@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 9:51:57.044716 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 10:18:02.971716 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 250!
+!provides: 'Ledgerdemain' 1 251!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -577,6 +577,13 @@ reconcileList: anObject
 	"Set the value of reconcileList"
 
 	reconcileList _ anObject! !
+
+!Account methodsFor: 'accessing' stamp: 'dhn 4/29/2016 22:08'!
+resetReconcile
+	"Reset the reconcile state in each transaction in reconcileList ivar"
+	
+	reconcileList do: [:ea | ea stateR: false].
+	reconcileList _ OrderedCollection new! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 4/5/2016 11:10'!
 type
@@ -2580,10 +2587,12 @@ cancelButton
 		setBalloonText: 'reset all state and close';
 		morphExtent: 60@30! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:58'!
+!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/29/2016 22:04'!
 cancelHit
-
-	Smalltalk beep! !
+	"Remove all intermediate results and close"
+	
+	model account resetReconcile. 
+	self closeBoxHit! !
 
 !ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/29/2016 20:14'!
 closeBoxHit
@@ -2645,10 +2654,10 @@ postponeButton
 		setBalloonText: 'preserve state for resumption and close';
 		morphExtent: 70@30! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:56'!
+!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/29/2016 21:55'!
 postponeHit
 
-	Smalltalk beep! !
+	self closeBoxHit! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
 theList
@@ -2671,12 +2680,13 @@ transactionButton
 		setBalloonText: 'list transactions';
 		morphExtent: 60@30! !
 
-!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/28/2016 15:39'!
+!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/29/2016 22:16'!
 openFor: anAccount
 	"Open the reconcile window for anAccount"
 
 	(ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
 		morphExtent: 400@400;
+		morphPosition: 600.0@40.0;
 		setWindowColor:  Theme current workspace! !
 
 !Payee methodsFor: 'accessing' stamp: 'dhn 4/28/2016 17:02'!
