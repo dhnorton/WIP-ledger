@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 30 April 2016 at 3:26:51.910609 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 30 April 2016 at 6:28:53.57469 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 252!
+!provides: 'Ledgerdemain' 1 253!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -2657,13 +2657,12 @@ finishButton
 		setBalloonText: 'update ledger, reset all state, and close';
 		morphExtent: 60@30! !
 
-!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/30/2016 15:14'!
+!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/30/2016 18:28'!
 finishHit
 	"Just a start - balance not changed"
 
 	model account reconcileIt.
-	peerWindow changed: #xactList.
-	peerWindow changed.
+	peerWindow model selectedTransaction: 0. 	"cause the ledger list to refresh"
 	self closeBoxHit! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:13'!
