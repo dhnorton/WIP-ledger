@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 9:02:35.984508 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 9:51:57.044716 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 249!
+!provides: 'Ledgerdemain' 1 250!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -2547,19 +2547,26 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:54'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 21:51'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
-	| nArea |
+	| nArea bArea |
 
 	nArea _ LayoutMorph newColumn name: #'Numbers Area'.
 	nArea layoutSpec: (LayoutSpec new
-				fixedWidth: 150).
-	nArea 
+				fixedWidth: 300).
+				
+	bArea _ LayoutMorph newRow 
+		name: #'Buttons Area';
+		padding: #center.
+	bArea separation: 10@5.
+	bArea 
 		addMorph: self cancelButton;
 		addMorph: self postponeButton;
 		addMorph: self transactionButton;
 		addMorph: self finishButton.
+	
+	nArea addMorph: bArea fixedHeight: 60.
 	
 	self layoutMorph
 		addMorph: nArea! !
