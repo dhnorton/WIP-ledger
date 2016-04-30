@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 29 April 2016 at 10:18:02.971716 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 30 April 2016 at 3:26:51.910609 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 251!
+!provides: 'Ledgerdemain' 1 252!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -74,7 +74,7 @@ EntryField class
 
 !classDefinition: #LedgerWindow category: #Ledgerdemain!
 SystemWindow subclass: #LedgerWindow
-	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryMorphs entryIndex keyboardFocus typeIndex'
+	instanceVariableNames: 'windowAccountList windowLedgerList windowEntries entryMorphs entryIndex keyboardFocus typeIndex reconcileWindow'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -84,7 +84,7 @@ LedgerWindow class
 
 !classDefinition: #ReconcileWindow category: #Ledgerdemain!
 SystemWindow subclass: #ReconcileWindow
-	instanceVariableNames: 'theList'
+	instanceVariableNames: 'peerWindow theList'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -566,6 +566,16 @@ reconcileIndex: anObject
 
 	reconcileIndex _ anObject! !
 
+!Account methodsFor: 'accessing' stamp: 'dhn 4/30/2016 12:42'!
+reconcileIt
+	"Reset the reconcile state and set 'R' in each transaction in reconcileList ivar"
+	
+	reconcileList ifNotNil: [
+		reconcileList do: [:ea | 
+			ea stateR ifTrue: [ea reconciled: 'R'].
+			ea stateR: false].
+		reconcileList _ nil]! !
+
 !Account methodsFor: 'accessing' stamp: 'dhn 4/24/2016 21:13'!
 reconcileList
 	"Answer the value of reconcileList"
@@ -578,12 +588,13 @@ reconcileList: anObject
 
 	reconcileList _ anObject! !
 
-!Account methodsFor: 'accessing' stamp: 'dhn 4/29/2016 22:08'!
+!Account methodsFor: 'accessing' stamp: 'dhn 4/30/2016 10:25'!
 resetReconcile
 	"Reset the reconcile state in each transaction in reconcileList ivar"
 	
-	reconcileList do: [:ea | ea stateR: false].
-	reconcileList _ OrderedCollection new! !
+	reconcileList ifNotNil: [
+		reconcileList do: [:ea | ea stateR: false].
+		reconcileList _ nil]! !
 
 !Account methodsFor: 'accessing' stamp: 'dhn 4/5/2016 11:10'!
 type
@@ -1928,6 +1939,23 @@ checkPlus: anEntry
 	model modified: true
 ! !
 
+!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 4/30/2016 12:05'!
+closeBoxHit
+	"Save the file (if changed) and close the window or cancel"
+	| cancel |
+
+	cancel _ false.
+	self model modified ifTrue: [
+		(nil 
+			confirm: 'Save changes?' 
+			orCancel: [
+				reconcileWindow ifNotNil: [self makeSecondTopmost].
+				(cancel _ true) not 	"essential to skip saving the file"]) 
+			ifTrue: [self model saveFile]].
+	cancel ifFalse: [
+		reconcileWindow ifNotNil: [reconcileWindow delete].
+		super delete]	"terminate; otherwise, cancel this"! !
+
 !LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/6/2016 15:26'!
 complete: aSymbol
 	"Indicate which entry field is active"
@@ -1960,18 +1988,6 @@ dateLater: anEntry
 	anEntry scroller selectAll.
 ! !
 
-!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 10/16/2015 20:39'!
-delete
-	"Close the window"
-	| cancel |
-
-	cancel _ false.
-	self model modified ifTrue: [
-		(nil confirm: 'Save changes?' orCancel: [(cancel _ true) not]) ifTrue: [
-			self model saveFile]].
-	cancel ifFalse: [super delete]		"terminate"
-	"otherwise, cancel this"! !
-
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/16/2016 18:45'!
 deleteEntries
 	"Ensure that there are no entry fields"
@@ -1998,6 +2014,18 @@ entryIndex: anObject
 	"Set the value of entryIndex"
 
 	entryIndex _ anObject! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/30/2016 10:40'!
+entryMorphs
+	"Answer the value of entryMorphs"
+
+	^ entryMorphs! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/30/2016 10:40'!
+entryMorphs: anObject
+	"Set the value of entryMorphs"
+
+	entryMorphs _ anObject! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/17/2016 12:09'!
 getCategory
@@ -2243,11 +2271,24 @@ openCompleterFor: aField
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'updating' stamp: 'dhn 4/26/2016 19:03'!
+!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 4/30/2016 14:54'!
 reconcile
 	"Reconcile an account"
 	
-	ReconcileWindow openFor: model selectedAccount! !
+	reconcileWindow _ ReconcileWindow openFor: model selectedAccount.
+	reconcileWindow peerWindow: self! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/30/2016 10:40'!
+reconcileWindow
+	"Answer the value of reconcileWindow"
+
+	^ reconcileWindow! !
+
+!LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/30/2016 10:40'!
+reconcileWindow: anObject
+	"Set the value of reconcileWindow"
+
+	reconcileWindow _ anObject! !
 
 !LedgerWindow methodsFor: 'event handling' stamp: 'dhn 3/10/2016 22:07'!
 releaseKeyboardFocus
@@ -2268,7 +2309,7 @@ resetUnacceptedEdits
 		ea scroller hasUnacceptedEdits 
 			ifTrue: [ea scroller hasUnacceptedEdits: false]]! !
 
-!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/16/2016 17:15'!
+!LedgerWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 14:43'!
 sayWhen
 	"Establish the receiving half of the Observer Pattern"
 	
@@ -2554,14 +2595,14 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 21:51'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 14:58'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
 	| nArea bArea |
 
 	nArea _ LayoutMorph newColumn name: #'Numbers Area'.
 	nArea layoutSpec: (LayoutSpec new
-				fixedWidth: 300).
+				proportionalWidth: 1.0).
 				
 	bArea _ LayoutMorph newRow 
 		name: #'Buttons Area';
@@ -2594,6 +2635,12 @@ cancelHit
 	model account resetReconcile. 
 	self closeBoxHit! !
 
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 14:46'!
+changedR
+	"The list has changed due to reconciliation"
+	
+	self halt.! !
+
 !ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/29/2016 20:14'!
 closeBoxHit
 	"Terminate the list and window"
@@ -2610,10 +2657,14 @@ finishButton
 		setBalloonText: 'update ledger, reset all state, and close';
 		morphExtent: 60@30! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:59'!
+!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/30/2016 15:14'!
 finishHit
+	"Just a start - balance not changed"
 
-	Smalltalk beep! !
+	model account reconcileIt.
+	peerWindow changed: #xactList.
+	peerWindow changed.
+	self closeBoxHit! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/19/2016 12:13'!
 initialize
@@ -2644,6 +2695,18 @@ offerTransactionMenu
 				m font: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9)]].
 		
 	theList _ menu popUpInWorld: self world! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/30/2016 14:53'!
+peerWindow
+	"Answer the value of peerWindow"
+
+	^ peerWindow! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/30/2016 14:53'!
+peerWindow: anObject
+	"Set the value of peerWindow"
+
+	peerWindow _ anObject! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:54'!
 postponeButton
@@ -2680,11 +2743,11 @@ transactionButton
 		setBalloonText: 'list transactions';
 		morphExtent: 60@30! !
 
-!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/29/2016 22:16'!
+!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/30/2016 10:41'!
 openFor: anAccount
 	"Open the reconcile window for anAccount"
 
-	(ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
+	^ (ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
 		morphExtent: 400@400;
 		morphPosition: 600.0@40.0;
 		setWindowColor:  Theme current workspace! !
