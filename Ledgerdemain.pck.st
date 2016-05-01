@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 30 April 2016 at 8:46:06.56669 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 1 May 2016 at 10:55:06.317522 am'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 254!
+!provides: 'Ledgerdemain' 1 255!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1242,6 +1242,24 @@ account: anObject
 
 	account _ anObject! !
 
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:48'!
+charBal
+	"Initial value for credit card charges"
+	
+	^ ''! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:26'!
+clearBal
+	"Initial value for cleared balance"
+	
+	^ ''! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:27'!
+diffBal
+	"Initial value for difference between statement and cleared balances"
+	
+	^ ''! !
+
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/30/2016 20:26'!
 endBal
 	"Initial value for statement ending balance"
@@ -1255,6 +1273,12 @@ initialize
 	super initialize.
 ! !
 
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:49'!
+loanBal
+	"Initial value for credit card cash loans"
+	
+	^ ''! !
+
 !Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/29/2016 15:48'!
 moreOver
 	
@@ -1266,11 +1290,23 @@ nextBatch
 	
 	^ #('There should' 'Be more.')! !
 
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:50'!
+pmntBal
+	"Initial value for credit card cash payments"
+	
+	^ ''! !
+
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/30/2016 20:04'!
 priorBal
 	"Answer the reconciled balance of the account"
 	
 	^ account balRcon ledgerFormatted! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:50'!
+rtrnBal
+	"Initial value for credit card returns"
+	
+	^ ''! !
 
 !LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/16/2016 12:33'!
 computeEntries
@@ -2607,15 +2643,11 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 20:42'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 10:47'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
-	| nArea bArea |
+	| bArea |
 
-	nArea _ LayoutMorph newColumn name: #'Numbers Area'.
-	nArea layoutSpec: (LayoutSpec new
-				minorDirectionPadding: #center).
-				
 	bArea _ LayoutMorph newRow 
 		name: #'Buttons Area';
 		padding: #center.
@@ -2625,34 +2657,46 @@ buildMorphicWindow
 		addMorph: self postponeButton;
 		addMorph: self transactionButton;
 		addMorph: self finishButton.
-	
-	nArea 
-		addMorph: (self buildRecEntry: 'Prior Balance' editable: false getter: #priorBal setter: #priorBal:);
-		addMorph: (self buildRecEntry: 'Ending Balance*' editable: true getter: #endBal setter: #endBal:);
-		addMorph: ((StringMorph contents: '*required')
-			layoutSpec: (LayoutSpec fixedHeight: 15));
-		addMorph: bArea fixedHeight: 50.
-	
+		
 	self layoutMorph
-		addMorph: nArea! !
+		beColumn;
+		addMorph: (self buildRecEntry: 'Prior Balance' editable: false getter: #priorBal setter: #priorBal:);
+		addMorph: (self buildRecEntry: 'Statement Ending Balance*' editable: true getter: #endBal setter: #endBal:).
+		
+	model account type = #'credit card' ifTrue: [
+		self layoutMorph
+			addMorph: (self buildRecEntry: 'Charges*' editable: true getter: #charBal setter: #charBal:);
+			addMorph: (self buildRecEntry: 'Cash Loans' editable: true getter: #loanBal setter: #loanBal:);
+			addMorph: (self buildRecEntry: 'Payments*' editable: true getter: #pmntBal setter: #pmntBal:);
+			addMorph: (self buildRecEntry: 'Returns' editable: true getter: #rtrnBal setter: #rtrnBal:)].
+		
+	self layoutMorph
+		addMorph: (self buildRecEntry: 'Cleared Balance' editable: false getter: #clearBal setter: #clearBal:);
+		addMorph: (self buildRecEntry: 'Difference' editable: false getter: #diffBal setter: #diffBal:);
+		addMorph: ((StringMorph contents: '* required')
+			layoutSpec: (LayoutSpec fixedWidth: 100 fixedHeight: 15 minorDirectionPadding: #center));
+		addMorph: bArea fixedHeight: 50! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 20:31'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 10:21'!
 buildRecEntry: aTitle editable: aBool getter: symbol1 setter: symbol2
 	"Answer an entry field with title, able to be changed: aBool"
 	| m |
 	
-	m _ LayoutMorph newColumn
-				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 55).
-	m addMorph: ((StringMorph contents: aTitle)
-		layoutSpec: (LayoutSpec fixedHeight: 15)).
-	m color: Color transparent.	
+	m _ LayoutMorph newRow
+				layoutSpec: (LayoutSpec proportionalWidth: 0.7 fixedHeight: 45).
+	m 
+		separation: 8@0;
+		color: Color transparent.
 		
 	m addMorph: ((EntryField 
 			textProvider: model
 			textGetter: symbol1
 			textSetter: symbol2)
-				layoutSpec: (LayoutSpec fixedWidth: 95)).
+				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
 				
+	m addMorph: ((StringMorph contents: aTitle)
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+		
 	aBool ifFalse: [m canDiscardEdits].
 	
 	^ m
@@ -2775,14 +2819,14 @@ transactionButton
 		setBalloonText: 'list transactions';
 		morphExtent: 60@30! !
 
-!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/30/2016 19:57'!
+!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 5/1/2016 10:53'!
 openFor: anAccount
 	"Open the reconcile window for anAccount"
 
 	^ anAccount
 		ifNotNil: [
 			(ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
-				morphExtent: 400@400;
+				morphExtent: 400@480;
 				morphPosition: 600.0@40.0;
 				setWindowColor:  Theme current workspace]! !
 
