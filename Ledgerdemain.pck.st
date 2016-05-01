@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 30 April 2016 at 6:28:53.57469 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 30 April 2016 at 8:46:06.56669 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 253!
+!provides: 'Ledgerdemain' 1 254!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -1242,6 +1242,12 @@ account: anObject
 
 	account _ anObject! !
 
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/30/2016 20:26'!
+endBal
+	"Initial value for statement ending balance"
+	
+	^ ''! !
+
 !Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/24/2016 19:14'!
 initialize
 	"initialize the state of the receiver"
@@ -1259,6 +1265,12 @@ nextBatch
 	"Answer the succeding group of transactions to be reconciled"
 	
 	^ #('There should' 'Be more.')! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/30/2016 20:04'!
+priorBal
+	"Answer the reconciled balance of the account"
+	
+	^ account balRcon ledgerFormatted! !
 
 !LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/16/2016 12:33'!
 computeEntries
@@ -2271,12 +2283,12 @@ openCompleterFor: aField
 popUpInWorld: aWorld
 	"Required by PluggableListMorph. Do nothing."! !
 
-!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 4/30/2016 14:54'!
+!LedgerWindow methodsFor: 'open/close' stamp: 'dhn 4/30/2016 19:58'!
 reconcile
 	"Reconcile an account"
 	
 	reconcileWindow _ ReconcileWindow openFor: model selectedAccount.
-	reconcileWindow peerWindow: self! !
+	reconcileWindow ifNotNil: [reconcileWindow peerWindow: self]! !
 
 !LedgerWindow methodsFor: 'accessing' stamp: 'dhn 4/30/2016 10:40'!
 reconcileWindow
@@ -2595,14 +2607,14 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 14:58'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 20:42'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
 	| nArea bArea |
 
 	nArea _ LayoutMorph newColumn name: #'Numbers Area'.
 	nArea layoutSpec: (LayoutSpec new
-				proportionalWidth: 1.0).
+				minorDirectionPadding: #center).
 				
 	bArea _ LayoutMorph newRow 
 		name: #'Buttons Area';
@@ -2614,10 +2626,37 @@ buildMorphicWindow
 		addMorph: self transactionButton;
 		addMorph: self finishButton.
 	
-	nArea addMorph: bArea fixedHeight: 60.
+	nArea 
+		addMorph: (self buildRecEntry: 'Prior Balance' editable: false getter: #priorBal setter: #priorBal:);
+		addMorph: (self buildRecEntry: 'Ending Balance*' editable: true getter: #endBal setter: #endBal:);
+		addMorph: ((StringMorph contents: '*required')
+			layoutSpec: (LayoutSpec fixedHeight: 15));
+		addMorph: bArea fixedHeight: 50.
 	
 	self layoutMorph
 		addMorph: nArea! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 20:31'!
+buildRecEntry: aTitle editable: aBool getter: symbol1 setter: symbol2
+	"Answer an entry field with title, able to be changed: aBool"
+	| m |
+	
+	m _ LayoutMorph newColumn
+				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 55).
+	m addMorph: ((StringMorph contents: aTitle)
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+	m color: Color transparent.	
+		
+	m addMorph: ((EntryField 
+			textProvider: model
+			textGetter: symbol1
+			textSetter: symbol2)
+				layoutSpec: (LayoutSpec fixedWidth: 95)).
+				
+	aBool ifFalse: [m canDiscardEdits].
+	
+	^ m
+		! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:58'!
 cancelButton
@@ -2634,12 +2673,6 @@ cancelHit
 	
 	model account resetReconcile. 
 	self closeBoxHit! !
-
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/30/2016 14:46'!
-changedR
-	"The list has changed due to reconciliation"
-	
-	self halt.! !
 
 !ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/29/2016 20:14'!
 closeBoxHit
@@ -2742,14 +2775,16 @@ transactionButton
 		setBalloonText: 'list transactions';
 		morphExtent: 60@30! !
 
-!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/30/2016 10:41'!
+!ReconcileWindow class methodsFor: 'instance creation' stamp: 'dhn 4/30/2016 19:57'!
 openFor: anAccount
 	"Open the reconcile window for anAccount"
 
-	^ (ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
-		morphExtent: 400@400;
-		morphPosition: 600.0@40.0;
-		setWindowColor:  Theme current workspace! !
+	^ anAccount
+		ifNotNil: [
+			(ReconcileWindow open: (Reconciliation new account: anAccount) label: 'Reconcile ', anAccount accountName)
+				morphExtent: 400@400;
+				morphPosition: 600.0@40.0;
+				setWindowColor:  Theme current workspace]! !
 
 !Payee methodsFor: 'accessing' stamp: 'dhn 4/28/2016 17:02'!
 last
