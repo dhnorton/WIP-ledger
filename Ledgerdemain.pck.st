@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 2 May 2016 at 12:57:54.044183 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 2 May 2016 at 4:07:11.554183 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 258!
+!provides: 'Ledgerdemain' 1 259!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 TextModel subclass: #Reconciliation
-	instanceVariableNames: 'account endBal charBal loanBal pmntBal rtrnBal'
+	instanceVariableNames: 'account difference cleared endBal charBal loanBal pmntBal rtrnBal diffBal'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -84,7 +84,7 @@ LedgerWindow class
 
 !classDefinition: #ReconcileWindow category: #Ledgerdemain!
 SystemWindow subclass: #ReconcileWindow
-	instanceVariableNames: 'peerWindow theList editables'
+	instanceVariableNames: 'peerWindow theList entries'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1249,12 +1249,12 @@ charBal
 	charBal ifNil: [charBal _ ''].
 	^ charBal! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 12:29'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 15:45'!
 charBal: aText
 	"Set the value of charBal; signal change"
 
 	charBal _ LedgerWindow dollarsToCents: aText asString.
-	self triggerEvent: #entryChange withArguments: {#charBal}! !
+	self triggerEvent: #entryChange withArguments: {{#charBal}}! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:26'!
 clearBal
@@ -1262,11 +1262,29 @@ clearBal
 	
 	^ ''! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:27'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 14:15'!
+cleared
+	"Answer the value of cleared"
+
+	^ cleared! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 14:15'!
+cleared: anObject
+	"Set the value of cleared"
+
+	cleared _ anObject! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 15:31'!
 diffBal
-	"Initial value for difference between statement and cleared balances"
+	"Answer the string for difference balance"
 	
-	^ ''! !
+	^ difference 	ifNil: ['']! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 14:56'!
+diffBal: aText
+	"Set the value of diffBal"
+
+	diffBal _ LedgerWindow dollarsToCents: aText asString! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 13:31'!
 endBal
@@ -1275,12 +1293,14 @@ endBal
 	endBal ifNil: [endBal _ ''].
 	^ endBal! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 11:43'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 15:39'!
 endBal: aText 
 	"Set the value of endBal; signal change"
 	
-	endBal _ LedgerWindow dollarsToCents: aText asString.
-	self triggerEvent: #entryChange withArguments: {#endBal}! !
+	endBal _ LedgerWindow dollarsToCents: (aText asString select: [:a | a ~= $,]).
+	difference _ account balRcon - endBal.
+	self triggerEvent: #entryChange withArguments: {{#endBal. #diffBal}}.
+! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:38'!
 formatEntry: anEntry
@@ -1316,23 +1336,12 @@ loanBal
 	loanBal ifNil: [loanBal _ ''].
 	^ loanBal! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 12:34'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 15:46'!
 loanBal: aText
 	"Set the value of loanBal; signal change"
 
 	loanBal _ LedgerWindow dollarsToCents: aText asString.
-	self triggerEvent: #entryChange withArguments: {#loanBal}! !
-
-!Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/29/2016 15:48'!
-moreOver
-	
-	^ 'more maybe...'! !
-
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/29/2016 15:20'!
-nextBatch
-	"Answer the succeding group of transactions to be reconciled"
-	
-	^ #('There should' 'Be more.')! !
+	self triggerEvent: #entryChange withArguments: {{#loanBal}}! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 12:36'!
 pmntBal
@@ -1341,12 +1350,12 @@ pmntBal
 	pmntBal ifNil: [pmntBal _ ''].
 	^ pmntBal! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 12:37'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 15:44'!
 pmntBal: aText
 	"Set the value of pmntBal; signal change"
 
 	pmntBal _ LedgerWindow dollarsToCents: aText asString.
-	self triggerEvent: #entryChange withArguments: {#pmntBal}! !
+	self triggerEvent: #entryChange withArguments: {{#pmntBal}}! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:39'!
 priorBal
@@ -1361,12 +1370,12 @@ rtrnBal
 	rtrnBal ifNil: [rtrnBal _ ''].
 	^ rtrnBal! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 12:44'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 15:46'!
 rtrnBal: aText
 	"Set the value of rtrnBal; signal change"
 
 	rtrnBal _ LedgerWindow dollarsToCents: aText asString.
-	self triggerEvent: #entryChange withArguments: {#rtrnBal}! !
+	self triggerEvent: #entryChange withArguments: {{#rtrnBal}}! !
 
 !LedgerCompleter methodsFor: 'accessing' stamp: 'dhn 4/16/2016 12:33'!
 computeEntries
@@ -2703,7 +2712,7 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 12:22'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:02'!
 buildCharBalEntry
 	"Answer the statement charges entry field"
 	| m field |
@@ -2720,14 +2729,62 @@ buildCharBalEntry
 			textSetter: #charBal:)
 				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
 	field acceptOnCR: true.
-	editables at: #charBal put: field.
+	entries at: #charBal put: field.
 				
 	m addMorph: ((StringMorph contents: 'Charges*')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	^ m! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 11:49'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:03'!
+buildClearBalEntry
+	"Answer the cleared balance field"
+	| m field |
+	
+	m _ LayoutMorph newRow
+				layoutSpec: (LayoutSpec proportionalWidth: 0.7 fixedHeight: 45).
+	m 
+		separation: 8@0;
+		color: Color transparent.
+		
+	m addMorph: ((field _ EntryField 
+			textProvider: model
+			textGetter: #clearBal
+			textSetter: #clearBal:)
+				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
+	field disableEdition.
+	entries at: #clearBal put: field.
+				
+	m addMorph: ((StringMorph contents: 'Cleared Balance')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+		
+	^ m! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:02'!
+buildDiffBalEntry
+	"Answer the difference balance field"
+	| m field |
+	
+	m _ LayoutMorph newRow
+				layoutSpec: (LayoutSpec proportionalWidth: 0.7 fixedHeight: 45).
+	m 
+		separation: 8@0;
+		color: Color transparent.
+		
+	m addMorph: ((field _ EntryField 
+			textProvider: model
+			textGetter: #diffBal
+			textSetter: #diffBal:)
+				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
+	field disableEdition.
+	entries at: #diffBal put: field.
+				
+	m addMorph: ((StringMorph contents: 'Statement Ending Balance*')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+		
+	^ m! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:01'!
 buildEndBalEntry
 	"Answer the statement ending balance entry field"
 	| m field |
@@ -2744,14 +2801,14 @@ buildEndBalEntry
 			textSetter: #endBal:)
 				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
 	field acceptOnCR: true.
-	editables at: #endBal put: field.
+	entries at: #endBal put: field.
 				
 	m addMorph: ((StringMorph contents: 'Statement Ending Balance*')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	^ m! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 12:22'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:02'!
 buildLoanBalEntry
 	"Answer the statement cash loans entry field"
 	| m field |
@@ -2768,14 +2825,14 @@ buildLoanBalEntry
 			textSetter: #loanBal:)
 				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
 	field acceptOnCR: true.
-	editables at: #loanBal put: field.
+	entries at: #loanBal put: field.
 				
 	m addMorph: ((StringMorph contents: 'Cash Loans')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	^ m! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 12:18'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 15:55'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
 	| bArea |
@@ -2792,7 +2849,7 @@ buildMorphicWindow
 		
 	self layoutMorph
 		beColumn;
-		addMorph: (self buildRecEntry: 'Prior Balance' getter: #priorBal setter: #priorBal:);
+		addMorph: self buildPriorBalEntry;
 		addMorph: self buildEndBalEntry.
 		
 	model account type = #'credit card' ifTrue: [
@@ -2803,15 +2860,15 @@ buildMorphicWindow
 			addMorph: self buildRtrnBalEntry].
 		
 	self layoutMorph
-		addMorph: (self buildRecEntry: 'Cleared Balance' getter: #clearBal setter: #clearBal:);
-		addMorph: (self buildRecEntry: 'Difference' getter: #diffBal setter: #diffBal:);
+		addMorph: self buildClearBalEntry;
+		addMorph: self buildDiffBalEntry;
 		addMorph: ((StringMorph contents: '* required')
 			layoutSpec: (LayoutSpec fixedWidth: 100 fixedHeight: 15 minorDirectionPadding: #center));
 		addMorph: bArea fixedHeight: 50.
 		
 	self sayWhen! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 12:50'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:01'!
 buildPmntBalEntry
 	"Answer the statement payments entry field"
 	| m field |
@@ -2828,16 +2885,16 @@ buildPmntBalEntry
 			textSetter: #pmntBal:)
 				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
 	field acceptOnCR: true.
-	editables at: #pmntBal put: field.
+	entries at: #pmntBal put: field.
 				
 	m addMorph: ((StringMorph contents: 'Payments*')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	^ m! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 12:59'!
-buildRecEntry: aTitle editable: aBool getter: symbol1 setter: symbol2
-	"Answer an entry field with title, able to be changed: aBool"
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:03'!
+buildPriorBalEntry
+	"Answer the prior balance field"
 	| m field |
 	
 	m _ LayoutMorph newRow
@@ -2848,45 +2905,18 @@ buildRecEntry: aTitle editable: aBool getter: symbol1 setter: symbol2
 		
 	m addMorph: ((field _ EntryField 
 			textProvider: model
-			textGetter: symbol1
-			textSetter: symbol2)
+			textGetter: #priorBal
+			textSetter: #priorBal:)
 				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
+	field disableEdition.
+	entries at: #priorBal put: field.
 				
-	m addMorph: ((StringMorph contents: aTitle)
+	m addMorph: ((StringMorph contents: 'Prior Balance')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
-	aBool 
-		ifTrue: [field acceptOnCR: true]
-		ifFalse: [field disableEdition].
-	
-	^ m
-		! !
+	^ m! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 12:53'!
-buildRecEntry: aTitle getter: symbol1 setter: symbol2
-	"Answer an entry field with title; editing is disabled"
-	| m field |
-	
-	m _ LayoutMorph newRow
-				layoutSpec: (LayoutSpec proportionalWidth: 0.7 fixedHeight: 45).
-	m 
-		separation: 8@0;
-		color: Color transparent.
-		
-	m addMorph: ((field _ EntryField 
-			textProvider: model
-			textGetter: symbol1
-			textSetter: symbol2)
-				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
-			field disableEdition.
-				
-	m addMorph: ((StringMorph contents: aTitle)
-		layoutSpec: (LayoutSpec fixedHeight: 15)).
-		
-	^ m
-		! !
-
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 12:53'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:02'!
 buildRtrnBalEntry
 	"Answer the statement returns entry field"
 	| m field |
@@ -2903,7 +2933,7 @@ buildRtrnBalEntry
 			textSetter: #rtrnBal:)
 				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
 	field acceptOnCR: true.
-	editables at: #rtrnBal put: field.
+	entries at: #rtrnBal put: field.
 				
 	m addMorph: ((StringMorph contents: 'Returns')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
@@ -2926,25 +2956,13 @@ cancelHit
 	model account resetReconcile. 
 	self closeBoxHit! !
 
-!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 5/2/2016 11:51'!
+!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 5/2/2016 16:01'!
 closeBoxHit
 	"Terminate the list and window"
 	
 	theList ifNotNil: [theList delete].
-	editables keysAndValuesDo: [:aKey :aValue |  aValue disregardUnacceptedEdits].
+	entries keysAndValuesDo: [:aKey :aValue |  aValue disregardUnacceptedEdits].
 	super closeBoxHit! !
-
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 5/2/2016 11:08'!
-editables
-	"Answer the value of editables"
-
-	^ editables! !
-
-!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 5/2/2016 11:08'!
-editables: anObject
-	"Set the value of editables"
-
-	editables _ anObject! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:57'!
 finishButton
@@ -2963,11 +2981,11 @@ finishHit
 	peerWindow model selectedTransaction: 0. 	"cause the ledger list to refresh"
 	self closeBoxHit! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 11:48'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:01'!
 initialize
 
 	super initialize.
-	editables _ Dictionary new! !
+	entries _ Dictionary new! !
 
 !ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/29/2016 21:01'!
 offerTransactionMenu
@@ -3026,14 +3044,13 @@ sayWhen
 	
 	self model when: #entryChange send: #spruceUp: to: self withArguments: #(#ntry).! !
 
-!ReconcileWindow methodsFor: 'updating' stamp: 'dhn 5/2/2016 11:55'!
-spruceUp: aField
-	"Deal with changes to aField"
-	| fld |
+!ReconcileWindow methodsFor: 'updating' stamp: 'dhn 5/2/2016 16:02'!
+spruceUp: fields
+	"Deal with changes to fields"
 
-	fld _ self model perform: aField.
-	(editables at: aField) model actualContents: 
-		(self model formatEntry: fld)! !
+	fields do: [:ea |
+		(entries at: ea) model actualContents: 
+			(model formatEntry: (model perform: ea))]! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
 theList
