@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 1 May 2016 at 10:55:06.317522 am'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 1 May 2016 at 8:33:02.435825 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 255!
+!provides: 'Ledgerdemain' 1 256!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 TextModel subclass: #Reconciliation
-	instanceVariableNames: 'account'
+	instanceVariableNames: 'account endBal'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -84,7 +84,7 @@ LedgerWindow class
 
 !classDefinition: #ReconcileWindow category: #Ledgerdemain!
 SystemWindow subclass: #ReconcileWindow
-	instanceVariableNames: 'peerWindow theList'
+	instanceVariableNames: 'peerWindow theList endBalEntry'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1260,11 +1260,27 @@ diffBal
 	
 	^ ''! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/30/2016 20:26'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 13:31'!
 endBal
-	"Initial value for statement ending balance"
+	"Answer the string for statement ending balance"
 	
-	^ ''! !
+	endBal ifNil: [endBal _ ''].
+	^ endBal! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:52'!
+endBal: aText 
+	"Set the value of endBal; signal change"
+	
+	endBal _ LedgerWindow dollarsToCents: aText asString.
+	self triggerEvent: #endBalChange! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:38'!
+formatEntry: anEntry
+	"Answer anEntry formatted"
+	
+	^ Text
+		initialFont: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9)
+		stringOrText: (self justifyRight: anEntry ledgerFormatted length: 12)! !
 
 !Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/24/2016 19:14'!
 initialize
@@ -1272,6 +1288,18 @@ initialize
 
 	super initialize.
 ! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 12:37'!
+justifyRight: aString length: aNumber
+	"Answer a string of length aNumber, with aString in the right-most positions"
+	| bl |
+	
+	aString size > aNumber ifTrue: [nil error: aString, ' is longer than ', aNumber asString].
+	bl _ '          '.
+	^ String streamContents: [:str |
+		str 	
+			nextPutAll: (bl copyFrom: 1 to: aNumber - aString size);
+			nextPutAll: aString]! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:49'!
 loanBal
@@ -1296,11 +1324,11 @@ pmntBal
 	
 	^ ''! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 4/30/2016 20:04'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:39'!
 priorBal
 	"Answer the reconciled balance of the account"
 	
-	^ account balRcon ledgerFormatted! !
+	^ self formatEntry: account balRcon! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:50'!
 rtrnBal
@@ -2643,7 +2671,30 @@ withCommas: aString
 				',', (aString copyFrom: aString size - 2 to: aString size))].
 	^ aString! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 10:47'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 19:05'!
+buildEndBalEntry
+	"Answer the statement ending balance entry field"
+	| m |
+	
+	m _ LayoutMorph newRow
+				layoutSpec: (LayoutSpec proportionalWidth: 0.7 fixedHeight: 45).
+	m 
+		separation: 8@0;
+		color: Color transparent.
+		
+	m addMorph: ((endBalEntry _ EntryField 
+			textProvider: model
+			textGetter: #endBal
+			textSetter: #endBal:)
+				layoutSpec: (LayoutSpec fixedWidth: 95 fixedHeight: 25)).
+	endBalEntry acceptOnCR: true.
+				
+	m addMorph: ((StringMorph contents: 'Statement Ending Balance*')
+		layoutSpec: (LayoutSpec fixedHeight: 15)).
+		
+	^ m! !
+
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 18:23'!
 buildMorphicWindow
 	"Lay out a window for reconciling an account"
 	| bArea |
@@ -2661,7 +2712,7 @@ buildMorphicWindow
 	self layoutMorph
 		beColumn;
 		addMorph: (self buildRecEntry: 'Prior Balance' editable: false getter: #priorBal setter: #priorBal:);
-		addMorph: (self buildRecEntry: 'Statement Ending Balance*' editable: true getter: #endBal setter: #endBal:).
+		addMorph: self buildEndBalEntry.
 		
 	model account type = #'credit card' ifTrue: [
 		self layoutMorph
@@ -2675,12 +2726,14 @@ buildMorphicWindow
 		addMorph: (self buildRecEntry: 'Difference' editable: false getter: #diffBal setter: #diffBal:);
 		addMorph: ((StringMorph contents: '* required')
 			layoutSpec: (LayoutSpec fixedWidth: 100 fixedHeight: 15 minorDirectionPadding: #center));
-		addMorph: bArea fixedHeight: 50! !
+		addMorph: bArea fixedHeight: 50.
+		
+	self sayWhen! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 10:21'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/1/2016 12:59'!
 buildRecEntry: aTitle editable: aBool getter: symbol1 setter: symbol2
 	"Answer an entry field with title, able to be changed: aBool"
-	| m |
+	| m field |
 	
 	m _ LayoutMorph newRow
 				layoutSpec: (LayoutSpec proportionalWidth: 0.7 fixedHeight: 45).
@@ -2688,7 +2741,7 @@ buildRecEntry: aTitle editable: aBool getter: symbol1 setter: symbol2
 		separation: 8@0;
 		color: Color transparent.
 		
-	m addMorph: ((EntryField 
+	m addMorph: ((field _ EntryField 
 			textProvider: model
 			textGetter: symbol1
 			textSetter: symbol2)
@@ -2697,7 +2750,9 @@ buildRecEntry: aTitle editable: aBool getter: symbol1 setter: symbol2
 	m addMorph: ((StringMorph contents: aTitle)
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
-	aBool ifFalse: [m canDiscardEdits].
+	aBool 
+		ifTrue: [field acceptOnCR: true]
+		ifFalse: [field disableEdition].
 	
 	^ m
 		! !
@@ -2718,12 +2773,25 @@ cancelHit
 	model account resetReconcile. 
 	self closeBoxHit! !
 
-!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 4/29/2016 20:14'!
+!ReconcileWindow methodsFor: 'termination' stamp: 'dhn 5/1/2016 20:28'!
 closeBoxHit
 	"Terminate the list and window"
 	
 	theList ifNotNil: [theList delete].
+	endBalEntry disregardUnacceptedEdits.
 	super closeBoxHit! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:09'!
+endBalEntry
+	"Answer the value of endBalEntry"
+
+	^ endBalEntry! !
+
+!ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:09'!
+endBalEntry: anObject
+	"Set the value of endBalEntry"
+
+	endBalEntry _ anObject! !
 
 !ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 4/29/2016 20:57'!
 finishButton
@@ -2797,6 +2865,19 @@ postponeButton
 postponeHit
 
 	self closeBoxHit! !
+
+!ReconcileWindow methodsFor: 'updating' stamp: 'dhn 5/1/2016 14:25'!
+sayWhen
+	"Establish the receiving half of the observer pattern"
+	
+	self model when: #endBalChange send: #spruceUp to: self.! !
+
+!ReconcileWindow methodsFor: 'updating' stamp: 'dhn 5/1/2016 18:44'!
+spruceUp
+	"Deal with changes to the entry fields"
+
+	endBalEntry model actualContents: 
+		( model formatEntry: model endBal) 	"note that the textPane model differs from the model for this view"! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
 theList
