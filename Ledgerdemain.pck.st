@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 1 May 2016 at 8:33:02.435825 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 1 May 2016 at 8:55:03.915825 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 256!
+!provides: 'Ledgerdemain' 1 257!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -2872,12 +2872,12 @@ sayWhen
 	
 	self model when: #endBalChange send: #spruceUp to: self.! !
 
-!ReconcileWindow methodsFor: 'updating' stamp: 'dhn 5/1/2016 18:44'!
+!ReconcileWindow methodsFor: 'updating' stamp: 'dhn 5/1/2016 20:51'!
 spruceUp
 	"Deal with changes to the entry fields"
 
 	endBalEntry model actualContents: 
-		( model formatEntry: model endBal) 	"note that the textPane model differs from the model for this view"! !
+		(self model formatEntry: self model endBal) 	"note that 'endBalEntry model' is different from 'self model' "! !
 
 !ReconcileWindow methodsFor: 'accessing' stamp: 'dhn 4/25/2016 17:36'!
 theList
