@@ -1,6 +1,6 @@
-'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 2 May 2016 at 4:07:11.554183 pm'!
+'From Cuis 4.2 of 25 July 2013 [latest update: #2727] on 2 May 2016 at 9:24:08.444183 pm'!
 'Description A description for this package will be supplied.'!
-!provides: 'Ledgerdemain' 1 259!
+!provides: 'Ledgerdemain' 1 261!
 !requires: 'Records' 1 10 nil!
 !classDefinition: #Account category: #Ledgerdemain!
 Object subclass: #Account
@@ -24,7 +24,7 @@ LedgerDeMain class
 
 !classDefinition: #Reconciliation category: #Ledgerdemain!
 TextModel subclass: #Reconciliation
-	instanceVariableNames: 'account difference cleared endBal charBal loanBal pmntBal rtrnBal diffBal'
+	instanceVariableNames: 'account difference cleared endBal charBal loanBal pmntBal rtrnBal clearBal diffBal'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Ledgerdemain'!
@@ -1256,16 +1256,39 @@ charBal: aText
 	charBal _ LedgerWindow dollarsToCents: aText asString.
 	self triggerEvent: #entryChange withArguments: {{#charBal}}! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 10:26'!
-clearBal
-	"Initial value for cleared balance"
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 20:08'!
+clear: aBool amount: anAmount
+	"Adjust #cleared up or down by anAmount"
+	| x |
 	
-	^ ''! !
+	x _ aBool 
+		ifTrue: [anAmount]
+		ifFalse: [anAmount negated].
+	cleared _ self cleared + x.
+	difference _ difference + x.
+	self triggerEvent: #entryChange withArguments: {{#clearBal. #diffBal}}.
+! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 14:15'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 21:19'!
+clearBal
+	"Answer the cleared balance"
+	
+	clearBal 
+		ifNil: [clearBal _ ''] 	"to get established"
+		ifNotNil: [clearBal _ self cleared]. "ever after"
+	^ clearBal! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 20:11'!
+clearBal: aText
+	"Set the value of clearBal"
+
+	clearBal _ LedgerWindow dollarsToCents: aText asString! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 18:02'!
 cleared
 	"Answer the value of cleared"
 
+	cleared ifNil: [cleared _ 0].
 	^ cleared! !
 
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 14:15'!
@@ -1286,6 +1309,18 @@ diffBal: aText
 
 	diffBal _ LedgerWindow dollarsToCents: aText asString! !
 
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 18:06'!
+difference
+	"Answer the value of difference"
+
+	^ difference! !
+
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 18:06'!
+difference: anObject
+	"Set the value of difference"
+
+	difference _ anObject! !
+
 !Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 13:31'!
 endBal
 	"Answer the string for statement ending balance"
@@ -1302,13 +1337,17 @@ endBal: aText
 	self triggerEvent: #entryChange withArguments: {{#endBal. #diffBal}}.
 ! !
 
-!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/1/2016 18:38'!
+!Reconciliation methodsFor: 'accessing' stamp: 'dhn 5/2/2016 19:23'!
 formatEntry: anEntry
 	"Answer anEntry formatted"
+	| str |
 	
+	str _ anEntry isNumber 
+		ifTrue: [self justifyRight: anEntry ledgerFormatted length: 12]
+		ifFalse: [anEntry].
 	^ Text
 		initialFont: (AbstractFont familyName: 'DejaVu Sans Mono' aroundPointSize: 9)
-		stringOrText: (self justifyRight: anEntry ledgerFormatted length: 12)! !
+		stringOrText: str! !
 
 !Reconciliation methodsFor: 'initialization' stamp: 'dhn 4/24/2016 19:14'!
 initialize
@@ -2760,7 +2799,7 @@ buildClearBalEntry
 		
 	^ m! !
 
-!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 16:02'!
+!ReconcileWindow methodsFor: 'initialization' stamp: 'dhn 5/2/2016 19:27'!
 buildDiffBalEntry
 	"Answer the difference balance field"
 	| m field |
@@ -2779,7 +2818,7 @@ buildDiffBalEntry
 	field disableEdition.
 	entries at: #diffBal put: field.
 				
-	m addMorph: ((StringMorph contents: 'Statement Ending Balance*')
+	m addMorph: ((StringMorph contents: 'Difference')
 		layoutSpec: (LayoutSpec fixedHeight: 15)).
 		
 	^ m! !
@@ -2987,7 +3026,7 @@ initialize
 	super initialize.
 	entries _ Dictionary new! !
 
-!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 4/29/2016 21:01'!
+!ReconcileWindow methodsFor: 'menus' stamp: 'dhn 5/2/2016 17:52'!
 offerTransactionMenu
 	"Show the menu of transactions to be reconciled"
 	| menu |
@@ -3000,6 +3039,7 @@ offerTransactionMenu
 	model account ledger do: [ :ea | 
 		ea reconciled ~= 'R' ifTrue: [
 			model account reconcileList addLast: ea.
+			ea when: #clearChange send: #clear:amount: to: model withArguments: #(#a #b).
 			menu 
 				addUpdating: #recListItem 
 				target: ea
@@ -3182,7 +3222,7 @@ date: anObject
 
 	date _ anObject! !
 
-!Transaction methodsFor: 'displaying' stamp: 'dhn 4/25/2016 12:32'!
+!Transaction methodsFor: 'displaying' stamp: 'dhn 5/2/2016 17:18'!
 formatForR
 	"Answer the receiver as a formatted line for reconciling"
 
@@ -3199,11 +3239,12 @@ formatForR
 
 		str
 			nextPutAll: 
-				(self leftJustify: (self class listFields at: #payee) 
-					with: self payee withoutTrailingBlanks);
-			nextPutAll: 
 				(self rightJustify: (self class listFields at: #amount) 
-					with: self amount ledgerFormatted)]! !
+					with: self amount ledgerFormatted);
+			nextPut: $ ;
+			nextPutAll: 
+				(self leftJustify: (self class listFields at: #payee) 
+					with: self payee withoutTrailingBlanks)]! !
 
 !Transaction methodsFor: 'displaying' stamp: 'dhn 4/12/2016 15:04'!
 formatTransaction
@@ -3367,11 +3408,12 @@ stateR: anObject
 
 	stateR _ anObject! !
 
-!Transaction methodsFor: 'updating' stamp: 'dhn 4/29/2016 15:05'!
+!Transaction methodsFor: 'updating' stamp: 'dhn 5/2/2016 18:22'!
 toggleRec
 	"Toggle the reconciliation state of the receiver"
 	
-	self stateR: self stateR not! !
+	self stateR: self stateR not.
+	self triggerEvent: #clearChange withArguments: {stateR. amount}! !
 
 !Transaction methodsFor: 'accessing' stamp: 'dhn 6/26/2015 17:15'!
 transfer
